@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phoenix Travel Australia - Fly Beyond</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:root{
+  --gold:#C9A84C;--gold-light:#E8C97A;--gold-dim:#8a6f30;
+  --dark:#080B12;--dark2:#0D1220;--dark3:#111827;--dark4:#1a2235;
+  --white:#F5F0E8;--wdim:rgba(245,240,232,0.6);--wfaint:rgba(245,240,232,0.1);
+}
+body{background:var(--dark);color:var(--white);font-family:'DM Sans',sans-serif;font-weight:300;overflow-x:hidden}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:500;padding:20px 60px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(8,11,18,0.95),transparent);transition:all .4s}
+nav.scrolled{background:rgba(8,11,18,0.95);backdrop-filter:blur(20px);padding:14px 60px;border-bottom:1px solid rgba(201,168,76,.12)}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;cursor:pointer}
+.logo-mark{width:34px;height:34px}
+.logo-text{font-family:‘Syne’,sans-serif;font-weight:700;font-size:17px;letter-spacing:.04em;color:var(–white)}
+.logo-text span{color:var(–gold)}
+.nav-links{display:flex;gap:36px;list-style:none}
+.nav-links a{color:var(–wdim);text-decoration:none;font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;transition:color .3s;cursor:pointer}
+.nav-links a:hover{color:var(–white)}
+.nav-cta{background:var(–gold)!important;color:var(–dark)!important;padding:10px 22px;border-radius:2px;font-weight:600!important}
+.nav-cta:hover{background:var(–gold-light)!important}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px}
+.hamburger span{width:24px;height:1.5px;background:var(–white);transition:all .3s;display:block}
+
+/* HERO */
+.hero{min-height:100vh;position:relative;display:flex;align-items:center;padding:0 60px;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 70% 50%,rgba(58,123,213,.07) 0%,transparent 60%),radial-gradient(ellipse 50% 80% at 20% 80%,rgba(201,168,76,.05) 0%,transparent 50%),linear-gradient(135deg,#060910 0%,#0D1220 50%,#080B12 100%)}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.04) 1px,transparent 1px);background-size:80px 80px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 80%)}
+.hero-orb{position:absolute;right:-80px;top:50%;transform:translateY(-50%);width:600px;height:600px;opacity:.12}
+.hero-orb svg{animation:spin 40s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hero-content{position:relative;z-index:2;max-width:680px}
+.eyebrow{display:flex;align-items:center;gap:14px;margin-bottom:24px;animation:fadeUp .8s ease both}
+.eyebrow-line{width:36px;height:1px;background:var(–gold)}
+.eyebrow-text{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(–gold);font-weight:500}
+h1.hero-title{font-family:‘Cormorant Garamond’,serif;font-size:clamp(50px,7vw,90px);font-weight:300;line-height:.95;letter-spacing:-.02em;animation:fadeUp .8s .15s ease both;margin-bottom:24px}
+h1.hero-title em{color:var(–gold);font-style:italic}
+.hero-sub{font-size:clamp(14px,1.4vw,16px);color:var(–wdim);line-height:1.7;max-width:460px;margin-bottom:44px;animation:fadeUp .8s .3s ease both}
+.hero-btns{display:flex;align-items:center;gap:20px;animation:fadeUp .8s .45s ease both;flex-wrap:wrap}
+.btn-gold{background:var(–gold);color:var(–dark);padding:15px 34px;font-family:‘Syne’,sans-serif;font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;border:none;cursor:pointer;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));transition:all .3s;text-decoration:none;display:inline-block}
+.btn-gold:hover{background:var(–gold-light);transform:translateY(-2px);box-shadow:0 14px 36px rgba(201,168,76,.3)}
+.btn-outline{color:var(–wdim);font-size:13px;letter-spacing:.06em;background:none;border:1px solid rgba(245,240,232,.15);padding:13px 28px;cursor:pointer;transition:all .3s;font-family:‘DM Sans’,sans-serif}
+.btn-outline:hover{border-color:var(–gold);color:var(–white)}
+.hero-stats{position:absolute;bottom:50px;left:60px;right:60px;display:flex;gap:50px;z-index:2;animation:fadeUp .8s .6s ease both;flex-wrap:wrap}
+.stat{display:flex;flex-direction:column;gap:4px}
+.stat-num{font-family:‘Cormorant Garamond’,serif;font-size:34px;font-weight:600;color:var(–gold);line-height:1}
+.stat-lbl{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(–wdim)}
+.stat-div{width:1px;background:rgba(245,240,232,.1);align-self:stretch}
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+
+/* SEARCH BAR */
+.search-wrap{position:relative;z-index:10;padding:0 60px}
+.search-box{background:var(–dark2);border:1px solid rgba(201,168,76,.15);padding:32px 40px;position:relative}
+.search-box::before{content:’’;position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(–gold),transparent)}
+.s-tabs{display:flex;gap:0;margin-bottom:28px;border-bottom:1px solid rgba(245,240,232,.07)}
+.s-tab{padding:9px 20px 13px;font-size:11px;letter-spacing:.15em;text-transform:uppercase;font-weight:500;color:var(–wdim);cursor:pointer;border:none;background:none;position:relative;transition:color .3s;font-family:‘DM Sans’,sans-serif}
+.s-tab.active{color:var(–gold)}
+.s-tab.active::after{content:’’;position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(–gold)}
+.s-fields{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:2px}
+.s-field{background:rgba(245,240,232,.03);padding:16px 20px;display:flex;flex-direction:column;gap:5px;border:1px solid transparent;transition:all .3s;cursor:pointer}
+.s-field:focus-within,.s-field:hover{background:rgba(245,240,232,.05);border-color:rgba(201,168,76,.3)}
+.s-field-lbl{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(–gold-dim);font-weight:600}
+.s-field input,.s-field select{background:none;border:none;color:var(–white);font-family:‘DM Sans’,sans-serif;font-size:14px;font-weight:300;outline:none;width:100%;cursor:pointer}
+.s-field input::placeholder{color:var(–wdim)}
+.s-field select option{background:var(–dark3);color:var(–white)}
+.s-btn{background:var(–gold);border:none;padding:16px 30px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:‘Syne’,sans-serif;font-weight:700;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(–dark);transition:background .3s;white-space:nowrap}
+.s-btn:hover{background:var(–gold-light)}
+
+/* SECTIONS */
+.section{padding:100px 60px}
+.section-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:56px}
+.section-tag{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(–gold);font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.section-tag::before{content:’’;display:block;width:20px;height:1px;background:var(–gold)}
+.section-title{font-family:‘Cormorant Garamond’,serif;font-size:clamp(34px,4vw,52px);font-weight:300;line-height:1.1;color:var(–white)}
+.section-title em{color:var(–gold);font-style:italic}
+.section-link{color:var(–wdim);text-decoration:none;font-size:11px;letter-spacing:.15em;text-transform:uppercase;display:flex;align-items:center;gap:8px;transition:color .3s;cursor:pointer;background:none;border:none;font-family:‘DM Sans’,sans-serif;white-space:nowrap;margin-bottom:6px}
+.section-link:hover{color:var(–gold)}
+
+/* DESTINATIONS */
+.dest-grid{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:280px 280px;gap:3px}
+.dest-card{position:relative;overflow:hidden;cursor:pointer;background:var(–dark3);display:block;text-decoration:none}
+.dest-card:first-child{grid-row:1/3}
+.dest-bg{position:absolute;inset:0;background-size:cover;background-position:center;transition:transform .7s ease}
+.dest-card:hover .dest-bg{transform:scale(1.05)}
+.dest-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,11,18,.9) 0%,rgba(8,11,18,.2) 60%,transparent 100%)}
+.dest-content{position:absolute;bottom:0;left:0;right:0;padding:28px}
+.dest-region{font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(–gold);margin-bottom:6px;font-weight:600}
+.dest-name{font-family:‘Cormorant Garamond’,serif;font-size:28px;font-weight:400;color:var(–white);line-height:1.1;margin-bottom:6px}
+.dest-card:first-child .dest-name{font-size:44px}
+.dest-price{font-size:12px;color:var(–wdim)}
+.dest-price strong{color:var(–gold);font-size:16px;font-family:‘Cormorant Garamond’,serif}
+.dest-arrow{position:absolute;top:20px;right:20px;width:40px;height:40px;border:1px solid rgba(245,240,232,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:0;transform:translateY(-6px);transition:all .3s}
+.dest-card:hover .dest-arrow{opacity:1;transform:translateY(0);border-color:var(–gold)}
+
+/* SERVICES */
+.services-bg{background:var(–dark2)}
+.srv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px}
+.srv-card{background:var(–dark);padding:44px 32px;position:relative;overflow:hidden;transition:background .4s;cursor:pointer}
+.srv-card::before{content:’’;position:absolute;inset:0;background:linear-gradient(135deg,rgba(201,168,76,.05) 0%,transparent 60%);opacity:0;transition:opacity .4s}
+.srv-card:hover{background:var(–dark3)}
+.srv-card:hover::before{opacity:1}
+.srv-num{font-family:‘Cormorant Garamond’,serif;font-size:64px;font-weight:600;color:rgba(201,168,76,.07);line-height:1;margin-bottom:20px;transition:color .4s}
+.srv-card:hover .srv-num{color:rgba(201,168,76,.14)}
+.srv-icon{width:44px;height:44px;margin-bottom:20px;color:var(–gold)}
+.srv-name{font-family:‘Syne’,sans-serif;font-size:17px;font-weight:700;color:var(–white);margin-bottom:10px}
+.srv-desc{font-size:13px;color:var(–wdim);line-height:1.7;margin-bottom:28px}
+.srv-btn{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(–gold-dim);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .3s;font-weight:600;font-family:‘DM Sans’,sans-serif;padding:0}
+.srv-card:hover .srv-btn{color:var(–gold);gap:12px}
+
+/* WHY */
+.why-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.why-visual{position:relative;height:520px}
+.why-main{position:absolute;right:0;top:0;width:75%;height:75%;overflow:hidden}
+.why-main-img{width:100%;height:100%;background:url(‘https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800’) center/cover;filter:grayscale(30%)}
+.why-accent{position:absolute;left:0;bottom:0;width:50%;height:50%;border:4px solid var(–dark);overflow:hidden}
+.why-accent-img{width:100%;height:100%;background:url(‘https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400’) center/cover;filter:grayscale(30%)}
+.since-badge{position:absolute;top:-16px;left:-16px;width:56px;height:56px;background:var(–gold);display:flex;align-items:center;justify-content:center;font-family:‘Cormorant Garamond’,serif;font-size:10px;letter-spacing:.08em;color:var(–dark);text-transform:uppercase;font-weight:600;text-align:center;line-height:1.3}
+.why-features{list-style:none;margin-top:44px;display:flex;flex-direction:column;gap:28px}
+.why-feat{display:flex;gap:20px;align-items:flex-start}
+.why-feat-icon{width:42px;height:42px;flex-shrink:0;background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.18);display:flex;align-items:center;justify-content:center;color:var(–gold)}
+.why-feat-title{font-family:‘Syne’,sans-serif;font-weight:700;font-size:14px;color:var(–white);margin-bottom:5px}
+.why-feat-desc{font-size:13px;color:var(–wdim);line-height:1.6}
+
+/* TESTIMONIALS */
+.testi-bg{background:var(–dark2)}
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+.testi-card{background:var(–dark);padding:44px 36px;transition:background .3s}
+.testi-card:hover{background:var(–dark3)}
+.testi-quote{font-family:‘Cormorant Garamond’,serif;font-size:72px;line-height:.6;color:var(–gold);opacity:.25;margin-bottom:20px}
+.testi-stars{color:var(–gold);font-size:11px;letter-spacing:2px;margin-bottom:16px}
+.testi-text{font-family:‘Cormorant Garamond’,serif;font-size:19px;font-weight:400;color:var(–white);line-height:1.6;margin-bottom:28px;font-style:italic}
+.testi-author{display:flex;align-items:center;gap:14px}
+.testi-avatar{width:42px;height:42px;border-radius:50%;background:var(–dark4);border:2px solid rgba(201,168,76,.25);display:flex;align-items:center;justify-content:center;font-family:‘Syne’,sans-serif;font-weight:700;font-size:13px;color:var(–gold)}
+.testi-name{font-family:‘Syne’,sans-serif;font-weight:700;font-size:13px;color:var(–white)}
+.testi-loc{font-size:11px;color:var(–wdim);margin-top:2px}
+
+/* BANNER */
+.banner{background:var(–gold);padding:56px 60px;display:flex;align-items:center;justify-content:space-between;gap:36px;flex-wrap:wrap}
+.banner-eyebrow{font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:rgba(8,11,18,.55);margin-bottom:8px;font-weight:600}
+.banner-title{font-family:‘Cormorant Garamond’,serif;font-size:44px;font-weight:600;color:var(–dark);line-height:1.1}
+.banner-sub{font-size:14px;color:rgba(8,11,18,.65);margin-top:10px}
+.banner-btn{background:var(–dark);color:var(–gold);padding:16px 36px;font-family:‘Syne’,sans-serif;font-weight:700;font-size:11px;letter-spacing:.15em;text-transform:uppercase;border:none;cursor:pointer;transition:all .3s;white-space:nowrap}
+.banner-btn:hover{background:#0D1220;transform:translateY(-2px)}
+
+/* FOOTER */
+footer{background:var(–dark);padding:72px 60px 36px;border-top:1px solid rgba(201,168,76,.08)}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:56px;margin-bottom:56px}
+.footer-logo-text{font-family:‘Syne’,sans-serif;font-size:20px;font-weight:800;color:var(–white);margin-bottom:14px}
+.footer-logo-text span{color:var(–gold)}
+.footer-desc{font-size:13px;color:var(–wdim);line-height:1.7;max-width:260px;margin-bottom:28px}
+.footer-contact{font-size:13px;color:var(–wdim);margin-bottom:8px;display:flex;align-items:flex-start;gap:10px}
+.footer-contact svg{color:var(–gold);flex-shrink:0;margin-top:2px}
+.footer-head{font-family:‘Syne’,sans-serif;font-weight:700;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(–white);margin-bottom:20px}
+.footer-links{list-style:none;display:flex;flex-direction:column;gap:10px}
+.footer-links a{color:var(–wdim);text-decoration:none;font-size:13px;transition:color .3s;cursor:pointer;background:none;border:none;font-family:‘DM Sans’,sans-serif;text-align:left;padding:0}
+.footer-links a:hover,.footer-links button:hover{color:var(–gold)}
+.footer-links button{color:var(–wdim);text-decoration:none;font-size:13px;transition:color .3s;cursor:pointer;background:none;border:none;font-family:‘DM Sans’,sans-serif;text-align:left;padding:0}
+.footer-bottom{border-top:1px solid rgba(245,240,232,.05);padding-top:28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.footer-copy{font-size:11px;color:rgba(245,240,232,.25)}
+.footer-socials{display:flex;gap:12px}
+.social-btn{width:34px;height:34px;border:1px solid rgba(245,240,232,.1);display:flex;align-items:center;justify-content:center;cursor:pointer;background:none;color:var(–wdim);transition:all .3s}
+.social-btn:hover{border-color:var(–gold);color:var(–gold)}
+
+/* MODAL OVERLAY */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(–dark2);border:1px solid rgba(201,168,76,.2);max-width:600px;width:100%;max-height:90vh;overflow-y:auto;position:relative}
+.modal::before{content:’’;position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(–gold),transparent)}
+.modal-header{padding:36px 40px 24px;display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.modal-title{font-family:‘Cormorant Garamond’,serif;font-size:32px;font-weight:400;color:var(–white)}
+.modal-sub{font-size:13px;color:var(–wdim);margin-top:4px}
+.modal-close{background:none;border:none;cursor:pointer;color:var(–wdim);font-size:22px;line-height:1;transition:color .3s;flex-shrink:0;padding:0}
+.modal-close:hover{color:var(–white)}
+.modal-body{padding:0 40px 40px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-grid.full{grid-template-columns:1fr}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group.full{grid-column:1/-1}
+label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(–gold-dim);font-weight:600}
+input[type=text],input[type=email],input[type=tel],input[type=date],input[type=number],select,textarea{background:rgba(245,240,232,.04);border:1px solid rgba(245,240,232,.1);color:var(–white);font-family:‘DM Sans’,sans-serif;font-size:14px;font-weight:300;padding:12px 16px;outline:none;width:100%;transition:border-color .3s;border-radius:0}
+input::placeholder,textarea::placeholder{color:var(–wdim)}
+input:focus,select:focus,textarea:focus{border-color:rgba(201,168,76,.4)}
+select option{background:var(–dark3);color:var(–white)}
+textarea{resize:vertical;min-height:100px}
+.form-submit{width:100%;margin-top:24px;background:var(–gold);color:var(–dark);padding:16px;font-family:‘Syne’,sans-serif;font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;border:none;cursor:pointer;transition:all .3s}
+.form-submit:hover{background:var(–gold-light)}
+.form-note{font-size:11px;color:var(–wdim);text-align:center;margin-top:12px;line-height:1.5}
+.success-msg{text-align:center;padding:40px 20px}
+.success-icon{font-size:48px;margin-bottom:16px}
+.success-title{font-family:‘Cormorant Garamond’,serif;font-size:28px;color:var(–gold);margin-bottom:8px}
+.success-text{font-size:14px;color:var(–wdim);line-height:1.6}
+.pkg-detail{background:rgba(201,168,76,.05);border:1px solid rgba(201,168,76,.1);padding:20px;margin-bottom:24px}
+.pkg-detail-name{font-family:‘Syne’,sans-serif;font-weight:700;color:var(–white);margin-bottom:4px}
+.pkg-detail-info{font-size:13px;color:var(–wdim)}
+.pkg-detail-price{font-family:‘Cormorant Garamond’,serif;font-size:24px;color:var(–gold);margin-top:8px}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.divider{height:1px;background:rgba(245,240,232,.07);margin:24px 0}
+
+/* RESPONSIVE */
+@media(max-width:1024px){
+nav,nav.scrolled{padding:16px 30px}
+.hero{padding:0 30px}
+.hero-stats{left:30px;right:30px;gap:28px}
+.search-wrap,.section{padding-left:30px;padding-right:30px}
+.dest-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto}
+.dest-card:first-child{grid-column:1/3;grid-row:auto}
+.srv-grid{grid-template-columns:repeat(2,1fr)}
+.why-grid{grid-template-columns:1fr;gap:50px}
+.why-visual{height:360px}
+.testi-grid{grid-template-columns:1fr}
+.footer-grid{grid-template-columns:1fr 1fr;gap:36px}
+.banner{padding:40px 30px;flex-direction:column;align-items:flex-start}
+footer{padding:56px 30px 28px}
+.nav-links{display:none;position:absolute;top:100%;left:0;right:0;background:rgba(8,11,18,.98);backdrop-filter:blur(20px);flex-direction:column;gap:0;border-top:1px solid rgba(201,168,76,.1)}
+.nav-links.open{display:flex}
+.nav-links li a{display:block;padding:16px 30px;border-bottom:1px solid rgba(245,240,232,.05)}
+.hamburger{display:flex}
+.form-grid{grid-template-columns:1fr}
+.form-group.full{grid-column:1}
+.modal-header{padding:24px 24px 16px}
+.modal-body{padding:0 24px 24px}
+.s-fields{grid-template-columns:1fr 1fr;gap:2px}
+.s-btn{grid-column:1/-1}
+.hero-btns{flex-direction:column;align-items:flex-start}
+}
+@media(max-width:600px){
+.dest-grid{grid-template-columns:1fr;grid-template-rows:auto}
+.dest-card:first-child{grid-column:1}
+.dest-grid .dest-card{height:240px}
+.dest-grid .dest-card:first-child{height:300px}
+.srv-grid{grid-template-columns:1fr}
+.footer-grid{grid-template-columns:1fr}
+.hero-orb{display:none}
+.s-fields{grid-template-columns:1fr}
+}
+</style>
+
+</head>
+<body>
+
+<!-- NAV -->
+
+<nav id="navbar">
+  <a class="logo" onclick="scrollTo(0,0)">
+    <svg class="logo-mark" viewBox="0 0 34 34" fill="none">
+      <path d="M17 3L31 26H3L17 3Z" stroke="#C9A84C" stroke-width="1.5"/>
+      <path d="M17 10L25 24H9L17 10Z" fill="#C9A84C" opacity=".3"/>
+      <circle cx="17" cy="17" r="2.5" fill="#C9A84C"/>
+    </svg>
+    <div class="logo-text">PHOENIX <span>TRAVEL</span></div>
+  </a>
+  <ul class="nav-links" id="navLinks">
+    <li><a onclick="closeNav();scrollToSection('destinations')">Destinations</a></li>
+    <li><a onclick="closeNav();scrollToSection('services')">Services</a></li>
+    <li><a onclick="closeNav();scrollToSection('about')">About Us</a></li>
+    <li><a onclick="closeNav();scrollToSection('testimonials')">Reviews</a></li>
+    <li><a onclick="closeNav();openModal('contact')" class="nav-cta">Book Now</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger" onclick="toggleNav()">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- HERO -->
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-orb">
+    <svg viewBox="0 0 600 600" fill="none">
+      <circle cx="300" cy="300" r="260" stroke="#C9A84C" stroke-width=".5"/>
+      <circle cx="300" cy="300" r="200" stroke="#C9A84C" stroke-width=".5"/>
+      <circle cx="300" cy="300" r="140" stroke="#C9A84C" stroke-width=".5"/>
+      <ellipse cx="300" cy="300" rx="260" ry="70" stroke="#C9A84C" stroke-width=".5"/>
+      <ellipse cx="300" cy="300" rx="260" ry="140" stroke="#C9A84C" stroke-width=".5"/>
+      <ellipse cx="300" cy="300" rx="260" ry="210" stroke="#C9A84C" stroke-width=".5"/>
+      <line x1="40" y1="300" x2="560" y2="300" stroke="#C9A84C" stroke-width=".5"/>
+      <line x1="300" y1="40" x2="300" y2="560" stroke="#C9A84C" stroke-width=".5"/>
+    </svg>
+  </div>
+  <div class="hero-content">
+    <div class="eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">Australia's Premier Travel Partner</span>
+    </div>
+    <h1 class="hero-title">Fly<br><em>Beyond</em><br>the Horizon</h1>
+    <p class="hero-sub">Curated holidays, flights, and tour packages worldwide. We craft journeys that become lifelong memories - from Kerala to the Maldives, Sydney to Switzerland.</p>
+    <div class="hero-btns">
+      <button class="btn-gold" onclick="openModal('search')">Explore Packages</button>
+      <button class="btn-outline" onclick="scrollToSection('destinations')">View Destinations</button>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">15+</div><div class="stat-lbl">Years Experience</div></div>
+    <div class="stat-div"></div>
+    <div class="stat"><div class="stat-num">8K+</div><div class="stat-lbl">Happy Travellers</div></div>
+    <div class="stat-div"></div>
+    <div class="stat"><div class="stat-num">120+</div><div class="stat-lbl">Destinations</div></div>
+    <div class="stat-div"></div>
+    <div class="stat"><div class="stat-num">4.9&#9733;</div><div class="stat-lbl">Customer Rating</div></div>
+  </div>
+</section>
+
+<!-- SEARCH -->
+
+<div class="search-wrap" id="searchbar">
+  <div class="search-box">
+    <div class="s-tabs">
+      <button class="s-tab active" onclick="switchTab(this,'flights')">&#9992; Flights</button>
+      <button class="s-tab" onclick="switchTab(this,'hotels')">&#127968; Hotels</button>
+      <button class="s-tab" onclick="switchTab(this,'packages')">&#128506; Tour Packages</button>
+      <button class="s-tab" onclick="switchTab(this,'cabs')">&#128662; Cab Transfers</button>
+    </div>
+    <!-- FLIGHTS -->
+    <div class="tab-content active" id="tab-flights">
+      <div class="s-fields">
+        <div class="s-field"><div class="s-field-lbl">From</div><input type="text" placeholder="Sydney, Australia" id="f-from"></div>
+        <div class="s-field"><div class="s-field-lbl">To</div><input type="text" placeholder="Dubai, UAE" id="f-to"></div>
+        <div class="s-field"><div class="s-field-lbl">Depart</div><input type="date" id="f-date"></div>
+        <div class="s-field"><div class="s-field-lbl">Passengers</div>
+          <select id="f-pax">
+            <option>1 Adult</option><option>2 Adults</option><option>2 Adults, 1 Child</option><option>2 Adults, 2 Children</option><option>Group (6+)</option>
+          </select>
+        </div>
+        <button class="s-btn" onclick="openSearchModal('flight')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#080B12" stroke-width="1.4"/><path d="M10 10l2.5 2.5" stroke="#080B12" stroke-width="1.4" stroke-linecap="round"/></svg>
+          Search
+        </button>
+      </div>
+    </div>
+    <!-- HOTELS -->
+    <div class="tab-content" id="tab-hotels">
+      <div class="s-fields">
+        <div class="s-field"><div class="s-field-lbl">Destination</div><input type="text" placeholder="Bali, Indonesia" id="h-dest"></div>
+        <div class="s-field"><div class="s-field-lbl">Check In</div><input type="date" id="h-in"></div>
+        <div class="s-field"><div class="s-field-lbl">Check Out</div><input type="date" id="h-out"></div>
+        <div class="s-field"><div class="s-field-lbl">Guests</div>
+          <select id="h-guests"><option>1 Guest</option><option>2 Guests</option><option>3 Guests</option><option>4 Guests</option><option>5+ Guests</option></select>
+        </div>
+        <button class="s-btn" onclick="openSearchModal('hotel')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#080B12" stroke-width="1.4"/><path d="M10 10l2.5 2.5" stroke="#080B12" stroke-width="1.4" stroke-linecap="round"/></svg>
+          Search
+        </button>
+      </div>
+    </div>
+    <!-- PACKAGES -->
+    <div class="tab-content" id="tab-packages">
+      <div class="s-fields">
+        <div class="s-field"><div class="s-field-lbl">Destination</div>
+          <select id="p-dest"><option>Kerala, India</option><option>Dubai, UAE</option><option>Bali, Indonesia</option><option>Tokyo, Japan</option><option>Venice, Italy</option><option>Maldives</option><option>Switzerland</option></select>
+        </div>
+        <div class="s-field"><div class="s-field-lbl">Duration</div>
+          <select id="p-dur"><option>5 Nights</option><option>7 Nights</option><option>10 Nights</option><option>14 Nights</option><option>Custom</option></select>
+        </div>
+        <div class="s-field"><div class="s-field-lbl">Travel Date</div><input type="date" id="p-date"></div>
+        <div class="s-field"><div class="s-field-lbl">Travellers</div>
+          <select id="p-pax"><option>1 Person</option><option>2 People</option><option>3-4 People</option><option>5-8 People</option><option>Group (9+)</option></select>
+        </div>
+        <button class="s-btn" onclick="openSearchModal('package')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#080B12" stroke-width="1.4"/><path d="M10 10l2.5 2.5" stroke="#080B12" stroke-width="1.4" stroke-linecap="round"/></svg>
+          Search
+        </button>
+      </div>
+    </div>
+    <!-- CABS -->
+    <div class="tab-content" id="tab-cabs">
+      <div class="s-fields">
+        <div class="s-field"><div class="s-field-lbl">Pick Up</div><input type="text" placeholder="Airport or Address" id="c-from"></div>
+        <div class="s-field"><div class="s-field-lbl">Drop Off</div><input type="text" placeholder="Hotel or Address" id="c-to"></div>
+        <div class="s-field"><div class="s-field-lbl">Date &amp; Time</div><input type="date" id="c-date"></div>
+        <div class="s-field"><div class="s-field-lbl">Vehicle</div>
+          <select id="c-type"><option>Sedan (1-3 pax)</option><option>SUV (1-6 pax)</option><option>Van (7-12 pax)</option><option>Luxury</option></select>
+        </div>
+        <button class="s-btn" onclick="openSearchModal('cab')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#080B12" stroke-width="1.4"/><path d="M10 10l2.5 2.5" stroke="#080B12" stroke-width="1.4" stroke-linecap="round"/></svg>
+          Search
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DESTINATIONS -->
+
+<section class="section" id="destinations">
+  <div class="section-header">
+    <div>
+      <div class="section-tag">Where to next</div>
+      <h2 class="section-title">Top <em>Destinations</em><br>This Season</h2>
+    </div>
+    <button class="section-link" onclick="openModal('all-destinations')">All Destinations &#8594;</button>
+  </div>
+  <div class="dest-grid">
+    <div class="dest-card" onclick="openBookModal('Kerala, India','$1,299 AUD','South India','10 Days / 9 Nights full guided tour with backwaters, hill stations, and Ayurveda experiences.')">
+      <div class="dest-bg" style="background-image:url('https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=900')"></div>
+      <div class="dest-overlay"></div>
+      <div class="dest-arrow"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3l4 4-4 4" stroke="#C9A84C" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+      <div class="dest-content">
+        <div class="dest-region">South India</div>
+        <div class="dest-name">Kerala,<br>India</div>
+        <div class="dest-price">From <strong>$1,299</strong> AUD per person</div>
+      </div>
+    </div>
+    <div class="dest-card" onclick="openBookModal('Dubai, UAE','$899 AUD','Middle East','6 Days / 5 Nights including Burj Khalifa, desert safari, and dhow cruise.')">
+      <div class="dest-bg" style="background-image:url('https://images.unsplash.com/photo-1518684079-3c830dcef090?w=600')"></div>
+      <div class="dest-overlay"></div>
+      <div class="dest-arrow"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3l4 4-4 4" stroke="#C9A84C" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+      <div class="dest-content">
+        <div class="dest-region">Middle East</div>
+        <div class="dest-name">Dubai, UAE</div>
+        <div class="dest-price">From <strong>$899</strong> AUD</div>
+      </div>
+    </div>
+    <div class="dest-card" onclick="openBookModal('Bali, Indonesia','$799 AUD','Southeast Asia','7 Days / 6 Nights with temple visits, rice terraces, and beach stays.')">
+      <div class="dest-bg" style="background-image:url('https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600')"></div>
+      <div class="dest-overlay"></div>
+      <div class="dest-arrow"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3l4 4-4 4" stroke="#C9A84C" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+      <div class="dest-content">
+        <div class="dest-region">Southeast Asia</div>
+        <div class="dest-name">Bali, Indonesia</div>
+        <div class="dest-price">From <strong>$799</strong> AUD</div>
+      </div>
+    </div>
+    <div class="dest-card" onclick="openBookModal('Venice, Italy','$2,199 AUD','Europe','9 Days / 8 Nights exploring Italy with Venice, Rome, and Florence.')">
+      <div class="dest-bg" style="background-image:url('https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=600')"></div>
+      <div class="dest-overlay"></div>
+      <div class="dest-arrow"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3l4 4-4 4" stroke="#C9A84C" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+      <div class="dest-content">
+        <div class="dest-region">Europe</div>
+        <div class="dest-name">Venice, Italy</div>
+        <div class="dest-price">From <strong>$2,199</strong> AUD</div>
+      </div>
+    </div>
+    <div class="dest-card" onclick="openBookModal('Tokyo, Japan','$1,599 AUD','Asia','8 Days / 7 Nights with Tokyo, Kyoto, and Mount Fuji experiences.')">
+      <div class="dest-bg" style="background-image:url('https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=600')"></div>
+      <div class="dest-overlay"></div>
+      <div class="dest-arrow"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3l4 4-4 4" stroke="#C9A84C" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+      <div class="dest-content">
+        <div class="dest-region">Asia</div>
+        <div class="dest-name">Tokyo, Japan</div>
+        <div class="dest-price">From <strong>$1,599</strong> AUD</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+
+<section class="section services-bg" id="services">
+  <div class="section-header">
+    <div>
+      <div class="section-tag">What we offer</div>
+      <h2 class="section-title">Everything You<br><em>Need</em> to Travel</h2>
+    </div>
+  </div>
+  <div class="srv-grid">
+    <div class="srv-card" onclick="openModal('book-flight')">
+      <div class="srv-num">01</div>
+      <svg class="srv-icon" viewBox="0 0 44 44" fill="none"><path d="M22 8l-8 11h5l-2 17h10l-2-17h5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M6 26h8M30 26h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      <div class="srv-name">Flight Booking</div>
+      <div class="srv-desc">Domestic and international flights at competitive fares. Economy, business and first class with all major carriers.</div>
+      <button class="srv-btn">Book a Flight &#8594;</button>
+    </div>
+    <div class="srv-card" onclick="openModal('book-hotel')">
+      <div class="srv-num">02</div>
+      <svg class="srv-icon" viewBox="0 0 44 44" fill="none"><rect x="7" y="15" width="30" height="22" rx="1" stroke="currentColor" stroke-width="1.4"/><path d="M15 15V11a7 7 0 0114 0v4" stroke="currentColor" stroke-width="1.4"/><circle cx="22" cy="26" r="4" stroke="currentColor" stroke-width="1.4"/></svg>
+      <div class="srv-name">Hotel Stays</div>
+      <div class="srv-desc">Budget guesthouses to 5-star luxury resorts. Curated accommodations at every price point worldwide.</div>
+      <button class="srv-btn">Find Hotels &#8594;</button>
+    </div>
+    <div class="srv-card" onclick="openModal('book-package')">
+      <div class="srv-num">03</div>
+      <svg class="srv-icon" viewBox="0 0 44 44" fill="none"><circle cx="22" cy="18" r="7" stroke="currentColor" stroke-width="1.4"/><path d="M22 25c-7 0-14 3.5-14 7h28c0-3.5-7-7-14-7z" stroke="currentColor" stroke-width="1.4"/></svg>
+      <div class="srv-name">Tour Packages</div>
+      <div class="srv-desc">Fully curated guided tours to India, Southeast Asia, Europe, Middle East and more. Flights + hotel + transfers included.</div>
+      <button class="srv-btn">View Packages &#8594;</button>
+    </div>
+    <div class="srv-card" onclick="openModal('book-cab')">
+      <div class="srv-num">04</div>
+      <svg class="srv-icon" viewBox="0 0 44 44" fill="none"><rect x="5" y="26" width="34" height="11" rx="2" stroke="currentColor" stroke-width="1.4"/><circle cx="13" cy="37" r="3.5" stroke="currentColor" stroke-width="1.4"/><circle cx="31" cy="37" r="3.5" stroke="currentColor" stroke-width="1.4"/><path d="M5 31l7-13h18l7 7" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+      <div class="srv-name">Cab Transfers</div>
+      <div class="srv-desc">Airport transfers and point-to-point bookings at your destination. Available in 80+ countries with pre-booked pricing.</div>
+      <button class="srv-btn">Book a Cab &#8594;</button>
+    </div>
+  </div>
+</section>
+
+<!-- WHY US -->
+
+<section class="section" id="about">
+  <div class="why-grid">
+    <div class="why-visual">
+      <div class="why-main"><div class="why-main-img"></div></div>
+      <div class="why-accent"><div class="why-accent-img"></div></div>
+      <div class="since-badge">Since<br>2009</div>
+    </div>
+    <div>
+      <div class="section-tag">Why Phoenix Travel</div>
+      <h2 class="section-title">Travel Experts<br>You Can <em>Trust</em></h2>
+      <ul class="why-features">
+        <li class="why-feat">
+          <div class="why-feat-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2l2.2 4.5L16 7l-3.5 3.4.8 5L9 13l-4.3 2.4.8-5L2 7l4.8-.5L9 2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></div>
+          <div><div class="why-feat-title">15+ Years of Excellence</div><div class="why-feat-desc">Serving Australian travellers since 2009 with thousands of satisfied customers across every continent.</div></div>
+        </li>
+        <li class="why-feat">
+          <div class="why-feat-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.2"/><path d="M6 9l2 2 4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+          <div><div class="why-feat-title">12 Months Interest-Free</div><div class="why-feat-desc">Book now and spread the cost with our interest-free payment plan. No hidden fees, no surprises.</div></div>
+        </li>
+        <li class="why-feat">
+          <div class="why-feat-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2C6.24 2 4 4.24 4 7c0 4 5 9 5 9s5-5 5-9c0-2.76-2.24-5-5-5z" stroke="currentColor" stroke-width="1.2"/><circle cx="9" cy="7" r="2" stroke="currentColor" stroke-width="1.2"/></svg></div>
+          <div><div class="why-feat-title">Personalised Itineraries</div><div class="why-feat-desc">Every trip custom-built around your budget, dates, and preferences by expert travel consultants.</div></div>
+        </li>
+        <li class="why-feat">
+          <div class="why-feat-icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9l5-5 5 5v6H4V9z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M7 15v-4h4v4" stroke="currentColor" stroke-width="1.2"/></svg></div>
+          <div><div class="why-feat-title">Melbourne-Based Team</div><div class="why-feat-desc">Real humans available by phone and email. Local support when you need it most.</div></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+
+<section class="section testi-bg" id="testimonials">
+  <div class="section-header">
+    <div>
+      <div class="section-tag">Client Stories</div>
+      <h2 class="section-title">What Our Travellers<br><em>Say</em></h2>
+    </div>
+  </div>
+  <div class="testi-grid">
+    <div class="testi-card">
+      <div class="testi-quote">"</div>
+      <div class="testi-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+      <div class="testi-text">Booked a Kerala tour through Phoenix and it was absolutely flawless. Every transfer, hotel, and guide perfectly arranged.</div>
+      <div class="testi-author"><div class="testi-avatar">SR</div><div><div class="testi-name">Sunita Rao</div><div class="testi-loc">Melbourne, VIC</div></div></div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-quote">"</div>
+      <div class="testi-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+      <div class="testi-text">Got our family flights to Dubai sorted in under an hour. Found us a much better deal than anything I found online.</div>
+      <div class="testi-author"><div class="testi-avatar">JM</div><div><div class="testi-name">James Mathew</div><div class="testi-loc">Sydney, NSW</div></div></div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-quote">"</div>
+      <div class="testi-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+      <div class="testi-text">The 12-month interest-free plan made our Europe trip actually affordable. Booking 6 people was seamless start to finish.</div>
+      <div class="testi-author"><div class="testi-avatar">PT</div><div><div class="testi-name">Priya Thomas</div><div class="testi-loc">Brisbane, QLD</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- BANNER -->
+
+<div class="banner">
+  <div>
+    <div class="banner-eyebrow">Limited Time Offer</div>
+    <div class="banner-title">Book Now, Pay Later.</div>
+    <div class="banner-sub">12 months interest-free on all holiday packages over $1,500 AUD.</div>
+  </div>
+  <button class="banner-btn" onclick="openModal('interest-free')">Apply Now &#8594;</button>
+</div>
+
+<!-- FOOTER -->
+
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-logo-text">PHOENIX <span>TRAVEL</span></div>
+      <div class="footer-desc">Australia's trusted travel partner since 2009. Flights, tours, hotels, and transfers - crafted around you.</div>
+      <div class="footer-contact"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="10" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M1 3l6 5 6-5" stroke="currentColor" stroke-width="1.2"/></svg>sales@phoenixtravelaustralia.com</div>
+      <div class="footer-contact"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3.5 1.5h2.5l1 3-1.5 1.5s.8 2.5 3.5 3.5L10.5 8l3 1v2.5a1 1 0 01-1 1C5 13.5 1 5 1 3a1 1 0 011-1h1.5z" stroke="currentColor" stroke-width="1.2"/></svg>+61 401 865 790 / 03 8658 9829</div>
+    </div>
+    <div>
+      <div class="footer-head">Services</div>
+      <ul class="footer-links">
+        <li><button onclick="openModal('book-flight')">Flight Booking</button></li>
+        <li><button onclick="openModal('book-hotel')">Hotel Booking</button></li>
+        <li><button onclick="openModal('book-package')">Tour Packages</button></li>
+        <li><button onclick="openModal('book-cab')">Cab Transfers</button></li>
+        <li><button onclick="openModal('interest-free')">Interest Free Plan</button></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-head">Destinations</div>
+      <ul class="footer-links">
+        <li><button onclick="openBookModal('Kerala, India','$1,299 AUD','South India','10 Days full guided tour.')">Kerala, India</button></li>
+        <li><button onclick="openBookModal('Dubai, UAE','$899 AUD','Middle East','6 Days city and desert package.')">Dubai, UAE</button></li>
+        <li><button onclick="openBookModal('Bali, Indonesia','$799 AUD','Southeast Asia','7 Days cultural retreat.')">Bali, Indonesia</button></li>
+        <li><button onclick="openBookModal('Tokyo, Japan','$1,599 AUD','Asia','8 Days Japan explorer.')">Tokyo, Japan</button></li>
+        <li><button onclick="openModal('all-destinations')">All Destinations</button></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-head">Company</div>
+      <ul class="footer-links">
+        <li><button onclick="scrollToSection('about')">About Us</button></li>
+        <li><button onclick="openModal('contact')">Contact Us</button></li>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms & Conditions</a></li>
+        <li><button onclick="openModal('contact')">Make a Complaint</button></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">&#169; 2025 Phoenix Travel Australia Pty Ltd. All rights reserved. Melbourne, VIC.</div>
+    <div class="footer-socials">
+      <button class="social-btn" onclick="window.open('https://www.facebook.com/PhoenixTravelAustralia/','_blank')">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8 1H6.5a2 2 0 00-2 2v1.5H3v2h1.5V11h2V6.5H8l.5-2H6.5V3a.5.5 0 01.5-.5H8V1z" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="social-btn" onclick="openModal('contact')">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" rx="3" stroke="currentColor" stroke-width="1"/><circle cx="6" cy="6" r="2.2" stroke="currentColor" stroke-width="1"/><circle cx="9" cy="3" r=".5" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </div>
+</footer>
+
+<!-- ======== MODALS ======== -->
+
+<!-- FLIGHT BOOKING MODAL -->
+
+<div class="modal-overlay" id="modal-book-flight">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title">Book a Flight</div><div class="modal-sub">Fill in your details and we will contact you with the best fares</div></div>
+      <button class="modal-close" onclick="closeModal('book-flight')">&#10005;</button>
+    </div>
+    <div class="modal-body" id="form-book-flight">
+      <div class="form-grid">
+        <div class="form-group"><label>From City / Airport</label><input type="text" placeholder="e.g. Sydney (SYD)"></div>
+        <div class="form-group"><label>To City / Airport</label><input type="text" placeholder="e.g. Dubai (DXB)"></div>
+        <div class="form-group"><label>Departure Date</label><input type="date"></div>
+        <div class="form-group"><label>Return Date (optional)</label><input type="date"></div>
+        <div class="form-group"><label>Adults</label><select><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option></select></div>
+        <div class="form-group"><label>Children</label><select><option>0</option><option>1</option><option>2</option><option>3</option></select></div>
+        <div class="form-group"><label>Cabin Class</label><select><option>Economy</option><option>Premium Economy</option><option>Business</option><option>First Class</option></select></div>
+        <div class="form-group"><label>Trip Type</label><select><option>Return</option><option>One Way</option><option>Multi-City</option></select></div>
+        <div class="form-group"><label>Your Full Name</label><input type="text" placeholder="John Smith"></div>
+        <div class="form-group"><label>Email Address</label><input type="email" placeholder="john@email.com"></div>
+        <div class="form-group"><label>Phone Number</label><input type="tel" placeholder="+61 400 000 000"></div>
+        <div class="form-group"><label>Preferred Contact Time</label><select><option>Morning (9am-12pm)</option><option>Afternoon (12pm-5pm)</option><option>Evening (5pm-7pm)</option></select></div>
+        <div class="form-group full"><label>Special Requests</label><textarea placeholder="Any special requests, dietary needs, etc."></textarea></div>
+      </div>
+      <button class="form-submit" onclick="submitForm('book-flight')">Submit Flight Enquiry</button>
+      <div class="form-note">We will contact you within 2 business hours with available options and pricing.</div>
+    </div>
+  </div>
+</div>
+
+<!-- HOTEL BOOKING MODAL -->
+
+<div class="modal-overlay" id="modal-book-hotel">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title">Find a Hotel</div><div class="modal-sub">We'll find the best options within your budget</div></div>
+      <button class="modal-close" onclick="closeModal('book-hotel')">&#10005;</button>
+    </div>
+    <div class="modal-body" id="form-book-hotel">
+      <div class="form-grid">
+        <div class="form-group"><label>Destination</label><input type="text" placeholder="e.g. Bali, Indonesia"></div>
+        <div class="form-group"><label>Star Rating</label><select><option>Any</option><option>3 Stars</option><option>4 Stars</option><option>5 Stars</option><option>Luxury Resort</option></select></div>
+        <div class="form-group"><label>Check In</label><input type="date"></div>
+        <div class="form-group"><label>Check Out</label><input type="date"></div>
+        <div class="form-group"><label>Rooms</label><select><option>1 Room</option><option>2 Rooms</option><option>3 Rooms</option><option>4+ Rooms</option></select></div>
+        <div class="form-group"><label>Guests</label><select><option>1 Guest</option><option>2 Guests</option><option>3 Guests</option><option>4 Guests</option><option>5+ Guests</option></select></div>
+        <div class="form-group"><label>Budget Per Night (AUD)</label><select><option>Under $100</option><option>$100 - $200</option><option>$200 - $400</option><option>$400 - $700</option><option>$700+</option></select></div>
+        <div class="form-group"><label>Board Basis</label><select><option>Room Only</option><option>Bed & Breakfast</option><option>Half Board</option><option>All Inclusive</option></select></div>
+        <div class="form-group"><label>Your Name</label><input type="text" placeholder="Full name"></div>
+        <div class="form-group"><label>Email</label><input type="email" placeholder="your@email.com"></div>
+        <div class="form-group full"><label>Additional Requirements</label><textarea placeholder="Pool view, wheelchair access, honeymoon, etc."></textarea></div>
+      </div>
+      <button class="form-submit" onclick="submitForm('book-hotel')">Request Hotel Options</button>
+      <div class="form-note">We'll send you curated hotel options within 4 business hours.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PACKAGE BOOKING MODAL -->
+
+<div class="modal-overlay" id="modal-book-package">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title">Tour Packages</div><div class="modal-sub">All-inclusive curated holiday packages</div></div>
+      <button class="modal-close" onclick="closeModal('book-package')">&#10005;</button>
+    </div>
+    <div class="modal-body" id="form-book-package">
+      <div class="form-grid">
+        <div class="form-group"><label>Destination</label><select><option>Kerala, India</option><option>Dubai, UAE</option><option>Bali, Indonesia</option><option>Tokyo, Japan</option><option>Venice, Italy</option><option>Maldives</option><option>Switzerland</option><option>Other - specify below</option></select></div>
+        <div class="form-group"><label>Duration</label><select><option>5 Nights</option><option>7 Nights</option><option>10 Nights</option><option>14 Nights</option><option>Custom</option></select></div>
+        <div class="form-group"><label>Travel Date</label><input type="date"></div>
+        <div class="form-group"><label>Flexible Dates?</label><select><option>Yes, +/- 1 week</option><option>Yes, +/- 2 weeks</option><option>No, exact dates</option></select></div>
+        <div class="form-group"><label>Adults</label><select><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option></select></div>
+        <div class="form-group"><label>Children</label><select><option>0</option><option>1</option><option>2</option><option>3</option></select></div>
+        <div class="form-group"><label>Budget Per Person (AUD)</label><select><option>Under $1,000</option><option>$1,000-$2,000</option><option>$2,000-$3,500</option><option>$3,500-$5,000</option><option>$5,000+</option></select></div>
+        <div class="form-group"><label>Hotel Standard</label><select><option>3 Star</option><option>4 Star</option><option>5 Star</option><option>Mix of options</option></select></div>
+        <div class="form-group"><label>Your Name</label><input type="text" placeholder="Full name"></div>
+        <div class="form-group"><label>Email</label><input type="email" placeholder="your@email.com"></div>
+        <div class="form-group"><label>Phone</label><input type="tel" placeholder="+61 400 000 000"></div>
+        <div class="form-group"><label>How did you hear about us?</label><select><option>Google</option><option>Facebook</option><option>Word of mouth</option><option>Returning customer</option><option>Other</option></select></div>
+        <div class="form-group full"><label>Special Interests / Requirements</label><textarea placeholder="Honeymoon, anniversary, dietary requirements, accessibility needs, specific attractions..."></textarea></div>
+      </div>
+      <button class="form-submit" onclick="submitForm('book-package')">Get Package Quote</button>
+      <div class="form-note">Our team will prepare a personalised itinerary and quote within 24 hours.</div>
+    </div>
+  </div>
+</div>
+
+<!-- CAB BOOKING MODAL -->
+
+<div class="modal-overlay" id="modal-book-cab">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title">Book a Transfer</div><div class="modal-sub">Airport transfers and point-to-point cab bookings</div></div>
+      <button class="modal-close" onclick="closeModal('book-cab')">&#10005;</button>
+    </div>
+    <div class="modal-body" id="form-book-cab">
+      <div class="form-grid">
+        <div class="form-group"><label>Country / City</label><input type="text" placeholder="e.g. Bali, Indonesia"></div>
+        <div class="form-group"><label>Transfer Type</label><select><option>Airport to Hotel</option><option>Hotel to Airport</option><option>Hotel to Hotel</option><option>City Tour</option><option>Multi-stop</option></select></div>
+        <div class="form-group"><label>Pick Up Location</label><input type="text" placeholder="Airport name or full address"></div>
+        <div class="form-group"><label>Drop Off Location</label><input type="text" placeholder="Hotel name or full address"></div>
+        <div class="form-group"><label>Pick Up Date</label><input type="date"></div>
+        <div class="form-group"><label>Pick Up Time</label><input type="text" placeholder="e.g. 14:30"></div>
+        <div class="form-group"><label>Passengers</label><select><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7-12</option></select></div>
+        <div class="form-group"><label>Vehicle Preference</label><select><option>Standard Sedan</option><option>SUV / 4WD</option><option>Van / Minibus</option><option>Luxury</option></select></div>
+        <div class="form-group"><label>Your Name</label><input type="text" placeholder="Full name"></div>
+        <div class="form-group"><label>Email</label><input type="email" placeholder="your@email.com"></div>
+        <div class="form-group"><label>Phone (include country code)</label><input type="tel" placeholder="+61 400 000 000"></div>
+        <div class="form-group"><label>Flight Number (if airport pickup)</label><input type="text" placeholder="e.g. QF12"></div>
+      </div>
+      <button class="form-submit" onclick="submitForm('book-cab')">Confirm Transfer Request</button>
+      <div class="form-note">You will receive a confirmation with driver details within 2 business hours.</div>
+    </div>
+  </div>
+</div>
+
+<!-- DESTINATION BOOKING MODAL (dynamic) -->
+
+<div class="modal-overlay" id="modal-book-dest">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="dest-modal-title">Book This Package</div>
+        <div class="modal-sub" id="dest-modal-sub">Complete your enquiry below</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('book-dest')">&#10005;</button>
+    </div>
+    <div class="modal-body" id="form-book-dest">
+      <div class="pkg-detail" id="dest-pkg-detail">
+        <div class="pkg-detail-name" id="dest-pkg-name"></div>
+        <div class="pkg-detail-info" id="dest-pkg-info"></div>
+        <div class="pkg-detail-price" id="dest-pkg-price"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Travel Date</label><input type="date"></div>
+        <div class="form-group"><label>Flexibility</label><select><option>Exact dates</option><option>+/- 1 week</option><option>+/- 2 weeks</option></select></div>
+        <div class="form-group"><label>Adults</label><select><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option></select></div>
+        <div class="form-group"><label>Children</label><select><option>0</option><option>1</option><option>2</option><option>3</option></select></div>
+        <div class="form-group"><label>Your Name</label><input type="text" placeholder="Full name"></div>
+        <div class="form-group"><label>Email</label><input type="email" placeholder="your@email.com"></div>
+        <div class="form-group"><label>Phone</label><input type="tel" placeholder="+61 400 000 000"></div>
+        <div class="form-group"><label>Budget (AUD per person)</label><select><option>As quoted</option><option>Under $1,000</option><option>$1,000-$2,000</option><option>$2,000-$3,500</option><option>$3,500+</option></select></div>
+        <div class="form-group full"><label>Special Requests</label><textarea placeholder="Any special requirements or questions..."></textarea></div>
+      </div>
+      <button class="form-submit" onclick="submitForm('book-dest')">Submit Enquiry</button>
+      <div class="form-note">Our team will be in touch within 2 business hours to confirm availability and pricing.</div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTACT MODAL -->
+
+<div class="modal-overlay" id="modal-contact">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title">Get in Touch</div><div class="modal-sub">We'd love to help plan your next adventure</div></div>
+      <button class="modal-close" onclick="closeModal('contact')">&#10005;</button>
+    </div>
+    <div class="modal-body" id="form-contact">
+      <div class="form-grid">
+        <div class="form-group"><label>Your Name</label><input type="text" placeholder="Full name"></div>
+        <div class="form-group"><label>Email</label><input type="email" placeholder="your@email.com"></div>
+        <div class="form-group"><label>Phone</label><input type="tel" placeholder="+61 400 000 000"></div>
+        <div class="form-group"><label>Enquiry Type</label><select><option>Flight Booking</option><option>Hotel Booking</option><option>Tour Package</option><option>Cab Transfer</option><option>Interest-Free Payment</option><option>General Enquiry</option><option>Complaint</option></select></div>
+        <div class="form-group full"><label>Message</label><textarea placeholder="Tell us how we can help you..."></textarea></div>
+      </div>
+      <button class="form-submit" onclick="submitForm('contact')">Send Message</button>
+      <div class="form-note">We typically respond within 2 business hours. You can also call us on 03 8658 9829.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ALL DESTINATIONS MODAL -->
+
+<div class="modal-overlay" id="modal-all-destinations">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <div><div class="modal-title">All Destinations</div><div class="modal-sub">Click any destination to start your enquiry</div></div>
+      <button class="modal-close" onclick="closeModal('all-destinations')">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div id="dest-list"></div>
+        <div id="dest-list-2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INTEREST FREE MODAL -->
+
+<div class="modal-overlay" id="modal-interest-free">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title">Book Now, Pay Later</div><div class="modal-sub">12 months interest-free on packages over $1,500 AUD</div></div>
+      <button class="modal-close" onclick="closeModal('interest-free')">&#10005;</button>
+    </div>
+    <div class="modal-body" id="form-interest-free">
+      <div class="pkg-detail">
+        <div class="pkg-detail-name">HSBC Interest-Free Payment Plan</div>
+        <div class="pkg-detail-info">Spread the cost of your holiday over 12 months with zero interest. Available on all packages over $1,500 AUD.</div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group"><label>Your Name</label><input type="text" placeholder="Full name"></div>
+        <div class="form-group"><label>Email</label><input type="email" placeholder="your@email.com"></div>
+        <div class="form-group"><label>Phone</label><input type="tel" placeholder="+61 400 000 000"></div>
+        <div class="form-group"><label>Package of Interest</label><select><option>Kerala, India</option><option>Dubai, UAE</option><option>Bali, Indonesia</option><option>Tokyo, Japan</option><option>Europe Tour</option><option>Not decided yet</option></select></div>
+        <div class="form-group"><label>Estimated Budget (AUD)</label><input type="text" placeholder="e.g. $3,000"></div>
+        <div class="form-group"><label>Number of Travellers</label><select><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option></select></div>
+        <div class="form-group full"><label>Any Questions?</label><textarea placeholder="Ask us anything about the payment plan..."></textarea></div>
+      </div>
+      <button class="form-submit" onclick="submitForm('interest-free')">Apply for Interest-Free Plan</button>
+      <div class="form-note">Subject to HSBC credit approval. Our team will guide you through the full application process.</div>
+    </div>
+  </div>
+</div>
+
+<!-- SEARCH RESULTS MODAL -->
+
+<div class="modal-overlay" id="modal-search-result">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title" id="search-modal-title">Search Results</div><div class="modal-sub">Fill in your details to confirm the best available options</div></div>
+      <button class="modal-close" onclick="closeModal('search-result')">&#10005;</button>
+    </div>
+    <div class="modal-body" id="form-search-result">
+      <div class="pkg-detail" id="search-summary"></div>
+      <div class="form-grid">
+        <div class="form-group"><label>Your Name</label><input type="text" placeholder="Full name"></div>
+        <div class="form-group"><label>Email</label><input type="email" placeholder="your@email.com"></div>
+        <div class="form-group full"><label>Phone Number</label><input type="tel" placeholder="+61 400 000 000"></div>
+        <div class="form-group full"><label>Any Additional Notes</label><textarea placeholder="Special requests, preferences..."></textarea></div>
+      </div>
+      <button class="form-submit" onclick="submitForm('search-result')">Request Full Quote</button>
+      <div class="form-note">We'll contact you within 2 hours with confirmed availability and best pricing.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// NAV
+window.addEventListener('scroll',()=>{
+  document.getElementById('navbar').classList.toggle('scrolled',window.scrollY>60);
+});
+function toggleNav(){
+  document.getElementById('navLinks').classList.toggle('open');
+}
+function closeNav(){
+  document.getElementById('navLinks').classList.remove('open');
+}
+function scrollToSection(id){
+  const el=document.getElementById(id);
+  if(el)el.scrollIntoView({behavior:'smooth'});
+}
+
+// TABS
+function switchTab(btn,id){
+  document.querySelectorAll('.s-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+}
+
+// MODALS
+function openModal(id){
+  document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open'));
+  const m=document.getElementById('modal-'+id);
+  if(m)m.classList.add('open');
+  document.body.style.overflow='hidden';
+  if(id==='all-destinations')buildDestList();
+}
+function closeModal(id){
+  const m=document.getElementById('modal-'+id);
+  if(m)m.classList.remove('open');
+  document.body.style.overflow='';
+}
+document.querySelectorAll('.modal-overlay').forEach(overlay=>{
+  overlay.addEventListener('click',function(e){
+    if(e.target===this){
+      this.classList.remove('open');
+      document.body.style.overflow='';
+    }
+  });
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    document.querySelectorAll('.modal-overlay.open').forEach(m=>{m.classList.remove('open');document.body.style.overflow='';});
+  }
+});
+
+// BOOK MODAL FOR DESTINATIONS
+function openBookModal(name,price,region,desc){
+  document.getElementById('dest-modal-title').textContent=name;
+  document.getElementById('dest-modal-sub').textContent=region;
+  document.getElementById('dest-pkg-name').textContent=name;
+  document.getElementById('dest-pkg-info').textContent=desc;
+  document.getElementById('dest-pkg-price').textContent='From '+price+' per person';
+  openModal('book-dest');
+}
+
+// SEARCH MODAL
+function openSearchModal(type){
+  let title='',summary='';
+  if(type==='flight'){
+    const from=document.getElementById('f-from').value||'Origin';
+    const to=document.getElementById('f-to').value||'Destination';
+    const date=document.getElementById('f-date').value||'Date TBC';
+    const pax=document.getElementById('f-pax').value;
+    title='Flight: '+from+' to '+to;
+    summary='<div class="pkg-detail-name">'+from+' &#8594; '+to+'</div><div class="pkg-detail-info">'+date+' &bull; '+pax+'</div>';
+  } else if(type==='hotel'){
+    const dest=document.getElementById('h-dest').value||'Destination';
+    const hin=document.getElementById('h-in').value||'TBC';
+    const hout=document.getElementById('h-out').value||'TBC';
+    title='Hotels in '+dest;
+    summary='<div class="pkg-detail-name">'+dest+'</div><div class="pkg-detail-info">Check in: '+hin+' &bull; Check out: '+hout+'</div>';
+  } else if(type==='package'){
+    const dest=document.getElementById('p-dest').value;
+    const dur=document.getElementById('p-dur').value;
+    title=dest+' - '+dur+' Package';
+    summary='<div class="pkg-detail-name">'+dest+'</div><div class="pkg-detail-info">'+dur+' &bull; '+document.getElementById('p-pax').value+'</div>';
+  } else if(type==='cab'){
+    const from=document.getElementById('c-from').value||'Pick Up';
+    const to=document.getElementById('c-to').value||'Drop Off';
+    title='Transfer: '+from+' to '+to;
+    summary='<div class="pkg-detail-name">'+from+' &#8594; '+to+'</div><div class="pkg-detail-info">'+document.getElementById('c-type').value+'</div>';
+  }
+  document.getElementById('search-modal-title').textContent=title;
+  document.getElementById('search-summary').innerHTML=summary;
+  openModal('search-result');
+}
+
+// DEST LIST
+const allDests=[
+  {name:'Kerala, India',price:'$1,299',region:'South India',desc:'10 Days full guided tour.'},
+  {name:'Dubai, UAE',price:'$899',region:'Middle East',desc:'6 Days city and desert package.'},
+  {name:'Bali, Indonesia',price:'$799',region:'Southeast Asia',desc:'7 Days cultural retreat.'},
+  {name:'Tokyo, Japan',price:'$1,599',region:'Asia',desc:'8 Days Japan explorer.'},
+  {name:'Venice, Italy',price:'$2,199',region:'Europe',desc:'9 Days Italy grand tour.'},
+  {name:'Maldives',price:'$2,899',region:'Indian Ocean',desc:'7 Days overwater bungalow escape.'},
+  {name:'Switzerland',price:'$3,499',region:'Europe',desc:'10 Days alpine adventure.'},
+  {name:'Singapore',price:'$1,099',region:'Southeast Asia',desc:'6 Days city discovery.'},
+  {name:'New Zealand',price:'$1,799',region:'Pacific',desc:'10 Days scenic road trip.'},
+  {name:'Thailand',price:'$999',region:'Southeast Asia',desc:'8 Days temples and beaches.'},
+  {name:'Paris, France',price:'$2,599',region:'Europe',desc:'7 Days city of lights.'},
+  {name:'Sri Lanka',price:'$1,199',region:'South Asia',desc:'9 Days heritage and wildlife.'}
+];
+function buildDestList(){
+  const half=Math.ceil(allDests.length/2);
+  let h1='',h2='';
+  allDests.forEach((d,i)=>{
+    const btn=`<div style="padding:14px 16px;background:rgba(245,240,232,.03);border:1px solid rgba(245,240,232,.07);margin-bottom:8px;cursor:pointer;transition:all .3s" onmouseenter="this.style.borderColor='rgba(201,168,76,.3)'" onmouseleave="this.style.borderColor='rgba(245,240,232,.07)'" onclick="closeModal('all-destinations');openBookModal('${d.name}','${d.price} AUD','${d.region}','${d.desc}')">
+      <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#8a6f30;margin-bottom:4px">${d.region}</div>
+      <div style="font-family:Cormorant Garamond,serif;font-size:17px;color:#F5F0E8">${d.name}</div>
+      <div style="font-size:12px;color:rgba(245,240,232,.5)">From <strong style="color:#C9A84C">${d.price}</strong> AUD</div>
+    </div>`;
+    if(i<half)h1+=btn; else h2+=btn;
+  });
+  document.getElementById('dest-list').innerHTML=h1;
+  document.getElementById('dest-list-2').innerHTML=h2;
+}
+
+// FORM SUBMIT - shows success message
+function submitForm(formId){
+  const bodyEl=document.getElementById('form-'+formId);
+  if(!bodyEl)return;
+  bodyEl.innerHTML=`<div class="success-msg">
+    <div class="success-icon">&#10003;</div>
+    <div class="success-title">Enquiry Received!</div>
+    <div class="success-text">Thank you for contacting Phoenix Travel Australia.<br><br>Our team will be in touch with you within 2 business hours.<br><br>You can also reach us directly at:<br><strong style="color:var(--gold)">sales@phoenixtravelaustralia.com</strong><br><strong style="color:var(--gold)">03 8658 9829</strong></div>
+  </div>`;
+}
+
+// SCROLL ANIMATIONS
+const observer=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)'}});
+},{threshold:.1});
+document.querySelectorAll('.srv-card,.dest-card,.testi-card,.why-feat').forEach(el=>{
+  el.style.opacity='0';
+  el.style.transform='translateY(20px)';
+  el.style.transition='opacity .6s ease, transform .6s ease';
+  observer.observe(el);
+});
+</script>
+
+</body>
+</html>
