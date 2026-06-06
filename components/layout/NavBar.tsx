@@ -1,8 +1,9 @@
 'use client';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Globe, BarChart3, Clock, MapPin, Grid3X3, User, Volume2, VolumeX, Menu, X } from 'lucide-react';
+import { Search, Globe, BarChart3, Clock, MapPin, Grid3X3, User, Volume2, VolumeX, Menu, X, LogIn, LogOut } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
+import { useSession, signIn, signOut } from 'next-auth/react';
 
 const navItems = [
   { id: 'graph', label: 'Knowledge Graph', icon: Grid3X3 },
@@ -15,8 +16,10 @@ const navItems = [
 
 export default function NavBar() {
   const { currentView, setCurrentView, audioEnabled, toggleAudio, progress, setSearchQuery, searchQuery } = useUserStore();
+  const { data: session, status } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const handleNav = (id: string) => {
     setCurrentView(id as Parameters<typeof setCurrentView>[0]);
@@ -106,6 +109,62 @@ export default function NavBar() {
             >
               {audioEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
             </button>
+
+            {/* Auth */}
+            <div className="relative">
+              {status === 'authenticated' && session?.user ? (
+                <>
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/10 transition-all"
+                  >
+                    {session.user.image ? (
+                      <img src={session.user.image} alt="" className="w-6 h-6 rounded-full border border-purple-500/50" />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-purple-700 flex items-center justify-center">
+                        <span className="text-xs text-white font-bold">
+                          {session.user.name?.[0]?.toUpperCase() ?? 'U'}
+                        </span>
+                      </div>
+                    )}
+                    <span className="text-xs text-slate-300 hidden sm:block max-w-[80px] truncate">
+                      {session.user.name}
+                    </span>
+                  </button>
+                  <AnimatePresence>
+                    {userMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                        className="absolute right-0 top-10 w-44 glass-dark border border-purple-900/40 rounded-xl p-2 shadow-xl z-50"
+                      >
+                        <div className="px-3 py-2 border-b border-purple-900/30 mb-1">
+                          <p className="text-xs text-slate-300 font-medium truncate">{session.user.name}</p>
+                          <p className="text-xs text-slate-500 truncate">{session.user.email}</p>
+                        </div>
+                        <button
+                          onClick={() => { setUserMenuOpen(false); signOut(); }}
+                          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-red-400 hover:bg-red-900/20 transition-all"
+                        >
+                          <LogOut size={12} />
+                          Sign out
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </>
+              ) : (
+                <button
+                  onClick={() => signIn('github')}
+                  disabled={status === 'loading'}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-700/50 hover:bg-purple-600/60 text-purple-200 border border-purple-500/30 transition-all disabled:opacity-50"
+                >
+                  <LogIn size={12} />
+                  <span className="hidden sm:block">Sign In</span>
+                </button>
+              )}
+            </div>
 
             {/* Mobile menu */}
             <button

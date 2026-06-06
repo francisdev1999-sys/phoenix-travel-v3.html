@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Providers from "./providers";
 
 export const metadata: Metadata = {
   title: "THE NEXUS ARCHIVE — Explore Hidden Connections in History",
@@ -20,7 +21,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark h-full">
-      <body className="antialiased min-h-full">{children}</body>
+      <body className="antialiased min-h-full">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
