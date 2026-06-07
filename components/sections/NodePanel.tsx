@@ -39,19 +39,17 @@ function formatYear(y: number): string {
 
 export default function NodePanel({ node, onClose }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
-  const { startRabbitHole, setCurrentView } = useUserStore();
+  const { startRabbitHole } = useUserStore();
   const researchScore = computeResearchScore(node);
   const relatedEdges = getRelatedEdges(node.id);
   const timelineNeighbors = getTimelineNeighbors(node.id);
   const geoNeighbors = getGeographicNeighbors(node.id);
   const nodeColor = node.color ?? CATEGORY_COLORS[node.category] ?? '#7c3aed';
 
-  const { setRabbitHoleNodeId } = useUserStore();
-
   const handleRabbitHole = () => {
     startRabbitHole(node.id);
-    setRabbitHoleNodeId(node.id);
-    setCurrentView('rabbit-hole');
+    // Don't change the view — AppShell auto-opens the rabbit hole side panel
+    // whenever rabbitHoleChain goes from empty to non-empty.
     onClose();
   };
 

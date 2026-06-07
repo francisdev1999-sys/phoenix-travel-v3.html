@@ -11,40 +11,46 @@ export async function GET(_req: NextRequest, { params }: Params) {
   const data = computeRabbitHole(nodeId, staticNodes, staticEdges);
   if (!data) return NextResponse.json({ error: 'Node not found' }, { status: 404 });
 
-  // Fetch approved sources linked to this node from the DB
-  const sourceLinks = await prisma.sourceLink.findMany({
-    where: {
-      targetType: 'node',
-      targetId: nodeId,
-      source: { status: 'approved' },
-    },
-    include: {
-      source: {
-        include: {
-          submitter: { select: { id: true, name: true, image: true } },
+  // Fetch approved sources from DB — gracefully degrade when DATABASE_URL is absent
+  let sources: object[] = [];
+  let sourceCountMap: Record<string, number> = {};
+
+  try {
+    const sourceLinks = await prisma.sourceLink.findMany({
+      where: {
+        targetType: 'node',
+        targetId: nodeId,
+        source: { status: 'approved' },
+      },
+      include: {
+        source: {
+          include: {
+            submitter: { select: { id: true, name: true, image: true } },
+          },
         },
       },
-    },
-    orderBy: { source: { credibilityScore: 'desc' } },
-  });
+      orderBy: { source: { credibilityScore: 'desc' } },
+    });
 
-  const sources = sourceLinks.map(sl => sl.source);
+    sources = sourceLinks.map(sl => sl.source);
 
-  // Also count approved sources linked to connected node IDs
-  const connectedIds = data.connections.map(c => c.node.id);
-  const neighborSourceCounts = await prisma.sourceLink.groupBy({
-    by: ['targetId'],
-    where: {
-      targetType: 'node',
-      targetId: { in: connectedIds },
-      source: { status: 'approved' },
-    },
-    _count: { id: true },
-  });
+    const connectedIds = data.connections.map(c => c.node.id);
+    const neighborSourceCounts = await prisma.sourceLink.groupBy({
+      by: ['targetId'],
+      where: {
+        targetType: 'node',
+        targetId: { in: connectedIds },
+        source: { status: 'approved' },
+      },
+      _count: { id: true },
+    });
 
-  const sourceCountMap = Object.fromEntries(
-    neighborSourceCounts.map(r => [r.targetId, r._count.id]),
-  );
+    sourceCountMap = Object.fromEntries(
+      neighborSourceCounts.map(r => [r.targetId, r._count.id]),
+    );
+  } catch {
+    // No database configured — return graph data without DB sources
+  }
 
   return NextResponse.json({ ...data, sources, sourceCountMap });
 }
