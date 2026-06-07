@@ -16,6 +16,7 @@ const Dashboard = lazy(() => import('@/components/sections/Dashboard'));
 const AIAssistant = lazy(() => import('@/components/sections/AIAssistant'));
 const RabbitHoleMode = lazy(() => import('@/components/sections/RabbitHoleMode'));
 const GraphDiagnostics = lazy(() => import('@/components/sections/GraphDiagnostics'));
+const SourceIngestion = lazy(() => import('@/components/sections/SourceIngestion'));
 
 function LoadingSpinner() {
   return (
@@ -108,6 +109,11 @@ export default function AppShell() {
                     {currentView === 'diagnostics' && (
                       <motion.div key="diagnostics" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto">
                         <GraphDiagnostics />
+                      </motion.div>
+                    )}
+                    {currentView === 'sources' && (
+                      <motion.div key="sources" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto">
+                        <SourceIngestion />
                       </motion.div>
                     )}
                   </AnimatePresence>
