@@ -1,5 +1,5 @@
 'use client';
-import { Suspense, lazy, useState } from 'react';
+import { Suspense, lazy, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Rabbit, X } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
@@ -31,6 +31,11 @@ export default function AppShell() {
   const { currentView, rabbitHoleChain, setCurrentView } = useUserStore();
   const [sidePanel, setSidePanel] = useState<'ai' | 'rabbit' | null>(null);
   const isLanding = currentView === 'landing';
+
+  // Auto-close side panel when the user navigates to a different view
+  useEffect(() => {
+    setSidePanel(null);
+  }, [currentView]);
 
   return (
     <div className="min-h-screen bg-[#000005] text-slate-200 overflow-hidden">
@@ -106,6 +111,15 @@ export default function AppShell() {
               {/* Side panel — full-screen overlay on mobile, 340px sidebar on sm+ */}
               <AnimatePresence>
                 {sidePanel && (
+                  <>
+                  {/* Tap backdrop — closes panel on mobile */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 z-20 sm:hidden bg-black/40"
+                    onClick={() => setSidePanel(null)}
+                  />
                   <motion.div
                     initial={{ x: '100%', opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
@@ -142,6 +156,7 @@ export default function AppShell() {
                       )}
                     </Suspense>
                   </motion.div>
+                  </>
                 )}
               </AnimatePresence>
             </div>
