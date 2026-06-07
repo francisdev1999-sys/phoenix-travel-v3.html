@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ZoomIn, ZoomOut, RotateCcw, Layers } from 'lucide-react';
-import { nodes, edges, GraphNode, CATEGORY_COLORS, EVIDENCE_COLORS } from '@/lib/graph';
+import { nodes as staticNodes, edges as staticEdges, GraphNode, GraphEdge, CATEGORY_COLORS, EVIDENCE_COLORS } from '@/lib/graph';
 import { useUserStore } from '@/lib/store/userStore';
 import NodePanel from '@/components/sections/NodePanel';
 
@@ -29,7 +29,34 @@ export default function KnowledgeGraph() {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const { exploreTheory, discoverConnection } = useUserStore();
 
+  // Live graph data: static base + approved DB proposals
+  const graphNodesRef = useRef<GraphNode[]>(staticNodes);
+  const graphEdgesRef = useRef<GraphEdge[]>(staticEdges);
+
+  // Merge approved DB proposals on mount (non-blocking)
+  useEffect(() => {
+    fetch('/api/graph')
+      .then(r => r.ok ? r.json() : null)
+      .then((data: { nodes: GraphNode[]; edges: GraphEdge[] } | null) => {
+        if (!data || (data.nodes.length === 0 && data.edges.length === 0)) return;
+        const existingIds = new Set(staticNodes.map(n => n.id));
+        const existingEdgeIds = new Set(staticEdges.map(e => e.id));
+        const newNodes = data.nodes.filter(n => !existingIds.has(n.id));
+        const newEdges = data.edges.filter(e => !existingEdgeIds.has(e.id));
+        if (newNodes.length === 0 && newEdges.length === 0) return;
+        graphNodesRef.current = [...staticNodes, ...newNodes];
+        graphEdgesRef.current = [...staticEdges, ...newEdges];
+        // Re-init layout to include the new nodes
+        const canvas = canvasRef.current;
+        if (canvas) initGraph(canvas.width, canvas.height);
+      })
+      .catch(() => {/* silently ignore — graph still works from static data */});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const initGraph = useCallback((w: number, h: number) => {
+    const nodes = graphNodesRef.current;
+    const edges = graphEdgesRef.current;
     const cx = w / 2;
     const cy = h / 2;
     const categories = [...new Set(nodes.map(n => n.category))];
@@ -101,7 +128,7 @@ export default function KnowledgeGraph() {
           }
         });
 
-        edges.forEach(edge => {
+        graphEdgesRef.current.forEach(edge => {
           if (edge.from === vn.id || edge.to === vn.id) {
             const otherId = edge.from === vn.id ? edge.to : edge.from;
             const other = getVNode(otherId);
@@ -136,7 +163,7 @@ export default function KnowledgeGraph() {
       ctx.scale(scale, scale);
 
       // Draw edges
-      edges.forEach(edge => {
+      graphEdgesRef.current.forEach(edge => {
         const src = getVNode(edge.from);
         const tgt = getVNode(edge.to);
         if (!src || !tgt) return;
@@ -225,7 +252,7 @@ export default function KnowledgeGraph() {
         ctx.fillText(vn.node.icon ?? '◈', vn.x, vn.y);
 
         // Label
-        if (isHovered || isSelected || edges.filter(e => e.from === vn.id || e.to === vn.id).length >= 5) {
+        if (isHovered || isSelected || graphEdgesRef.current.filter(e => e.from === vn.id || e.to === vn.id).length >= 5) {
           ctx.font = `bold ${Math.min(11, r * 0.45)}px system-ui`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'top';

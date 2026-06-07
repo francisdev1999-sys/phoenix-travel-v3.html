@@ -29,14 +29,14 @@ interface UserStore {
   progress: UserProgress;
   audioEnabled: boolean;
   rabbitHoleChain: string[];
-  currentView: 'landing' | 'graph' | 'theory' | 'universe' | 'timeline' | 'evidence-board' | 'globe' | 'dashboard' | 'diagnostics' | 'sources';
+  currentView: 'landing' | 'graph' | 'theory' | 'universe' | 'timeline' | 'evidence-board' | 'globe' | 'dashboard' | 'diagnostics' | 'sources' | 'admin';
   selectedTheory: string | null;
   searchQuery: string;
 
   exploreTheory: (theoryId: string) => void;
   discoverConnection: (fromId: string, toId: string) => void;
   toggleAudio: () => void;
-  setCurrentView: (view: 'landing' | 'graph' | 'theory' | 'universe' | 'timeline' | 'evidence-board' | 'globe' | 'dashboard' | 'diagnostics' | 'sources') => void;
+  setCurrentView: (view: 'landing' | 'graph' | 'theory' | 'universe' | 'timeline' | 'evidence-board' | 'globe' | 'dashboard' | 'diagnostics' | 'sources' | 'admin') => void;
   setSelectedTheory: (id: string | null) => void;
   setSearchQuery: (query: string) => void;
   startRabbitHole: (theoryId: string) => void;

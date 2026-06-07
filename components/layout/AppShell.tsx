@@ -16,7 +16,8 @@ const Dashboard = lazy(() => import('@/components/sections/Dashboard'));
 const AIAssistant = lazy(() => import('@/components/sections/AIAssistant'));
 const RabbitHoleMode = lazy(() => import('@/components/sections/RabbitHoleMode'));
 const GraphDiagnostics = lazy(() => import('@/components/sections/GraphDiagnostics'));
-const SourceIngestion = lazy(() => import('@/components/sections/SourceIngestion'));
+const SourceIngestion  = lazy(() => import('@/components/sections/SourceIngestion'));
+const AdminPanel       = lazy(() => import('@/components/sections/AdminPanel'));
 
 function LoadingSpinner() {
   return (
@@ -114,6 +115,11 @@ export default function AppShell() {
                     {currentView === 'sources' && (
                       <motion.div key="sources" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto">
                         <SourceIngestion />
+                      </motion.div>
+                    )}
+                    {currentView === 'admin' && (
+                      <motion.div key="admin" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto">
+                        <AdminPanel />
                       </motion.div>
                     )}
                   </AnimatePresence>

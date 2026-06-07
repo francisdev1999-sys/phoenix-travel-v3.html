@@ -41,11 +41,15 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
 
-  accounts    Account[]
-  sessions    Session[]
-  progress    UserProgress?
-  submitted   Source[]      @relation("SubmittedSources")
-  reviewed    Source[]      @relation("ReviewedSources")
+  accounts         Account[]
+  sessions         Session[]
+  progress         UserProgress?
+  submitted        Source[]         @relation("SubmittedSources")
+  reviewed         Source[]         @relation("ReviewedSources")
+  submittedNodes   ProposedNode[]   @relation("SubmittedNodes")
+  reviewedNodes    ProposedNode[]   @relation("ReviewedNodes")
+  submittedEdges   ProposedEdge[]   @relation("SubmittedEdges")
+  reviewedEdges    ProposedEdge[]   @relation("ReviewedEdges")
 }
 
 model VerificationToken {
@@ -136,4 +140,71 @@ model SourceLink {
   @@unique([sourceId, targetType, targetId, claimIndex])
   @@index([sourceId])
   @@index([targetType, targetId])
+}
+
+// ─────────────────────────────────────────────
+// ADMIN RESEARCH DASHBOARD — PROPOSALS
+// ─────────────────────────────────────────────
+
+model ProposedNode {
+  id             String   @id @default(cuid())
+  nodeId         String?  // desired graph id (slug); auto-generated on approval if blank
+  label          String
+  category       String   // NodeCategory
+  description    String   @db.Text
+  evidenceLevel  String   @default("speculative")
+  confidence     Float    @default(0.5)
+  claims         Json?    // string[]
+  criticisms     Json?    // string[]
+  openQuestions  Json?    // string[]
+  mainstreamView String?  @db.Text
+  region         String?
+  country        String?
+  dateStart      Int?
+  dateEnd        Int?
+  tags           Json?    // string[]
+
+  status      String   @default("pending") // pending | approved | rejected | needs_revision
+  reviewNotes String?  @db.Text
+  reviewedAt  DateTime?
+  submittedBy String?
+  reviewedBy  String?
+  submitter   User?    @relation("SubmittedNodes", fields: [submittedBy], references: [id], onDelete: SetNull)
+  reviewer    User?    @relation("ReviewedNodes", fields: [reviewedBy], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([submittedBy])
+  @@index([category])
+}
+
+model ProposedEdge {
+  id              String   @id @default(cuid())
+  fromNodeId      String   // id of source node (static or proposed)
+  toNodeId        String   // id of target node
+  relationship    String   // RelationshipType
+  description     String   @db.Text
+  evidenceLevel   String   @default("speculative")
+  confidence      Float    @default(0.5)
+  strengthScore   Float    @default(0.5)
+  explanation     String?  @db.Text
+  historicalBasis String?  @db.Text
+
+  status      String   @default("pending")
+  reviewNotes String?  @db.Text
+  reviewedAt  DateTime?
+  submittedBy String?
+  reviewedBy  String?
+  submitter   User?    @relation("SubmittedEdges", fields: [submittedBy], references: [id], onDelete: SetNull)
+  reviewer    User?    @relation("ReviewedEdges", fields: [reviewedBy], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([fromNodeId])
+  @@index([toNodeId])
+  @@index([submittedBy])
 }
