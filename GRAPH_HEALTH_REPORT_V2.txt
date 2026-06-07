@@ -1,0 +1,270 @@
+================================================================
+NEXUS ARCHIVE — GRAPH HEALTH REPORT v2
+================================================================
+
+1. OVERALL HEALTH
+-----------------
+Nodes:                21
+Edges:                58
+Graph density:        0.276  (58 / 210 possible)
+Average degree:       5.52
+Median degree:        5
+Degree range:         3 – 12
+Ghost refs resolved:  38 / 49  (78%)
+Remaining ghosts:     11 unique IDs
+Orphan nodes:         0
+Near-orphans (<=3):   1  (stoned-ape)
+Single-node clusters: 0
+
+
+2. COMPLETE REMAINING GHOST NODES
+----------------------------------
+All 11 have exactly 1 inbound reference.
+None resolve automatically — each requires a new node to be added.
+
+Ghost ID               Declared by          Category
+-----------------------------------------------------
+lemuria                atlantis             ancient civilizations
+egyptian-mysteries     atlantis             Egyptian mysteries
+quantum-concepts       simulation-theory    physics
+ai-singularity         simulation-theory    technology
+holographic-universe   simulation-theory    physics/philosophy
+orion-belt             great-pyramid        astronomy
+area-51                roswell              UFO/government
+elite-influence        secret-societies     power
+financial-systems      secret-societies     power
+ancient-religion       stoned-ape           religion/anthropology
+philosophy             stoned-ape           philosophy
+
+Pattern: All surviving ghosts are 1-reference dead ends. The
+4-reference and 2-reference ghosts were resolved in the previous
+pass. Each ghost added now yields exactly 1 resolved connection
+unless the new node's own connections span further.
+
+
+3. TOP 10 MOST CONNECTED NODES
+--------------------------------
+Rank  Node                  Degree   Cluster
+-----------------------------------------------------
+  1   ancient-astronaut        12    Bridge (all clusters)
+  2   anunnaki                  8    A — Ancient Biblical
+  3   gobekli-tepe              7    B — Ancient Sites
+  4   nephilim                  6    A — Ancient Biblical
+  5   flood-narratives          6    B — Ancient Sites
+  6   human-origins             6    C — Consciousness/Origins
+  7   atlantis                  5    B — Ancient Sites
+  8   simulation-theory         5    C — Consciousness/Origins
+  9   book-of-enoch             5    A — Ancient Biblical
+ 10   great-pyramid             5    B — Ancient Sites
+
+Note: Positions 7-10 are a 12-way tie at degree 5. Listed above
+are the 4 most structurally central within that tier. Others at
+degree 5: secret-societies, reptilian-theory, ancient-engineering,
+consciousness, uap-reports, watchers, lost-civilizations,
+government-disclosure.
+
+
+4. TOP 10 LEAST CONNECTED NODES
+---------------------------------
+Rank  Node                  Degree   Notes
+---------------------------------------------------------------------
+  1   stoned-ape               3    Near-orphan. Only edges inside
+                                    Cluster C. No path to Clusters
+                                    A, B, or D without routing through
+                                    simulation-theory or human-origins.
+
+  2   roswell                  4    Weakest node in Cluster D.
+                                    Only ghost (area-51) unresolved.
+                                    Zero connections to Clusters A or B.
+
+  3   global-power             4    Only 4 connections despite being a
+                                    declared category hub. No path to
+                                    Clusters A or B.
+
+  4   atlantis                 5    2 unresolved ghosts (lemuria,
+                                    egyptian-mysteries).
+
+  5   simulation-theory        5    3 unresolved ghosts (quantum-
+                                    concepts, ai-singularity,
+                                    holographic-universe).
+
+  6   book-of-enoch            5    Fully saturated — no unresolved
+                                    ghosts. Degree limited by design.
+
+  7   great-pyramid            5    1 unresolved ghost (orion-belt).
+                                    No incoming edges from Cluster D.
+
+  8   secret-societies         5    2 unresolved ghosts (elite-
+                                    influence, financial-systems).
+
+  9   reptilian-theory         5    No unresolved ghosts. Acts as
+                                    secondary bridge to Clusters A/C/D.
+
+ 10   ancient-engineering      5    No unresolved ghosts. Fully
+                                    internal to Cluster B.
+
+
+5. CLUSTER BREAKDOWN
+---------------------
+
+CLUSTER A — Ancient Biblical Entities
+  Nodes:   anunnaki, nephilim, book-of-enoch, watchers
+  Edges:   6 internal
+  Density: 1.0  — FULL CLIQUE (every node connected to every other)
+  Status:  Maximum internal cohesion. No structural gaps.
+
+CLUSTER B — Ancient Sites & Lost History
+  Nodes:   atlantis, gobekli-tepe, great-pyramid,
+           lost-civilizations, ancient-engineering, flood-narratives
+  Edges:   13 internal  (15 possible)
+  Density: 0.87
+  Missing: great-pyramid <-> flood-narratives  (1 gap)
+           flood-narratives <-> ancient-engineering  (1 gap)
+  Status:  Near-clique. Both missing edges have documented basis
+           (flood erosion cited in pyramid dating debate; flood as
+           mechanism of lost civilizations).
+
+CLUSTER C — Consciousness & Human Origins
+  Nodes:   simulation-theory, stoned-ape, consciousness, human-origins
+  Edges:   6 internal
+  Density: 1.0  — FULL CLIQUE
+  Status:  Maximum internal cohesion. However, stoned-ape has
+           degree 3 total — it has no edges outside this cluster.
+
+CLUSTER D — Modern UFO & Power
+  Nodes:   roswell, uap-reports, government-disclosure,
+           global-power, secret-societies
+  Edges:   9 internal  (10 possible)
+  Density: 0.90
+  Missing: roswell <-> global-power  (1 gap)
+  Status:  Near-clique. Roswell is the structurally weakest node.
+
+CROSS-CLUSTER BRIDGES
+  ancient-astronaut  degree 12 — only node with edges into ALL
+                               4 clusters. SINGLE POINT OF FAILURE.
+                               Removing it disconnects Cluster D
+                               from Clusters A and B entirely.
+  reptilian-theory   degree 5  — bridges A (anunnaki), C (simulation-
+                               theory), D (secret-societies, global-power).
+
+INTER-CLUSTER EDGE COUNT
+         A    B    C    D
+    A    —    4    3    0
+    B    4    —    1    0
+    C    3    1    —    0
+    D    0    0    0    —
+
+CRITICAL FINDING:
+  Clusters B and D share ZERO direct edges.
+  Clusters C and D share ZERO direct edges.
+  All cross-cluster traffic between D and the rest of the graph
+  routes through ancient-astronaut or reptilian-theory.
+  This is the most significant structural vulnerability in the graph.
+
+
+6. SUGGESTED NEXT 10 NODES — BY GRAPH STRUCTURE
+-------------------------------------------------
+Ranked by structural impact, not cultural relevance or popularity.
+
+Priority 1: ai-singularity
+  Resolves: simulation-theory ghost
+  Connects: simulation-theory, consciousness, global-power
+  Creates:  First direct C <-> D edge not routed through
+            ancient-astronaut. Breaks the cluster D isolation
+            from Cluster C.
+  Impact:   HIGH — closes the most critical inter-cluster gap.
+
+Priority 2: area-51
+  Resolves: roswell ghost
+  Connects: roswell, uap-reports, government-disclosure
+  Creates:  Raises roswell from degree 4 to 6. Fully connects
+            Cluster D to its own declared narrative.
+  Impact:   HIGH — eliminates the weakest node in Cluster D.
+
+Priority 3: sacred-geometry
+  Resolves: NEW node (not yet referenced anywhere)
+  Connects: great-pyramid, anunnaki, simulation-theory
+  Creates:  Direct B <-> A and B <-> C edges independent of
+            ancient-astronaut. First true structural bypass
+            of the single point of failure.
+  Basis:    Pi/Phi encoding in pyramids; Anunnaki-as-engineers
+            claim (Sitchin); mathematical universe hypothesis
+            (Tegmark). All three documented.
+  Impact:   HIGH — highest structural value of any new node.
+
+Priority 4: ancient-religion
+  Resolves: stoned-ape ghost
+  Connects: stoned-ape, gobekli-tepe, book-of-enoch
+  Creates:  First edge from stoned-ape into Cluster A and
+            Cluster B. Stoned-ape exits near-orphan status
+            and gains cross-cluster reach for the first time.
+  Impact:   HIGH — resolves the graph's worst isolated node.
+
+Priority 5: orion-belt
+  Resolves: great-pyramid ghost
+  Connects: great-pyramid, gobekli-tepe, anunnaki
+  Creates:  New A <-> B edge independent of flood-narratives.
+            Second independent bridge between Clusters A and B.
+  Basis:    Bauval Orion Correlation (documented); Orion/Osiris/
+            Anunnaki overlap in alternative research canon.
+  Impact:   MEDIUM-HIGH — adds redundancy to A <-> B path.
+
+Priority 6: quantum-concepts
+  Resolves: simulation-theory ghost
+  Connects: simulation-theory, consciousness, ancient-astronaut
+  Creates:  Adds depth to Cluster C. Gives simulation-theory
+            a non-clique external connection.
+  Impact:   MEDIUM — improves Cluster C reach, not inter-cluster.
+
+Priority 7: philosophy
+  Resolves: stoned-ape ghost
+  Connects: stoned-ape, consciousness, simulation-theory
+  Creates:  Stoned-ape reaches degree 5. Cluster C gains one
+            more reinforcing node without breaking clique density.
+  Impact:   MEDIUM — completes stoned-ape's recovery.
+
+Priority 8: classified-programs
+  Resolves: NEW node (not yet referenced)
+  Connects: secret-societies, government-disclosure,
+            great-pyramid (suppressed-finds narrative), roswell
+  Creates:  First indirect B <-> D bridge. Adds structural
+            redundancy to the B/D gap.
+  Basis:    FOIA-documented government archaeology suppression
+            claims; classified project histories.
+  Impact:   MEDIUM — builds first B <-> D pathway.
+
+Priority 9: genetic-modification
+  Resolves: NEW node (not yet referenced)
+  Connects: anunnaki, human-origins, nephilim, ancient-astronaut
+  Creates:  Denser A <-> C path. Second bridge between
+            Clusters A and C independent of simulation-theory.
+  Basis:    Anunnaki genetic engineering (Sitchin); Nephilim
+            hybrid offspring (Enoch); human genome anomaly
+            discourse (documented in mainstream genetics debate).
+  Impact:   MEDIUM — adds A <-> C redundancy.
+
+Priority 10: elite-influence
+  Resolves: secret-societies ghost
+  Connects: secret-societies, global-power, reptilian-theory
+  Creates:  Cluster D becomes a near-full clique. Reptilian-
+            theory gains a stronger Cluster D foothold.
+  Impact:   LOW-MEDIUM — internal Cluster D improvement only.
+
+
+STRUCTURAL SUMMARY — NEXT-PASS PROJECTED IMPACT
+-------------------------------------------------
+Gap                     Before    After (next 10)
+-------------------------------------------------
+B <-> D direct edges       0           2+
+C <-> D direct edges       0           1
+stoned-ape degree          3           6
+roswell degree             4           6
+Ghost IDs remaining       11           4
+Single point of failure   YES    Reduced (2 bypass routes added)
+
+Remaining ghosts after next pass (projected):
+  lemuria, egyptian-mysteries, holographic-universe, financial-systems
+
+================================================================
+END OF REPORT
+================================================================

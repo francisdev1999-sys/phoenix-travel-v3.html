@@ -83,12 +83,12 @@ export default function EvidenceBoard() {
           </h2>
           <p className="text-xs text-slate-500">Detective-style research board</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {theories.slice(0, 8).map(t => (
             <button
               key={t.id}
               onClick={() => { setSelectedTheory(t); setSelectedCard(null); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border"
+              className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border"
               style={{
                 borderColor: selectedTheory.id === t.id ? t.color + '80' : 'rgba(255,255,255,0.1)',
                 background: selectedTheory.id === t.id ? t.color + '25' : 'transparent',

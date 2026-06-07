@@ -1,0 +1,213 @@
+================================================================
+NEXUS ARCHIVE — KNOWLEDGE GRAPH AUDIT REPORT
+================================================================
+
+OVERVIEW
+--------
+Total nodes:                    11
+Total rendered edges:           12
+Total connection declarations:  55  (11 nodes × 5 each)
+Connections resolving to nodes: 17 / 55  (31%)
+Connections pointing to ghosts: 38 / 55  (69%)
+Average degree per node:        2.18
+
+NODES (11)
+----------
+atlantis, anunnaki, simulation-theory, book-of-enoch,
+great-pyramid, nephilim, roswell, secret-societies,
+gobekli-tepe, reptilian-theory, stoned-ape
+
+RENDERED EDGES (12)
+-------------------
+atlantis         <-> gobekli-tepe
+anunnaki         <-> nephilim
+anunnaki         <-> book-of-enoch
+anunnaki         <-> simulation-theory
+anunnaki         <-> reptilian-theory
+book-of-enoch    <-> nephilim
+great-pyramid     -> atlantis
+great-pyramid     -> gobekli-tepe
+roswell          <-> secret-societies
+reptilian-theory  -> secret-societies
+reptilian-theory  -> simulation-theory
+stoned-ape        -> simulation-theory
+
+DEGREE DISTRIBUTION
+-------------------
+anunnaki           4   (hub)
+simulation-theory  3   (secondary hub)
+reptilian-theory   3   (secondary hub)
+atlantis           2
+book-of-enoch      2
+great-pyramid      2
+nephilim           2
+secret-societies   2
+gobekli-tepe       2
+roswell            1   <- near-orphan
+stoned-ape         1   <- near-orphan
+
+ORPHAN NODES (degree 0)
+-----------------------
+None.
+
+NEAR-ORPHANS (degree 1)
+-----------------------
+roswell      — connected only to secret-societies.
+               No path to UFO cluster (uap-reports, area-51,
+               government-disclosure are all ghost nodes).
+stoned-ape   — connected only to simulation-theory.
+               Completely isolated from all other clusters.
+
+DUPLICATE NODES
+---------------
+None. All 11 IDs are unique.
+
+DUPLICATE RELATIONSHIPS
+-----------------------
+No duplicate rendered edges. However, 5 bidirectional pairs
+each consume 2 connection slots to express 1 undirected edge.
+The graph engine deduplicates automatically, making these
+10 declarations structurally redundant:
+
+  atlantis       <-> gobekli-tepe     (gobekli-tepe re-declares)
+  anunnaki       <-> nephilim         (nephilim re-declares)
+  anunnaki       <-> book-of-enoch    (book-of-enoch re-declares)
+  book-of-enoch  <-> nephilim         (nephilim re-declares)
+  roswell        <-> secret-societies  (secret-societies re-declares)
+
+Each wastes 1 of only 5 available connection slots per node.
+
+GHOST NODES — REFERENCED BUT NON-EXISTENT (21 unique)
+------------------------------------------------------
+Sorted by number of theories referencing them:
+
+  ancient-astronaut     — 4 refs: anunnaki, book-of-enoch,
+                                  roswell, reptilian-theory
+  ancient-engineering   — 4 refs: atlantis, great-pyramid,
+                                  nephilim, gobekli-tepe
+  flood-narratives      — 4 refs: atlantis, book-of-enoch,
+                                  nephilim, gobekli-tepe
+  human-origins         — 4 refs: anunnaki, simulation-theory,
+                                  gobekli-tepe, stoned-ape
+  consciousness         — 2 refs: simulation-theory, stoned-ape
+  lost-civilizations    — 2 refs: great-pyramid, gobekli-tepe
+  watchers              — 2 refs: book-of-enoch, nephilim
+  uap-reports           — 2 refs: roswell, secret-societies
+  government-disclosure — 2 refs: roswell, secret-societies
+  global-power          — 2 refs: secret-societies, reptilian-theory
+  lemuria               — 1 ref:  atlantis
+  egyptian-mysteries    — 1 ref:  atlantis
+  quantum-concepts      — 1 ref:  simulation-theory
+  ai-singularity        — 1 ref:  simulation-theory
+  holographic-universe  — 1 ref:  simulation-theory
+  orion-belt            — 1 ref:  great-pyramid
+  area-51               — 1 ref:  roswell
+  elite-influence       — 1 ref:  secret-societies
+  financial-systems     — 1 ref:  secret-societies
+  ancient-religion      — 1 ref:  stoned-ape
+  philosophy            — 1 ref:  stoned-ape
+
+CLUSTER ANALYSIS
+----------------
+STRONG — Ancient Biblical Entities
+  Nodes: anunnaki, nephilim, book-of-enoch
+  Internal edges: 3 (full triangle). Maximum density.
+
+MEDIUM — Ancient Sites
+  Nodes: atlantis, gobekli-tepe, great-pyramid
+  Internal edges: 3. But great-pyramid has ZERO incoming edges —
+  it cannot be reached by following graph connections.
+
+WEAK — Modern Conspiracy
+  Nodes: roswell, secret-societies, reptilian-theory
+  Internal edges: 2. Roswell is near-orphan. reptilian-theory
+  bridges to Ancient Biblical cluster but roswell cannot.
+
+ISOLATED PAIR — Consciousness / Philosophy
+  Nodes: simulation-theory, stoned-ape
+  simulation-theory is a PURE SINK: all 5 of its declared
+  connections are ghost nodes. Users who arrive here cannot
+  follow any connection onward.
+
+DECLARED CATEGORIES WITH ZERO NODES
+-------------------------------------
+  Global Power Structures     — 0 nodes
+  Religion And Ancient Texts  — 0 nodes
+
+MISSING HIGH-VALUE NODES (top priority)
+----------------------------------------
+Adding each of these immediately activates 4 broken connections:
+
+  1. ancient-astronaut     -> connects: anunnaki, book-of-enoch,
+                                        roswell, reptilian-theory
+  2. flood-narratives      -> connects: atlantis, book-of-enoch,
+                                        nephilim, gobekli-tepe
+  3. ancient-engineering   -> connects: atlantis, great-pyramid,
+                                        nephilim, gobekli-tepe
+  4. human-origins         -> connects: anunnaki, simulation-theory,
+                                        gobekli-tepe, stoned-ape
+  5. consciousness         -> connects: simulation-theory, stoned-ape
+  6. uap-reports           -> connects: roswell, secret-societies
+  7. watchers              -> connects: book-of-enoch, nephilim
+  8. lost-civilizations    -> connects: great-pyramid, gobekli-tepe
+  9. government-disclosure -> connects: roswell, secret-societies
+ 10. global-power          -> connects: secret-societies, reptilian-theory
+
+MISSING RELATIONSHIPS (between existing nodes)
+----------------------------------------------
+  great-pyramid    <-> anunnaki
+    Egyptian gods / Anunnaki overlap; pyramid-builder-as-deity
+
+  gobekli-tepe     <-> anunnaki
+    Pre-Sumerian Anunnaki presence; core alternative claim
+
+  roswell          <-> reptilian-theory
+    Both central to modern ET conspiracy; currently zero link
+
+  great-pyramid    <-> nephilim
+    Megaliths-as-Nephilim-built is widely referenced
+
+  roswell          <-> anunnaki
+    Both involve extraterrestrial contact theories
+
+  stoned-ape       <-> anunnaki
+    Both address human cognitive origin; competing explanations
+
+  secret-societies <-> great-pyramid
+    Freemasonry–pyramid symbolism is foundational
+
+  book-of-enoch    <-> gobekli-tepe
+    Pre-flood civilization overlap; Watcher sites
+
+  simulation-theory <-> atlantis
+    Simulated history as explanation for lost civilizations
+
+  great-pyramid    <-> simulation-theory
+    Mathematical precision cited as evidence of designed universe
+
+RECOMMENDATIONS (priority order)
+----------------------------------
+1. Add 4 nodes with 4 references each: ancient-astronaut,
+   flood-narratives, ancient-engineering, human-origins.
+   Zero wiring changes needed — connections already declared.
+
+2. Fix simulation-theory: all 5 connections are ghosts.
+   It is a navigation dead end.
+
+3. Fix near-orphans roswell and stoned-ape: add 2-3
+   connections each to existing nodes.
+
+4. Remove 5 bidirectional redundancies. Repurpose the 5 freed
+   connection slots for missing cross-cluster edges above.
+
+5. Add nodes for the 2 empty declared categories.
+
+6. Add uap-reports and government-disclosure nodes to give
+   roswell navigable neighbors.
+
+7. Add at least one incoming edge to great-pyramid so it is
+   discoverable through graph traversal, not only direct click.
+
+================================================================
+END OF REPORT
+================================================================
