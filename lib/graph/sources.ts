@@ -377,6 +377,15 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       credibility_score: 0.88,
       notes: 'Published in Before the Pharaohs: Egypt\'s Mysterious Prehistory (Scarre, ed.). Documents the "Green Sahara" period occupation.',
     },
+    {
+      id: 'src-np-5',
+      title: 'Holocene Settlement of the Egyptian Sahara, Volume 1: The Archaeology of Nabta Playa',
+      source_type: 'Archaeological Report',
+      author: 'Fred Wendorf, Romuald Schild (eds.)',
+      publication_year: 2001,
+      credibility_score: 0.93,
+      notes: 'Kluwer Academic / Plenum Publishers. The comprehensive final excavation monograph; definitive record of all fieldwork at Nabta Playa.',
+    },
   ],
 
   'ancient-megalithic-sites': [
@@ -683,6 +692,15 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       credibility_score: 0.87,
       notes: 'Hebrew University Jerusalem PhD dissertation. Comprehensive analysis of Watcher tradition in Second Temple literature.',
     },
+    {
+      id: 'src-wat-5',
+      title: 'The Book of Giants from Qumran: Texts, Translation and Commentary',
+      source_type: 'Book',
+      author: 'Loren T. Stuckenbruck',
+      publication_year: 1997,
+      credibility_score: 0.90,
+      notes: 'Mohr Siebeck (Texte und Studien zum antiken Judentum 63). Scholarly edition and analysis of the Book of Giants — the closest Qumran text to the Watchers narrative.',
+    },
   ],
 
   'nephilim': [
@@ -722,6 +740,15 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       publication_year: 1990,
       credibility_score: 0.85,
       notes: 'Appears in Numbers commentary (JPS Torah Commentary series). Contextualises the Nephilim in the spy narrative as rhetorical exaggeration.',
+    },
+    {
+      id: 'src-nep-5',
+      title: 'The Last of the Rephaim: Conquest and Cataclysm in the Heroic Ages of Ancient Israel',
+      source_type: 'Book',
+      author: 'Brian R. Doak',
+      publication_year: 2012,
+      credibility_score: 0.88,
+      notes: 'Harvard Semitic Studies 69, Eisenbrauns. Comprehensive scholarly treatment of the Rephaim and giant traditions in biblical and extrabiblical texts.',
     },
   ],
 
@@ -969,6 +996,16 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       credibility_score: 0.82,
       notes: 'Prometheus Books. Critical analysis of witness testimony and documentary evidence by a former Pentagon employee.',
     },
+    {
+      id: 'src-ros-5',
+      title: 'FBI Records: The Vault — Roswell UFO',
+      source_type: 'Government Document',
+      author: 'Federal Bureau of Investigation',
+      publication_year: 1947,
+      url: 'https://vault.fbi.gov/Roswell%20UFO',
+      credibility_score: 0.90,
+      notes: 'FBI declassified files on the Roswell incident, including the 1947 teletype to J. Edgar Hoover. Primary documentary record; publicly accessible via FBI Vault.',
+    },
   ],
 
   'pentagon-uap-reports': [
@@ -1063,6 +1100,15 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       credibility_score: 0.58,
       notes: 'Morrow. Includes documentation of Rendlesham. Represents pro-UFO perspective; includes some genuine declassified documents alongside interpretation.',
     },
+    {
+      id: 'src-rfm-5',
+      title: 'The UFO Files: The Inside Story of Real-Life Sightings',
+      source_type: 'Book',
+      author: 'David Clarke',
+      publication_year: 2009,
+      credibility_score: 0.80,
+      notes: 'The National Archives. By Sheffield Hallam University journalist and National Archives UFO consultant; draws on declassified MoD files including Rendlesham documentation.',
+    },
   ],
 
   'ancient-astronaut-hypothesis': [
@@ -1104,6 +1150,16 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       credibility_score: 0.87,
       link_type: 'contradicts',
       notes: '9th edition. Oxford University Press. Widely used introductory text in archaeology courses; dedicates chapters to AAH refutation.',
+    },
+    {
+      id: 'src-aah-5',
+      title: 'The Space-Gods Revealed: A Close Look at the Theories of Erich von Däniken',
+      source_type: 'Book',
+      author: 'Ronald Story',
+      publication_year: 1976,
+      credibility_score: 0.80,
+      link_type: 'contradicts',
+      notes: 'Harper & Row. One of the first systematic scholarly refutations of von Däniken\'s claims, site by site; important early critical response.',
     },
   ],
 
@@ -1249,6 +1305,15 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       credibility_score: 0.95,
       notes: 'Pantheon. Chapter on Denisovans provides accessible summary of ancient DNA evidence for their range and interbreeding history.',
     },
+    {
+      id: 'src-den-5',
+      title: 'Neanderthal Man: In Search of Lost Genomes',
+      source_type: 'Book',
+      author: 'Svante Pääbo',
+      publication_year: 2014,
+      credibility_score: 0.96,
+      notes: 'Basic Books. The autobiography of Denisovan research by the 2022 Nobel laureate in Physiology or Medicine; describes the discovery and sequencing process firsthand.',
+    },
   ],
 
   'stoned-ape-theory': [
@@ -1289,6 +1354,15 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       publication_year: 2008,
       credibility_score: 0.85,
       notes: 'In The Evolution of the Human Diet (Oxford). Reviews evidence for dietary (non-psychedelic) drivers of hominin brain expansion.',
+    },
+    {
+      id: 'src-sat-5',
+      title: 'Shamanism: A Biopsychosocial Paradigm of Consciousness and Healing',
+      source_type: 'Book',
+      author: 'Michael Winkelman',
+      publication_year: 2010,
+      credibility_score: 0.75,
+      notes: 'Praeger/ABC-CLIO (2nd ed.). Academic anthropological treatment of altered states of consciousness; discusses psychedelic use in ritual contexts without endorsing the Stoned Ape hypothesis.',
     },
   ],
 
@@ -1383,6 +1457,15 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       url: 'https://doi.org/10.1140/epja/i2014-14148-0',
       credibility_score: 0.80,
       notes: 'European Physical Journal A 50. Proposes a lattice structure test that could in principle detect a numerical simulation; found no compelling evidence.',
+    },
+    {
+      id: 'src-sim-5',
+      title: 'Calculating Space (Rechnender Raum)',
+      source_type: 'Academic Paper',
+      author: 'Konrad Zuse',
+      publication_year: 1969,
+      credibility_score: 0.78,
+      notes: 'Schriften zur Datenverarbeitung Band 1, Friedrich Vieweg & Sohn, Braunschweig. The founding paper of digital physics; proposes the universe is a computational process. MIT Technical Translation AZT-70-164-GEMIT (1970).',
     },
   ],
 
@@ -1479,6 +1562,16 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       link_type: 'contradicts',
       notes: 'Nature 440. Review arguing that quantum effects in the brain are unlikely to play a role in neural computation relevant to consciousness.',
     },
+    {
+      id: 'src-qc-5',
+      title: 'Consciousness in the Universe: A Review of the \'Orch OR\' Theory',
+      source_type: 'Academic Paper',
+      author: 'Stuart Hameroff, Roger Penrose',
+      publication_year: 2014,
+      url: 'https://doi.org/10.1016/j.plrev.2013.08.002',
+      credibility_score: 0.68,
+      notes: 'Physics of Life Reviews 11(1):39–78. Updated formal statement of Orchestrated Objective Reduction; responds to decoherence objections. Flagged: objections remain unresolved in mainstream neuroscience.',
+    },
   ],
 
   'collective-unconscious': [
@@ -1517,6 +1610,15 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       publication_year: 2005,
       credibility_score: 0.70,
       notes: 'Journal of Analytical Psychology 50(3). Evaluates Jungian archetypes in light of contemporary cognitive science and complex systems theory.',
+    },
+    {
+      id: 'src-cu-5',
+      title: 'The Hero with a Thousand Faces',
+      source_type: 'Book',
+      author: 'Joseph Campbell',
+      publication_year: 1949,
+      credibility_score: 0.82,
+      notes: 'Princeton University Press (Bollingen Series). Campbell\'s comparative mythology demonstrating cross-cultural hero narrative structures; the most influential popular application of Jung\'s collective unconscious concept.',
     },
   ],
 
@@ -1559,6 +1661,15 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       credibility_score: 0.90,
       notes: 'Oxford University Press. Documents the actual political and intellectual activities of Masonic lodges, distinguishing fact from myth.',
     },
+    {
+      id: 'src-fm-5',
+      title: 'The Constitutions of the Free-Masons',
+      source_type: 'Historical Text',
+      author: 'James Anderson',
+      publication_year: 1723,
+      credibility_score: 0.90,
+      notes: 'William Hunter for John Senex and John Hooke, London. The foundational document of English speculative Freemasonry; establishes the mythology of ancient origins while recording the 1717 Grand Lodge formation.',
+    },
   ],
 
   'rosicrucianism': [
@@ -1597,6 +1708,15 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       publication_year: 1614,
       credibility_score: 0.90,
       notes: 'Primary sources — the Rosicrucian manifestos. Digital editions available through the Bibliothèque nationale de France.',
+    },
+    {
+      id: 'src-roc-5',
+      title: 'Western Esotericism: A Guide for the Perplexed',
+      source_type: 'Book',
+      author: 'Wouter J. Hanegraaff',
+      publication_year: 2013,
+      credibility_score: 0.90,
+      notes: 'Bloomsbury Academic. The leading academic reference for Western esotericism; includes authoritative chapter on Rosicrucianism situating it within the broader esoteric tradition.',
     },
   ],
 
@@ -1637,6 +1757,15 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       credibility_score: 0.88,
       notes: 'SUNY Press. Scholarly essays tracing Hermetic traditions from late antiquity through the modern Western esoteric tradition.',
     },
+    {
+      id: 'src-herm-5',
+      title: 'Esotericism and the Academy: Rejected Knowledge in Western Culture',
+      source_type: 'Book',
+      author: 'Wouter J. Hanegraaff',
+      publication_year: 2012,
+      credibility_score: 0.92,
+      notes: 'Cambridge University Press. Traces why Hermetic and esoteric knowledge was systematically excluded from academic study; essential historiographical context for understanding the tradition.',
+    },
   ],
 
   'illuminati-history': [
@@ -1676,6 +1805,15 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       credibility_score: 0.87,
       notes: 'Primary historical sources — the original Illuminati writings seized by the Bavarian government in 1787. Reproduced in academic editions.',
     },
+    {
+      id: 'src-ill-5',
+      title: 'Critique and Crisis: Enlightenment and the Pathogenesis of Modern Society',
+      source_type: 'Book',
+      author: 'Reinhart Koselleck',
+      publication_year: 1988,
+      credibility_score: 0.88,
+      notes: 'MIT Press (originally Kritik und Krise, 1959). Influential scholarly work contextualising the Illuminati within Enlightenment political philosophy and the emergence of modern conspiracy thinking.',
+    },
   ],
 
   'mystery-schools': [
@@ -1714,6 +1852,15 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       publication_year: 1987,
       credibility_score: 0.90,
       notes: 'Harper & Row. Primary source collection for Eleusinian, Orphic, Pythagorean, Dionysian, Mithraic, and Isis mysteries.',
+    },
+    {
+      id: 'src-ms-5',
+      title: 'Mystery Cults of the Ancient World',
+      source_type: 'Book',
+      author: 'Hugh Bowden',
+      publication_year: 2010,
+      credibility_score: 0.90,
+      notes: 'Princeton University Press. Scholarly overview drawing on archaeological evidence, literary sources, and material culture; covers Eleusis, Dionysus, Mithras, and Isis cults.',
     },
   ],
 
@@ -1862,6 +2009,16 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       credibility_score: 0.88,
       notes: 'Earth-Science Reviews 99. Systematic critical analysis of the impact markers; identifies multiple methodological concerns.',
     },
+    {
+      id: 'src-ydi-5',
+      title: 'Bayesian chronological analyses consistent with synchronous age of 12,835–12,735 Cal B.P. for Younger Dryas boundary on four continents',
+      source_type: 'Academic Paper',
+      author: 'James P. Kennett, Brendan J. Culleton, D.J. Kennett, et al.',
+      publication_year: 2015,
+      url: 'https://doi.org/10.1073/pnas.1507213112',
+      credibility_score: 0.80,
+      notes: 'PNAS 112(32). Bayesian modelling of radiocarbon dates at YDB sites on four continents; supports synchronous boundary. One of the stronger positive replications of the impact hypothesis.',
+    },
   ],
 
   'silk-road': [
@@ -1952,6 +2109,15 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       publication_year: 2012,
       credibility_score: 0.88,
       notes: 'Oxford University Press. Traces giant and cosmic being traditions across world mythological systems.',
+    },
+    {
+      id: 'src-gat-5',
+      title: 'Giants in Those Days: Folklore, Ancient History, and Nationalism',
+      source_type: 'Book',
+      author: 'Walter Stephens',
+      publication_year: 1989,
+      credibility_score: 0.85,
+      notes: 'University of Nebraska Press. Scholarly study of how giant traditions from biblical and classical sources were used to construct early modern national mythologies.',
     },
   ],
 
