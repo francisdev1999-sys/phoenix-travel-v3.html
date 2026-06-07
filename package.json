@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "start": "next start",
+    "start": "prisma migrate deploy && next start",
     "lint": "eslint",
     "postinstall": "prisma generate"
   },
@@ -29,6 +29,9 @@
     "react-dom": "19.2.4",
     "three": "^0.184.0",
     "zustand": "^5.0.14"
+  },
+  "engines": {
+    "node": ">=18.18.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
