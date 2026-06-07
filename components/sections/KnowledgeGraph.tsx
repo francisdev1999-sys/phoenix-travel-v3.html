@@ -27,11 +27,17 @@ export default function KnowledgeGraph() {
   const pinchDistRef = useRef<number>(0);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const selectedNodeRef = useRef<GraphNode | null>(null);
+  const hoveredIdRef = useRef<string | null>(null);
   const { exploreTheory, discoverConnection } = useUserStore();
 
   // Live graph data: static base + approved DB proposals
   const graphNodesRef = useRef<GraphNode[]>(staticNodes);
   const graphEdgesRef = useRef<GraphEdge[]>(staticEdges);
+
+  // Keep refs in sync so draw() reads current values without reinitializing canvas
+  useEffect(() => { selectedNodeRef.current = selectedNode; }, [selectedNode]);
+  useEffect(() => { hoveredIdRef.current = hoveredId; }, [hoveredId]);
 
   // Merge approved DB proposals on mount (non-blocking)
   useEffect(() => {
@@ -46,13 +52,12 @@ export default function KnowledgeGraph() {
         if (newNodes.length === 0 && newEdges.length === 0) return;
         graphNodesRef.current = [...staticNodes, ...newNodes];
         graphEdgesRef.current = [...staticEdges, ...newEdges];
-        // Re-init layout to include the new nodes
         const canvas = canvasRef.current;
         if (canvas) initGraph(canvas.width, canvas.height);
       })
       .catch(() => {/* silently ignore — graph still works from static data */});
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [];
 
   const initGraph = useCallback((w: number, h: number) => {
     const nodes = graphNodesRef.current;
@@ -155,6 +160,8 @@ export default function KnowledgeGraph() {
 
     const draw = () => {
       time += 0.02;
+      const selectedN = selectedNodeRef.current;
+      const hId = hoveredIdRef.current;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const { x: tx, y: ty, scale } = transformRef.current;
@@ -168,10 +175,10 @@ export default function KnowledgeGraph() {
         const tgt = getVNode(edge.to);
         if (!src || !tgt) return;
 
-        const srcSelected = src.id === selectedNode?.id;
-        const tgtSelected = tgt.id === selectedNode?.id;
+        const srcSelected = src.id === selectedN?.id;
+        const tgtSelected = tgt.id === selectedN?.id;
         const isHighlighted = srcSelected || tgtSelected;
-        const isHovered = src.id === hoveredId || tgt.id === hoveredId;
+        const isHovered = src.id === hId || tgt.id === hId;
 
         const alpha = isHighlighted ? 0.7 : isHovered ? 0.45 : 0.1;
         const srcColor = src.node.color ?? CATEGORY_COLORS[src.node.category] ?? '#7c3aed';
@@ -202,8 +209,8 @@ export default function KnowledgeGraph() {
 
       // Draw nodes
       nodesRef.current.forEach(vn => {
-        const isSelected = vn.id === selectedNode?.id;
-        const isHovered = vn.id === hoveredId;
+        const isSelected = vn.id === selectedN?.id;
+        const isHovered = vn.id === hId;
         const pulse = Math.sin(time * 2 + vn.pulsePhase) * 0.3 + 0.7;
         const r = vn.radius * (isSelected ? 1.35 : isHovered ? 1.18 : 1);
         const nodeColor = vn.node.color ?? CATEGORY_COLORS[vn.node.category] ?? '#7c3aed';
@@ -275,7 +282,7 @@ export default function KnowledgeGraph() {
       resizeObs.disconnect();
       cancelAnimationFrame(frameRef.current);
     };
-  }, [selectedNode, hoveredId, initGraph]);
+  }, [initGraph]);
 
   const getCanvasPos = (clientX: number, clientY: number) => {
     const canvas = canvasRef.current!;

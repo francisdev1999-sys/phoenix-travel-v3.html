@@ -161,7 +161,7 @@ function Scene({ onSelect }: { onSelect: (t: Theory) => void }) {
 
 export default function UniverseView() {
   const [selectedTheory, setSelectedTheory] = useState<Theory | null>(null);
-  const { exploreTheory } = useUserStore();
+  const { exploreTheory, setCurrentView } = useUserStore();
 
   const handleSelect = (theory: Theory) => {
     setSelectedTheory(theory);
@@ -197,25 +197,31 @@ export default function UniverseView() {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 glass rounded-2xl p-4 max-w-md w-full mx-4"
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 glass rounded-2xl p-4 max-w-lg w-[calc(100%-2rem)]"
           >
             <div className="flex items-start gap-3">
-              <span className="text-3xl">{selectedTheory.icon}</span>
-              <div className="flex-1">
+              <span className="text-3xl flex-shrink-0">{selectedTheory.icon}</span>
+              <div className="flex-1 min-w-0">
                 <div className="text-xs text-purple-400/70 uppercase tracking-widest">{selectedTheory.category}</div>
                 <h3 className="text-base font-bold text-white">{selectedTheory.title}</h3>
-                <p className="text-xs text-slate-400 mt-1 line-clamp-2">{selectedTheory.overview}</p>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">{selectedTheory.overview}</p>
                 <div className="flex flex-wrap gap-1 mt-2">
-                  {selectedTheory.tags.slice(0, 3).map(tag => (
+                  {selectedTheory.tags.slice(0, 4).map(tag => (
                     <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-purple-900/30 text-purple-400">
                       {tag}
                     </span>
                   ))}
                 </div>
+                <button
+                  onClick={() => { exploreTheory(selectedTheory.id); setCurrentView('graph'); }}
+                  className="mt-3 w-full py-2 rounded-xl bg-purple-700 hover:bg-purple-600 text-white text-xs font-bold transition-colors"
+                >
+                  Open Full Theory →
+                </button>
               </div>
               <button
                 onClick={() => setSelectedTheory(null)}
-                className="text-slate-500 hover:text-white text-xs"
+                className="text-slate-500 hover:text-white text-sm flex-shrink-0"
               >
                 ✕
               </button>
