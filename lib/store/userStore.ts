@@ -135,7 +135,7 @@ export const useUserStore = create<UserStore>()(
       setSearchQuery: (query) => set({ searchQuery: query }),
 
       startRabbitHole: (theoryId: string) => {
-        set({ rabbitHoleChain: [theoryId] });
+        set({ rabbitHoleChain: [theoryId], rabbitHoleNodeId: theoryId });
         get().exploreTheory(theoryId);
       },
 

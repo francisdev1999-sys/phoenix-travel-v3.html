@@ -24,17 +24,35 @@ const TABS: { id: Tab; label: string; icon: React.ElementType<any> }[] = [
   { id: 'sources', label: 'Sources', icon: ExternalLink },
 ];
 
+// Maps lib/data/theories.ts IDs → lib/graph/sources.ts (NODE_SOURCES) IDs
+const THEORY_TO_NODE: Record<string, string> = {
+  'simulation-theory':    'simulation-hypothesis',
+  'roswell':              'roswell-incident',
+  'stoned-ape':           'stoned-ape-theory',
+  'ancient-astronaut':    'ancient-astronaut-hypothesis',
+  'uap-reports':          'pentagon-uap-reports',
+  'human-origins':        'human-evolution',
+  'consciousness':        'hard-problem-consciousness',
+  'secret-societies':     'mystery-schools',
+  'ancient-engineering':  'pyramid-construction-debate',
+  'government-disclosure':'roswell-incident',
+  'global-power':         'illuminati-history',
+  'lost-civilizations':   'younger-dryas',
+};
+
 export default function TheoryPanel({ theory, onClose }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [expandedEvidence, setExpandedEvidence] = useState<number | null>(null);
   const { startRabbitHole, setCurrentView } = useUserStore();
+
+  const graphNodeId = THEORY_TO_NODE[theory.id] ?? theory.id;
 
   const relatedTheories = theories.filter(t =>
     theory.connections.includes(t.id) || theory.relatedTopics.includes(t.id)
   ).slice(0, 5);
 
   const handleRabbitHole = () => {
-    startRabbitHole(theory.id);
+    startRabbitHole(graphNodeId);
     setCurrentView('graph');
   };
 
@@ -230,7 +248,7 @@ export default function TheoryPanel({ theory, onClose }: Props) {
             )}
 
             {activeTab === 'sources' && (() => {
-              const graphSources = NODE_SOURCES[theory.id];
+              const graphSources = NODE_SOURCES[graphNodeId];
               const hasSources = graphSources && graphSources.length > 0;
               return (
                 <div className="space-y-3">
