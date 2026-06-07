@@ -23,31 +23,182 @@ const COLORS: Record<string, string> = {
   ancient_city: '#38bdf8',
 };
 
+const CONTINENT_LABELS = [
+  { name: 'NORTH AMERICA', lat: 48, lon: -100 },
+  { name: 'SOUTH AMERICA', lat: -18, lon: -57 },
+  { name: 'EUROPE', lat: 54, lon: 13 },
+  { name: 'AFRICA', lat: 5, lon: 23 },
+  { name: 'ASIA', lat: 52, lon: 88 },
+  { name: 'AUSTRALIA', lat: -26, lon: 133 },
+  { name: 'ANTARCTICA', lat: -80, lon: 0 },
+];
+
+function createEarthTexture(): THREE.CanvasTexture {
+  const W = 2048, H = 1024;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d')!;
+
+  // lat/lon → canvas pixel (equirectangular)
+  const px = (lat: number, lon: number): [number, number] => [
+    (lon + 180) / 360 * W,
+    (90 - lat) / 180 * H,
+  ];
+
+  const drawPoly = (pts: [number, number][]) => {
+    ctx.beginPath();
+    const [x0, y0] = px(pts[0][0], pts[0][1]);
+    ctx.moveTo(x0, y0);
+    for (let i = 1; i < pts.length; i++) {
+      const [x, y] = px(pts[i][0], pts[i][1]);
+      ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+  };
+
+  // Deep ocean background
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#040f1c');
+  grad.addColorStop(0.45, '#061a2e');
+  grad.addColorStop(0.55, '#061a2e');
+  grad.addColorStop(1, '#040f1c');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Land masses
+  ctx.fillStyle = '#1e4a1a';
+
+  // North America
+  drawPoly([[72,-168],[72,-95],[65,-64],[47,-53],[44,-66],[35,-76],
+    [25,-81],[20,-87],[9,-79],[10,-84],[22,-106],[30,-112],
+    [32,-117],[40,-124],[48,-124],[58,-136],[60,-141],[65,-168]]);
+
+  // Greenland
+  drawPoly([[83,-68],[83,-18],[60,-44],[60,-50],[75,-68]]);
+
+  // Iceland
+  drawPoly([[66,-24],[66,-13],[63,-13],[63,-24]]);
+
+  // Cuba / Caribbean (tiny)
+  drawPoly([[23,-85],[23,-74],[20,-74],[20,-85]]);
+
+  // South America
+  drawPoly([[12,-72],[12,-61],[8,-60],[5,-52],[0,-50],
+    [-5,-35],[-15,-39],[-22,-41],[-34,-53],[-40,-62],
+    [-56,-68],[-55,-67],[-40,-70],[-18,-70],[-5,-81],[0,-78],[8,-77]]);
+
+  // Europe
+  drawPoly([[71,28],[70,32],[65,28],[60,25],[57,22],[55,15],[55,8],
+    [51,2],[48,-5],[43,-9],[36,-9],[36,5],[37,11],[38,16],
+    [40,18],[42,20],[45,14],[47,20],[49,22],[54,18],
+    [57,22],[60,25],[65,25],[70,32]]);
+
+  // Great Britain
+  drawPoly([[58,-5],[58,2],[51,2],[50,-5],[55,-6]]);
+
+  // Ireland
+  drawPoly([[55,-10],[55,-6],[51,-6],[51,-10]]);
+
+  // Scandinavia
+  drawPoly([[71,15],[70,30],[63,28],[57,6],[57,8],[60,12],[65,14],[68,20],[71,28]]);
+
+  // Africa
+  drawPoly([[37,-6],[37,14],[31,33],[22,38],[15,42],[12,44],[11,43],
+    [8,44],[2,42],[-8,40],[-15,37],[-26,33],[-35,22],[-35,18],
+    [-26,14],[-18,12],[-5,10],[5,2],[4,-9],[8,-15],[15,-17],[21,-17],[32,-14]]);
+
+  // Madagascar
+  drawPoly([[-12,44],[-12,50],[-26,47],[-26,44]]);
+
+  // Main Asia body
+  drawPoly([[71,30],[72,60],[73,100],[72,130],[68,140],[62,142],
+    [55,135],[42,130],[38,128],[35,127],[22,115],[5,100],[1,104],
+    [15,120],[22,120],[25,122],[32,122],[37,122],[45,133],
+    [50,142],[55,140],[62,163],[68,172],[72,140],[73,100],[72,60]]);
+
+  // Arabian Peninsula
+  drawPoly([[30,32],[30,60],[12,45],[12,44],[15,42],[22,38]]);
+
+  // India
+  drawPoly([[22,68],[8,78],[8,80],[22,88]]);
+
+  // Sri Lanka
+  drawPoly([[10,80],[6,80],[7,82],[10,80]]);
+
+  // Indochina / SE Asia
+  drawPoly([[22,100],[22,108],[14,102],[10,104],[1,104],[5,100]]);
+
+  // Borneo
+  drawPoly([[7,108],[7,117],[1,117],[1,108]]);
+
+  // Sumatra
+  drawPoly([[5,95],[5,106],[-6,106],[-6,95]]);
+
+  // Java
+  drawPoly([[-6,105],[-6,114],[-9,114],[-9,105]]);
+
+  // Philippines (rough)
+  drawPoly([[18,120],[18,122],[10,122],[8,124],[10,125],[18,120]]);
+
+  // Japan (Honshu + Kyushu rough)
+  drawPoly([[42,141],[45,141],[43,145],[38,141],[33,131],[34,130],[42,141]]);
+
+  // New Guinea
+  drawPoly([[-2,132],[-2,150],[-8,148],[-8,132]]);
+
+  // Australia
+  drawPoly([[-14,130],[-14,136],[-14,140],[-24,154],
+    [-38,147],[-39,144],[-38,140],[-32,134],
+    [-26,114],[-22,114],[-16,122],[-14,128]]);
+
+  // New Zealand (South)
+  drawPoly([[-40,172],[-47,168],[-46,171],[-40,172]]);
+  // New Zealand (North)
+  drawPoly([[-36,174],[-41,174],[-38,178],[-34,173]]);
+
+  // Polar ice caps
+  ctx.fillStyle = '#b8d8f0';
+  // Arctic
+  drawPoly([[90,-180],[90,180],[72,180],[70,0],[72,-180]]);
+  // Antarctica
+  drawPoly([[-68,-180],[-68,180],[-90,180],[-90,-180]]);
+
+  // Antarctica jagged edge blending with land
+  ctx.fillStyle = '#d0e8f8';
+  drawPoly([[-74,-180],[-74,180],[-90,180],[-90,-180]]);
+
+  // Very subtle ocean depth variation
+  ctx.fillStyle = 'rgba(10,40,80,0.2)';
+  ctx.fillRect(0, H * 0.45, W, H * 0.1);
+
+  return new THREE.CanvasTexture(canvas);
+}
+
 function GlobeGrid() {
   const lines = useMemo(() => {
+    const GRID_R = R + 0.012; // slightly above sphere surface
     const result: THREE.Line[] = [];
-    const gridMat = new THREE.LineBasicMaterial({ color: '#2a5298', transparent: true, opacity: 0.55 });
-    const equatorMat = new THREE.LineBasicMaterial({ color: '#4a8fff', transparent: true, opacity: 0.9 });
-    const primeMat = new THREE.LineBasicMaterial({ color: '#4a8fff', transparent: true, opacity: 0.9 });
+    const gridMat = new THREE.LineBasicMaterial({ color: '#3060a8', transparent: true, opacity: 0.3 });
+    const equatorMat = new THREE.LineBasicMaterial({ color: '#5080d0', transparent: true, opacity: 0.6 });
+    const primeMat = new THREE.LineBasicMaterial({ color: '#5080d0', transparent: true, opacity: 0.6 });
 
-    // Latitude lines
     [-60, -45, -30, -15, 0, 15, 30, 45, 60].forEach(lat => {
       const pts: THREE.Vector3[] = [];
       const φ = (lat * Math.PI) / 180;
       for (let i = 0; i <= 128; i++) {
         const λ = ((i / 128) * 2 - 1) * Math.PI;
-        pts.push(new THREE.Vector3(R * Math.cos(φ) * Math.cos(λ), R * Math.sin(φ), R * Math.cos(φ) * Math.sin(λ)));
+        pts.push(new THREE.Vector3(GRID_R * Math.cos(φ) * Math.cos(λ), GRID_R * Math.sin(φ), GRID_R * Math.cos(φ) * Math.sin(λ)));
       }
       result.push(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lat === 0 ? equatorMat : gridMat));
     });
 
-    // Longitude lines
     [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180].forEach(lon => {
       const pts: THREE.Vector3[] = [];
       const λ = (lon * Math.PI) / 180;
       for (let i = 0; i <= 64; i++) {
         const φ = ((i / 64) - 0.5) * Math.PI;
-        pts.push(new THREE.Vector3(R * Math.cos(φ) * Math.cos(λ), R * Math.sin(φ), R * Math.cos(φ) * Math.sin(λ)));
+        pts.push(new THREE.Vector3(GRID_R * Math.cos(φ) * Math.cos(λ), GRID_R * Math.sin(φ), GRID_R * Math.cos(φ) * Math.sin(λ)));
       }
       result.push(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lon === 0 ? primeMat : gridMat));
     });
@@ -58,10 +209,39 @@ function GlobeGrid() {
   return <>{lines.map((line, i) => <primitive key={i} object={line} />)}</>;
 }
 
+function ContinentLabels() {
+  return (
+    <>
+      {CONTINENT_LABELS.map(({ name, lat, lon }) => {
+        const pos = latLonToXYZ(lat, lon, R + 0.08);
+        return (
+          <group key={name} position={pos}>
+            <Html center distanceFactor={9} style={{ pointerEvents: 'none' }}>
+              <div style={{
+                fontSize: 7,
+                fontFamily: 'monospace',
+                fontWeight: 'bold',
+                letterSpacing: '0.18em',
+                color: 'rgba(160, 200, 255, 0.55)',
+                whiteSpace: 'nowrap',
+                userSelect: 'none',
+                textTransform: 'uppercase',
+                textShadow: '0 0 8px rgba(80,140,255,0.5)',
+              }}>
+                {name}
+              </div>
+            </Html>
+          </group>
+        );
+      })}
+    </>
+  );
+}
+
 function SiteMarker({ site, onSelect }: { site: AncientSite; onSelect: (s: AncientSite) => void }) {
   const [hovered, setHovered] = useState(false);
   const dotRef = useRef<THREE.Mesh>(null);
-  const pos = latLonToXYZ(site.coordinates[0], site.coordinates[1], R + 0.08);
+  const pos = latLonToXYZ(site.coordinates[0], site.coordinates[1], R + 0.1);
   const color = new THREE.Color(COLORS[site.type] || '#ffffff');
   const colorHex = COLORS[site.type] || '#ffffff';
 
@@ -69,7 +249,7 @@ function SiteMarker({ site, onSelect }: { site: AncientSite; onSelect: (s: Ancie
     if (!dotRef.current) return;
     const pulse = Math.sin(clock.elapsedTime * 2.5 + site.id.length) * 0.18 + 1;
     dotRef.current.scale.setScalar(hovered ? pulse * 2.8 : pulse);
-    (dotRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity = hovered ? 4 : 2;
+    (dotRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity = hovered ? 4 : 2.5;
   });
 
   return (
@@ -80,8 +260,8 @@ function SiteMarker({ site, onSelect }: { site: AncientSite; onSelect: (s: Ancie
         onPointerOver={() => { setHovered(true); document.body.style.cursor = 'pointer'; }}
         onPointerOut={() => { setHovered(false); document.body.style.cursor = 'default'; }}
       >
-        <sphereGeometry args={[0.12, 14, 14]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={2} />
+        <sphereGeometry args={[0.11, 14, 14]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={2.5} />
       </mesh>
 
       <Html center distanceFactor={8} style={{ pointerEvents: 'none' }}>
@@ -103,13 +283,14 @@ function SiteMarker({ site, onSelect }: { site: AncientSite; onSelect: (s: Ancie
         </div>
       </Html>
 
-      <pointLight color={color} intensity={hovered ? 2 : 1} distance={1.2} />
+      <pointLight color={color} intensity={hovered ? 2 : 0.8} distance={1.2} />
     </group>
   );
 }
 
 function RotatingGlobe({ filteredSites, onSelect }: { filteredSites: AncientSite[]; onSelect: (s: AncientSite) => void }) {
   const groupRef = useRef<THREE.Group>(null);
+  const earthTexture = useMemo(() => createEarthTexture(), []);
 
   useFrame(() => {
     if (groupRef.current) groupRef.current.rotation.y += 0.0018;
@@ -117,28 +298,31 @@ function RotatingGlobe({ filteredSites, onSelect }: { filteredSites: AncientSite
 
   return (
     <group ref={groupRef}>
-      {/* Solid globe */}
+      {/* Earth-textured globe */}
       <mesh>
         <sphereGeometry args={[R, 64, 64]} />
-        <meshStandardMaterial color="#081830" metalness={0.2} roughness={0.8} />
+        <meshStandardMaterial map={earthTexture} metalness={0.05} roughness={0.88} />
       </mesh>
 
-      {/* Lat/lon grid — rotates with globe */}
+      {/* Lat/lon grid */}
       <GlobeGrid />
+
+      {/* Continent name labels */}
+      <ContinentLabels />
 
       {/* Outer atmosphere */}
       <mesh>
         <sphereGeometry args={[R * 1.06, 32, 32]} />
-        <meshBasicMaterial color="#1e40af" transparent opacity={0.10} side={THREE.BackSide} />
+        <meshBasicMaterial color="#1e40af" transparent opacity={0.09} side={THREE.BackSide} />
       </mesh>
 
       {/* Inner rim glow */}
       <mesh>
         <sphereGeometry args={[R * 1.02, 32, 32]} />
-        <meshBasicMaterial color="#3b82f6" transparent opacity={0.05} side={THREE.BackSide} />
+        <meshBasicMaterial color="#3b82f6" transparent opacity={0.04} side={THREE.BackSide} />
       </mesh>
 
-      {/* Markers — rotate with globe so they stay on correct lat/lon */}
+      {/* Site markers */}
       {filteredSites.map(site => (
         <SiteMarker key={site.id} site={site} onSelect={onSelect} />
       ))}
@@ -187,10 +371,10 @@ export default function AncientGlobe() {
         <Canvas camera={{ position: [0, 2, 7.5], fov: 48 }}>
           <color attach="background" args={['#00000a']} />
 
-          <ambientLight intensity={0.7} />
-          <directionalLight position={[8, 5, 5]} intensity={1.5} color="#6080ff" />
-          <directionalLight position={[-5, -3, -5]} intensity={0.4} color="#3030aa" />
-          <pointLight position={[0, 8, 0]} intensity={0.6} color="#ffffff" />
+          <ambientLight intensity={0.8} />
+          <directionalLight position={[8, 5, 5]} intensity={1.4} color="#7090e0" />
+          <directionalLight position={[-5, -3, -5]} intensity={0.4} color="#3040aa" />
+          <pointLight position={[0, 8, 0]} intensity={0.5} color="#ffffff" />
           <pointLight position={[0, -8, 0]} intensity={0.2} color="#3060ff" />
 
           <RotatingGlobe filteredSites={filteredSites} onSelect={setSelectedSite} />
