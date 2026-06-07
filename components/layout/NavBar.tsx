@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Globe, BarChart3, Clock, MapPin, Grid3X3, User, Volume2, VolumeX, Menu, X, LogIn, LogOut } from 'lucide-react';
+import { Search, Globe, BarChart3, Clock, MapPin, Grid3X3, User, Volume2, VolumeX, Menu, X, LogIn, LogOut, Activity } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import { useSession, signIn, signOut } from 'next-auth/react';
 
@@ -12,6 +12,7 @@ const navItems = [
   { id: 'globe', label: 'Ancient Sites', icon: MapPin },
   { id: 'evidence-board', label: 'Evidence Board', icon: BarChart3 },
   { id: 'dashboard', label: 'Dashboard', icon: User },
+  { id: 'diagnostics', label: 'Diagnostics', icon: Activity },
 ];
 
 export default function NavBar() {
