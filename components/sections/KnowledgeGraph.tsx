@@ -57,7 +57,7 @@ export default function KnowledgeGraph() {
       })
       .catch(() => {/* silently ignore — graph still works from static data */});
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [];
+  }, []);
 
   const initGraph = useCallback((w: number, h: number) => {
     const nodes = graphNodesRef.current;
