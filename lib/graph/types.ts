@@ -50,6 +50,7 @@ export interface ResearchSource {
   url?: string;
   credibility_score: number; // 0–1
   notes?: string;
+  link_type?: 'supports' | 'contradicts' | 'references';
 }
 
 export interface GraphNode {

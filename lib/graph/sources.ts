@@ -96,6 +96,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       author: 'Pierre Vidal-Naquet',
       publication_year: 2007,
       credibility_score: 0.88,
+      link_type: 'contradicts',
       notes: 'University of Exeter Press. Leading classical scholar\'s comprehensive argument for the literary allegory interpretation.',
     },
     {
@@ -105,6 +106,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       author: 'Christopher Gill',
       publication_year: 1977,
       credibility_score: 0.88,
+      link_type: 'contradicts',
       notes: 'Trivium 11. Argues Plato invented Atlantis as a philosophical device; widely cited in classical scholarship.',
     },
     {
@@ -503,6 +505,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       author: 'K. Lal Gauri, John J. Sinai, Jayanta K. Bandyopadhyay',
       publication_year: 1995,
       credibility_score: 0.87,
+      link_type: 'contradicts',
       notes: 'Geoarchaeology 10(2). Counter-argument to Schoch; attributes Sphinx enclosure erosion to salt weathering and wind rather than water.',
     },
     {
@@ -934,6 +937,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       author: 'Richard L. Weaver, James McAndrew',
       publication_year: 1994,
       credibility_score: 0.88,
+      link_type: 'contradicts',
       notes: 'U.S. Air Force. Official government investigation concluding the debris was from Project Mogul; contains primary documentary evidence.',
     },
     {
@@ -944,6 +948,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       publication_year: 1997,
       url: 'https://media.defense.gov/2010/Oct/27/2001329594/-1/-1/0/AFD-101027-030.pdf',
       credibility_score: 0.88,
+      link_type: 'contradicts',
       notes: 'U.S. Air Force. Second official report addressing witness descriptions of bodies, attributing them to test dummies.',
     },
     {
@@ -1046,6 +1051,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       publication_year: 2021,
       url: 'https://www.ianridpath.com/ufo/rendlesham.htm',
       credibility_score: 0.75,
+      link_type: 'contradicts',
       notes: 'Comprehensive skeptical analysis by astronomer Ian Ridpath; identifies the Orfordness lighthouse as the primary stimulus.',
     },
     {
@@ -1067,6 +1073,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       author: 'Kenneth L. Feder',
       publication_year: 2010,
       credibility_score: 0.87,
+      link_type: 'contradicts',
       notes: 'Greenwood Press. Systematic scholarly refutation of ancient astronaut and pseudoarchaeology claims by a professional archaeologist.',
     },
     {
@@ -1076,6 +1083,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       author: 'Ronald H. Fritze',
       publication_year: 2009,
       credibility_score: 0.85,
+      link_type: 'contradicts',
       notes: 'Reaktion Books. Contextualises ancient astronaut hypothesis within broader history of pseudoscience and alternative history.',
     },
     {
@@ -1094,6 +1102,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       author: 'Kenneth L. Feder',
       publication_year: 2018,
       credibility_score: 0.87,
+      link_type: 'contradicts',
       notes: '9th edition. Oxford University Press. Widely used introductory text in archaeology courses; dedicates chapters to AAH refutation.',
     },
   ],
@@ -1269,6 +1278,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       author: 'Chris Stringer',
       publication_year: 2012,
       credibility_score: 0.93,
+      link_type: 'contradicts',
       notes: 'Times Books. Mainstream account of human cognitive evolution; provides context against which to evaluate McKenna\'s claims.',
     },
     {
@@ -1352,6 +1362,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       author: 'Max Tegmark',
       publication_year: 2014,
       credibility_score: 0.80,
+      link_type: 'contradicts',
       notes: 'Knopf. Physicist\'s argument for the Mathematical Universe Hypothesis; adjacent to simulation arguments. Speculative but by a credentialled physicist.',
     },
     {
@@ -1402,6 +1413,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       author: 'Daniel C. Dennett',
       publication_year: 1991,
       credibility_score: 0.87,
+      link_type: 'contradicts',
       notes: 'Little, Brown. The major materialist counterargument; Dennett denies qualia as popularly conceived. Key text in the debate.',
     },
     {
@@ -1453,6 +1465,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       publication_year: 2000,
       url: 'https://doi.org/10.1103/PhysRevE.61.4194',
       credibility_score: 0.90,
+      link_type: 'contradicts',
       notes: 'Physical Review E 61. Calculates that decoherence times in the brain are ~10^13 times too short for Orch-OR to operate; the primary physics objection.',
     },
     {
@@ -1463,6 +1476,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       publication_year: 2006,
       url: 'https://doi.org/10.1038/440611a',
       credibility_score: 0.88,
+      link_type: 'contradicts',
       notes: 'Nature 440. Review arguing that quantum effects in the brain are unlikely to play a role in neural computation relevant to consciousness.',
     },
   ],
@@ -1825,6 +1839,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
       author: 'Mark Boslough, Ken Nicoll, Vance Holliday, et al.',
       publication_year: 2012,
       credibility_score: 0.88,
+      link_type: 'contradicts',
       notes: 'AGU Geophysical Monograph 198. Compilation of skeptical analyses by geologists who failed to replicate the original impact markers.',
     },
     {
