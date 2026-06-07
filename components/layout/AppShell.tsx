@@ -64,7 +64,7 @@ export default function AppShell() {
             <NavBar />
 
             {/* Main content area */}
-            <div className="flex-1 flex overflow-hidden mt-16">
+            <div className="flex-1 flex overflow-hidden mt-16 relative">
               {/* Core view */}
               <div className="flex-1 overflow-hidden relative">
                 <Suspense fallback={<LoadingSpinner />}>
@@ -103,16 +103,25 @@ export default function AppShell() {
                 </Suspense>
               </div>
 
-              {/* Side panel */}
+              {/* Side panel — full-screen overlay on mobile, 340px sidebar on sm+ */}
               <AnimatePresence>
                 {sidePanel && (
                   <motion.div
-                    initial={{ width: 0, opacity: 0 }}
-                    animate={{ width: 340, opacity: 1 }}
-                    exit={{ width: 0, opacity: 0 }}
+                    initial={{ x: '100%', opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: '100%', opacity: 0 }}
                     transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                    className="flex-shrink-0 glass-dark border-l border-purple-900/20 overflow-hidden flex flex-col"
+                    className="absolute inset-y-0 right-0 w-full sm:w-[340px] z-30 glass-dark border-l border-purple-900/20 overflow-hidden flex flex-col"
                   >
+                    {/* Mobile-only close button for AI panel */}
+                    {sidePanel === 'ai' && (
+                      <button
+                        onClick={() => setSidePanel(null)}
+                        className="sm:hidden absolute top-3 right-3 z-10 p-2 glass rounded-lg text-slate-400 hover:text-white"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
                     <Suspense fallback={<LoadingSpinner />}>
                       {sidePanel === 'ai' && <AIAssistant />}
                       {sidePanel === 'rabbit' && (
@@ -137,8 +146,8 @@ export default function AppShell() {
               </AnimatePresence>
             </div>
 
-            {/* Floating action buttons */}
-            <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-40">
+            {/* Floating action buttons — above disclaimer banner */}
+            <div className="fixed bottom-12 right-4 flex flex-col gap-3 z-40">
               {/* Rabbit Hole button */}
               <motion.button
                 whileHover={{ scale: 1.1 }}

@@ -32,6 +32,8 @@ export default function KnowledgeGraph() {
   const frameRef = useRef<number>(0);
   const transformRef = useRef({ x: 0, y: 0, scale: 1 });
   const draggingRef = useRef<{ nodeId: string | null; panStart: { x: number; y: number } | null }>({ nodeId: null, panStart: null });
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const pinchDistRef = useRef<number>(0);
   const [selectedTheory, setSelectedTheory] = useState<Theory | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const { exploreTheory, discoverConnection } = useUserStore();
@@ -337,6 +339,81 @@ export default function KnowledgeGraph() {
     transformRef.current.scale = Math.max(0.3, Math.min(3, transformRef.current.scale * delta));
   };
 
+  const getClientPos = (clientX: number, clientY: number) => {
+    const canvas = canvasRef.current!;
+    const rect = canvas.getBoundingClientRect();
+    const { x, y, scale } = transformRef.current;
+    return {
+      x: (clientX - rect.left - x) / scale,
+      y: (clientY - rect.top - y) / scale,
+    };
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      const pos = getClientPos(touch.clientX, touch.clientY);
+      const node = findNodeAt(pos.x, pos.y);
+      if (node) {
+        draggingRef.current = { nodeId: node.id, panStart: null };
+      } else {
+        draggingRef.current = { nodeId: null, panStart: { x: touch.clientX - transformRef.current.x, y: touch.clientY - transformRef.current.y } };
+      }
+      touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      pinchDistRef.current = Math.sqrt(dx * dx + dy * dy);
+      draggingRef.current = { nodeId: null, panStart: null };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      const pos = getClientPos(touch.clientX, touch.clientY);
+      if (draggingRef.current.nodeId) {
+        const n = nodesRef.current.find(n => n.id === draggingRef.current.nodeId);
+        if (n) { n.x = pos.x; n.y = pos.y; n.vx = 0; n.vy = 0; }
+      } else if (draggingRef.current.panStart) {
+        transformRef.current.x = touch.clientX - draggingRef.current.panStart.x;
+        transformRef.current.y = touch.clientY - draggingRef.current.panStart.y;
+      }
+    } else if (e.touches.length === 2 && pinchDistRef.current > 0) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const newDist = Math.sqrt(dx * dx + dy * dy);
+      const ratio = newDist / pinchDistRef.current;
+      transformRef.current.scale = Math.max(0.3, Math.min(3, transformRef.current.scale * ratio));
+      pinchDistRef.current = newDist;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (touchStartRef.current && e.changedTouches.length > 0) {
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - touchStartRef.current.x;
+      const dy = touch.clientY - touchStartRef.current.y;
+      if (Math.sqrt(dx * dx + dy * dy) < 10) {
+        const pos = getClientPos(touch.clientX, touch.clientY);
+        const node = findNodeAt(pos.x, pos.y);
+        if (node) {
+          setSelectedTheory(node.theory);
+          exploreTheory(node.theory.id);
+          if (selectedTheory && selectedTheory.id !== node.theory.id) {
+            discoverConnection(selectedTheory.id, node.theory.id);
+          }
+        } else {
+          setSelectedTheory(null);
+        }
+      }
+    }
+    draggingRef.current = { nodeId: null, panStart: null };
+    touchStartRef.current = null;
+    pinchDistRef.current = 0;
+  };
+
   const resetView = () => {
     transformRef.current = { x: 0, y: 0, scale: 1 };
   };
@@ -346,12 +423,15 @@ export default function KnowledgeGraph() {
       <canvas
         ref={canvasRef}
         className="flex-1 cursor-crosshair"
-        style={{ background: 'transparent' }}
+        style={{ background: 'transparent', touchAction: 'none' }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onClick={handleClick}
         onWheel={handleWheel}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       />
 
       <div className="absolute top-4 right-4 flex flex-col gap-2">
@@ -369,7 +449,7 @@ export default function KnowledgeGraph() {
         </button>
       </div>
 
-      <div className="absolute bottom-4 left-4 glass rounded-xl p-3 text-xs space-y-1.5">
+      <div className="absolute bottom-4 left-4 glass rounded-xl p-3 text-xs space-y-1.5 hidden sm:block">
         <div className="text-slate-400 font-medium mb-2 flex items-center gap-1">
           <GitBranch size={11} /> Categories
         </div>

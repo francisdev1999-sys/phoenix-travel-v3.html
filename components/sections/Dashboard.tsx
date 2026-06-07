@@ -42,7 +42,7 @@ export default function Dashboard() {
   const completionPct = Math.round((exploredCount / totalTheories) * 100);
 
   return (
-    <div className="h-full overflow-y-auto p-6 space-y-6">
+    <div className="h-full overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div>
         <h2 className="text-2xl font-black text-white flex items-center gap-3">
           <Target size={22} className="text-purple-400" />

@@ -165,12 +165,12 @@ export default function AncientGlobe() {
     <div className="h-full flex flex-col">
       <div className="flex-shrink-0 p-4 border-b border-purple-900/20">
         <h2 className="text-lg font-black text-white mb-3">Ancient Sites Globe</h2>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {siteTypes.map(type => (
             <button
               key={type.id}
               onClick={() => setFilter(type.id)}
-              className="px-3 py-1.5 rounded-full text-xs font-medium transition-all border"
+              className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all border"
               style={{
                 borderColor: filter === type.id ? type.color + '60' : 'rgba(255,255,255,0.1)',
                 background: filter === type.id ? type.color + '20' : 'transparent',
@@ -237,7 +237,7 @@ export default function AncientGlobe() {
           )}
         </AnimatePresence>
 
-        <div className="absolute bottom-4 left-4 glass rounded-xl p-3">
+        <div className="absolute bottom-4 left-4 glass rounded-xl p-3 hidden sm:block">
           <div className="text-xs text-slate-400 font-medium mb-2">Site Types</div>
           {siteTypes.filter(t => t.id !== 'all').map(type => (
             <div key={type.id} className="flex items-center gap-2 text-xs text-slate-500 mb-1">
@@ -247,7 +247,7 @@ export default function AncientGlobe() {
           ))}
         </div>
 
-        <div className="absolute top-4 left-4 glass rounded-lg px-3 py-2">
+        <div className="absolute top-4 left-4 glass rounded-lg px-3 py-2 hidden sm:block">
           <div className="text-xs text-slate-500">Drag · Scroll · Click dots</div>
         </div>
       </div>

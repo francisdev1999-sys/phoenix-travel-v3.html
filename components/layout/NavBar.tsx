@@ -72,13 +72,13 @@ export default function NavBar() {
           </div>
 
           {/* Right side */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             {/* Search */}
             <AnimatePresence>
               {searchOpen && (
                 <motion.input
                   initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 200, opacity: 1 }}
+                  animate={{ width: 'min(160px, 40vw)', opacity: 1 }}
                   exit={{ width: 0, opacity: 0 }}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
