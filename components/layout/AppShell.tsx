@@ -1,5 +1,5 @@
 'use client';
-import { Suspense, lazy, useState, useEffect } from 'react';
+import { Suspense, lazy, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Rabbit, X } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
@@ -35,6 +35,19 @@ export default function AppShell() {
   const { currentView, rabbitHoleChain, setCurrentView } = useUserStore();
   const [sidePanel, setSidePanel] = useState<'ai' | 'rabbit' | null>(null);
   const isLanding = currentView === 'landing';
+  const prevChainLenRef = useRef(rabbitHoleChain.length);
+
+  // Auto-open the rabbit hole panel the moment a rabbit hole is started
+  useEffect(() => {
+    if (rabbitHoleChain.length > 0 && prevChainLenRef.current === 0) {
+      setSidePanel('rabbit');
+    }
+    if (rabbitHoleChain.length === 0) {
+      prevChainLenRef.current = 0;
+    } else {
+      prevChainLenRef.current = rabbitHoleChain.length;
+    }
+  }, [rabbitHoleChain.length]);
 
   // Auto-close side panel when the user navigates to a different view
   useEffect(() => {

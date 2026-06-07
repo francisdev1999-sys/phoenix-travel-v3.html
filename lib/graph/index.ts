@@ -1,18 +1,25 @@
-import { nodes } from './nodes';
+import { nodes as rawNodes } from './nodes';
 import { edges } from './edges';
+import { NODE_SOURCES } from './sources';
 import {
   GraphNode, GraphEdge, KnowledgeGraph, NodeCategory,
   EvidenceLevel, GraphDiagnostics, ClusterReport,
 } from './types';
 
 export * from './types';
-export { nodes, edges };
+export { edges };
+
+// Nodes enriched with curated static sources
+export const nodes: GraphNode[] = rawNodes.map(n => ({
+  ...n,
+  sources: NODE_SOURCES[n.id] ?? [],
+}));
 
 export const graph: KnowledgeGraph = {
   nodes,
   edges,
   version: '2.0.0',
-  generated: '2025',
+  generated: '2026',
 };
 
 // ── Lookup helpers ──────────────────────────────────────────────────
@@ -268,6 +275,9 @@ export const validateGraph = () => {
   diag.low_confidence_edges.forEach(e =>
     issues.push(`Low-confidence edge ${e.id} (${e.from} → ${e.to}): ${e.confidence_score}`)
   );
+  nodes.forEach(n => {
+    if (!n.sources?.length) issues.push(`Node "${n.id}" has no sources — add entries to NODE_SOURCES`);
+  });
   return { valid: issues.length === 0, issues, diagnostics: diag };
 };
 

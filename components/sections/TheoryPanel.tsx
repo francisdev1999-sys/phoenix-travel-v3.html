@@ -1,10 +1,11 @@
 'use client';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronDown, ChevronUp, GitBranch, AlertCircle, BookOpen, Map, Clock, ExternalLink, Rabbit } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, GitBranch, AlertCircle, BookOpen, Map, Clock, ExternalLink, Rabbit, Star } from 'lucide-react';
 import { Theory } from '@/lib/types';
 import { theories } from '@/lib/data/theories';
 import { useUserStore } from '@/lib/store/userStore';
+import { NODE_SOURCES } from '@/lib/graph/sources';
 
 interface Props {
   theory: Theory;
@@ -228,24 +229,60 @@ export default function TheoryPanel({ theory, onClose }: Props) {
               </div>
             )}
 
-            {activeTab === 'sources' && (
-              <div className="space-y-3">
-                {theory.sources.map((src, i) => (
-                  <div key={i} className="p-3 rounded-lg bg-slate-900/40 border border-white/5">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="text-sm font-medium text-slate-200">&quot;{src.title}&quot;</div>
-                        {src.author && <div className="text-xs text-slate-500 mt-0.5">by {src.author}</div>}
-                        <div className="flex items-center gap-2 mt-1">
-                          {src.year && <span className="text-xs text-slate-600">{src.year < 0 ? `${Math.abs(src.year)} BCE` : src.year}</span>}
-                          <span className="text-xs text-purple-400/60 capitalize">{src.type.replace('_', ' ')}</span>
+            {activeTab === 'sources' && (() => {
+              const graphSources = NODE_SOURCES[theory.id];
+              const hasSources = graphSources && graphSources.length > 0;
+              return (
+                <div className="space-y-3">
+                  <p className="text-xs text-slate-500 italic">
+                    Curated academic sources. Credibility score reflects peer consensus (0–1).
+                  </p>
+                  {hasSources ? graphSources.map((src) => (
+                    <div key={src.id} className="p-3 rounded-lg bg-slate-900/40 border border-white/5 hover:border-purple-500/20 transition-colors">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-slate-200 leading-snug">&ldquo;{src.title}&rdquo;</div>
+                          {src.author && <div className="text-xs text-slate-500 mt-0.5">by {src.author}</div>}
+                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                            {src.publication_year && (
+                              <span className="text-xs text-slate-600">
+                                {src.publication_year < 0 ? `${Math.abs(src.publication_year)} BCE` : src.publication_year}
+                              </span>
+                            )}
+                            <span className="text-xs text-purple-400/60">{src.source_type}</span>
+                            {src.link_type === 'contradicts' && (
+                              <span className="text-xs px-1.5 py-0.5 rounded-full bg-red-900/30 text-red-400 border border-red-500/20">contradicts</span>
+                            )}
+                            <div className="flex items-center gap-0.5 ml-auto">
+                              <Star size={9} className="text-yellow-500" />
+                              <span className="text-xs text-yellow-500/70">{(src.credibility_score * 10).toFixed(1)}/10</span>
+                            </div>
+                          </div>
+                          {src.notes && <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">{src.notes}</p>}
+                          {src.url && (
+                            <a href={src.url} target="_blank" rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 mt-1.5 transition-colors">
+                              <ExternalLink size={10} /> View source
+                            </a>
+                          )}
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  )) : (
+                    theory.sources?.map((src, i) => (
+                      <div key={i} className="p-3 rounded-lg bg-slate-900/40 border border-white/5">
+                        <div className="text-sm font-medium text-slate-200">&ldquo;{src.title}&rdquo;</div>
+                        {src.author && <div className="text-xs text-slate-500 mt-0.5">by {src.author}</div>}
+                        <div className="flex items-center gap-2 mt-1">
+                          {src.year && <span className="text-xs text-slate-600">{src.year < 0 ? `${Math.abs(src.year)} BCE` : src.year}</span>}
+                          <span className="text-xs text-purple-400/60 capitalize">{src.type?.replace('_', ' ')}</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              );
+            })()}
           </motion.div>
         </AnimatePresence>
 

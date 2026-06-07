@@ -21,6 +21,14 @@ export default function LandingPage() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      if (e.deltaY > 30) setCurrentView('graph');
+    };
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    return () => window.removeEventListener('wheel', handleWheel);
+  }, [setCurrentView]);
+
+  useEffect(() => {
     const timer1 = setTimeout(() => setTitleVisible(true), 600);
     const timer2 = setTimeout(() => setSubtitleVisible(true), 1400);
     const timer3 = setTimeout(() => setButtonsVisible(true), 2200);
