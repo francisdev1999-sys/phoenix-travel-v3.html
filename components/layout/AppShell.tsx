@@ -15,9 +15,10 @@ const AncientGlobe = lazy(() => import('@/components/sections/AncientGlobe'));
 const Dashboard = lazy(() => import('@/components/sections/Dashboard'));
 const AIAssistant = lazy(() => import('@/components/sections/AIAssistant'));
 const RabbitHoleMode = lazy(() => import('@/components/sections/RabbitHoleMode'));
-const GraphDiagnostics = lazy(() => import('@/components/sections/GraphDiagnostics'));
-const SourceIngestion  = lazy(() => import('@/components/sections/SourceIngestion'));
-const AdminPanel       = lazy(() => import('@/components/sections/AdminPanel'));
+const GraphDiagnostics  = lazy(() => import('@/components/sections/GraphDiagnostics'));
+const SourceIngestion   = lazy(() => import('@/components/sections/SourceIngestion'));
+const AdminPanel        = lazy(() => import('@/components/sections/AdminPanel'));
+const RabbitHoleView    = lazy(() => import('@/components/sections/RabbitHoleView'));
 
 function LoadingSpinner() {
   return (
@@ -122,6 +123,11 @@ export default function AppShell() {
                         <AdminPanel />
                       </motion.div>
                     )}
+                    {currentView === 'rabbit-hole' && (
+                      <motion.div key="rabbit-hole" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto">
+                        <RabbitHoleView />
+                      </motion.div>
+                    )}
                   </AnimatePresence>
                 </Suspense>
               </div>
@@ -168,7 +174,7 @@ export default function AppShell() {
                             </button>
                           </div>
                           <div className="flex-1 overflow-y-auto">
-                            <RabbitHoleMode onSelectTheory={() => setCurrentView('graph')} />
+                            <RabbitHoleMode />
                           </div>
                         </div>
                       )}

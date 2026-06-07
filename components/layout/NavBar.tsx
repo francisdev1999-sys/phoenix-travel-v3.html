@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Globe, BarChart3, Clock, MapPin, Grid3X3, User, Volume2, VolumeX, Menu, X, LogIn, LogOut, Activity, BookMarked, ShieldCheck } from 'lucide-react';
+import { Search, Globe, BarChart3, Clock, MapPin, Grid3X3, User, Volume2, VolumeX, Menu, X, LogIn, LogOut, Activity, BookMarked, ShieldCheck, Rabbit } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import { useSession, signIn, signOut } from 'next-auth/react';
 
@@ -11,6 +11,7 @@ const NAV_BASE = [
   { id: 'timeline',       label: 'Timeline',        icon: Clock },
   { id: 'globe',          label: 'Ancient Sites',   icon: MapPin },
   { id: 'evidence-board', label: 'Evidence Board',  icon: BarChart3 },
+  { id: 'rabbit-hole',    label: 'Rabbit Hole',     icon: Rabbit },
   { id: 'dashboard',      label: 'Dashboard',       icon: User },
   { id: 'diagnostics',    label: 'Diagnostics',     icon: Activity },
   { id: 'sources',        label: 'Sources',         icon: BookMarked },

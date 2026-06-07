@@ -1,121 +1,157 @@
 'use client';
-import { motion } from 'framer-motion';
-import { Rabbit, ChevronRight, RotateCcw } from 'lucide-react';
-import { theories, getRelatedTheories } from '@/lib/data/theories';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Rabbit, ChevronRight, RotateCcw, Loader2, ExternalLink } from 'lucide-react';
+import { nodes as staticNodes } from '@/lib/graph';
+import { CATEGORY_COLORS, EVIDENCE_COLORS } from '@/lib/graph';
+import { computeRabbitHole, scoreTier, TIER_COLORS, RELATIONSHIP_COLORS, RELATIONSHIP_LABELS, type RabbitHoleData } from '@/lib/rabbit-hole';
+import { nodes as allNodes, edges as allEdges } from '@/lib/graph';
 import { useUserStore } from '@/lib/store/userStore';
-import { Theory } from '@/lib/types';
 
-interface Props {
-  onSelectTheory: (theory: Theory) => void;
-}
+export default function RabbitHoleMode() {
+  const { rabbitHoleNodeId, setRabbitHoleNodeId, setCurrentView, rabbitHoleChain, setRabbitHoleChain } = useUserStore();
+  const [data, setData] = useState<RabbitHoleData | null>(null);
 
-export default function RabbitHoleMode({ onSelectTheory }: Props) {
-  const { rabbitHoleChain, extendRabbitHole, resetRabbitHole } = useUserStore();
+  // Compute locally — no network needed for the side panel
+  useEffect(() => {
+    if (!rabbitHoleNodeId) { setData(null); return; }
+    const result = computeRabbitHole(rabbitHoleNodeId, allNodes, allEdges);
+    setData(result);
+  }, [rabbitHoleNodeId]);
 
-  const chainTheories = rabbitHoleChain.map(id => theories.find(t => t.id === id)).filter(Boolean) as Theory[];
-  const currentTheory = chainTheories[chainTheories.length - 1];
-  const suggestions = currentTheory
-    ? getRelatedTheories(currentTheory.id).filter(t => !rabbitHoleChain.includes(t.id)).slice(0, 4)
-    : [];
+  const navigate = (nodeId: string) => {
+    setRabbitHoleChain([...(rabbitHoleChain ?? []), nodeId]);
+    setRabbitHoleNodeId(nodeId);
+  };
 
-  if (rabbitHoleChain.length === 0) {
+  const reset = () => {
+    setRabbitHoleNodeId(null);
+    setRabbitHoleChain([]);
+    setData(null);
+  };
+
+  const openFull = () => {
+    setCurrentView('rabbit-hole');
+  };
+
+  if (!rabbitHoleNodeId || !data) {
     return (
-      <div className="p-6 text-center space-y-3">
+      <div className="p-6 text-center space-y-4">
         <Rabbit size={32} className="text-purple-400 mx-auto animate-bounce" />
         <p className="text-sm text-slate-400">
-          Select a theory and click <span className="text-purple-300 font-bold">Dive Deeper</span> to start a rabbit hole
+          Click any node in the Knowledge Graph and press{' '}
+          <span className="text-purple-300 font-bold">Rabbit Hole</span> to start exploring.
         </p>
+        <p className="text-xs text-slate-600">Paths are ranked by evidence quality, historical relevance, and graph confidence.</p>
       </div>
     );
   }
 
+  const { node, connections } = data;
+  const catColor = CATEGORY_COLORS[node.category] ?? '#7c3aed';
+  const evColor  = EVIDENCE_COLORS[node.evidence_level] ?? '#94a3b8';
+  const top5     = connections.slice(0, 5);
+
   return (
-    <div className="p-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-bold text-purple-300">
-          <Rabbit size={16} />
-          Rabbit Hole — Depth {rabbitHoleChain.length}
-        </div>
-        <button
-          onClick={resetRabbitHole}
-          className="flex items-center gap-1 text-xs text-slate-500 hover:text-white transition-colors"
-        >
-          <RotateCcw size={12} />
-          Reset
-        </button>
-      </div>
-
-      <div className="space-y-1">
-        {chainTheories.map((theory, i) => (
-          <motion.div
-            key={theory.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className="flex items-center gap-2"
-          >
-            {i > 0 && (
-              <div className="flex flex-col items-center">
-                <div className="w-px h-3 bg-purple-500/30" />
-              </div>
-            )}
-            <button
-              onClick={() => onSelectTheory(theory)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all w-full text-left border ${
-                i === chainTheories.length - 1
-                  ? 'bg-purple-900/40 border-purple-500/40 text-purple-300'
-                  : 'bg-slate-900/30 border-white/5 text-slate-400'
-              }`}
-            >
-              <span>{theory.icon}</span>
-              <span className="flex-1">{theory.title}</span>
-              {i === chainTheories.length - 1 && (
-                <span className="text-xs text-purple-400">← current</span>
-              )}
-            </button>
-          </motion.div>
-        ))}
-      </div>
-
-      {suggestions.length > 0 && (
-        <div className="border-t border-white/5 pt-4">
-          <div className="text-xs text-slate-500 mb-3 flex items-center gap-1">
-            <ChevronRight size={12} />
-            Go deeper into...
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Header */}
+      <div className="p-4 border-b border-purple-900/20 flex-shrink-0">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2 text-sm font-bold text-purple-300">
+            <Rabbit size={14} />
+            Rabbit Hole — Depth {(rabbitHoleChain?.length ?? 0) + 1}
           </div>
-          <div className="space-y-2">
-            {suggestions.map((theory, i) => (
-              <motion.button
-                key={theory.id}
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.08 }}
-                onClick={() => {
-                  extendRabbitHole(theory.id);
-                  onSelectTheory(theory);
-                }}
-                className="w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all border border-white/5 hover:border-purple-500/30 bg-slate-900/30 hover:bg-purple-900/20"
-              >
-                <span className="text-lg">{theory.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-bold text-white">{theory.title}</div>
-                  <div className="text-xs text-slate-500 truncate">{theory.category}</div>
-                </div>
-                <ChevronRight size={12} className="text-purple-400" />
-              </motion.button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {suggestions.length === 0 && rabbitHoleChain.length > 0 && (
-        <div className="text-center text-xs text-slate-500 py-4">
-          <div className="text-2xl mb-2">🌀</div>
-          You&apos;ve reached the bottom of this rabbit hole.
-          <br />
-          <button onClick={resetRabbitHole} className="text-purple-400 hover:text-purple-300 mt-2 block mx-auto">
-            Start a new one?
+          <button onClick={reset} className="flex items-center gap-1 text-xs text-slate-500 hover:text-white transition-colors">
+            <RotateCcw size={11} />Reset
           </button>
+        </div>
+
+        {/* Current node */}
+        <div className="flex items-center gap-2.5 p-3 rounded-xl bg-white/5 border border-purple-900/30">
+          <span className="text-xl">{node.icon ?? '◈'}</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-white truncate">{node.title}</p>
+            <p className="text-[10px]" style={{ color: catColor }}>{node.category}</p>
+          </div>
+          <div className="text-right">
+            <div className="text-xs font-bold text-purple-400">{Math.round(node.confidence_score * 100)}%</div>
+            <div className="text-[9px]" style={{ color: evColor }}>{node.evidence_level.replace('_', ' ')}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Connections */}
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">
+            Top {top5.length} paths
+          </p>
+          <button onClick={openFull} className="flex items-center gap-1 text-[10px] text-purple-400 hover:text-purple-300 transition-colors">
+            Full analysis <ExternalLink size={9} />
+          </button>
+        </div>
+
+        {top5.map((conn, i) => {
+          const tier      = scoreTier(conn.score);
+          const tierColor = TIER_COLORS[tier];
+          const relColor  = RELATIONSHIP_COLORS[conn.edge.relationship_type] ?? '#94a3b8';
+          const relLabel  = RELATIONSHIP_LABELS[conn.edge.relationship_type];
+          const pct       = Math.round(conn.score * 100);
+          const cc        = CATEGORY_COLORS[conn.node.category] ?? '#7c3aed';
+
+          return (
+            <motion.button
+              key={conn.node.id}
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.07 }}
+              onClick={() => navigate(conn.node.id)}
+              className="w-full text-left p-3 rounded-xl border border-purple-900/30 bg-white/4 hover:border-purple-500/40 hover:bg-white/8 transition-all"
+            >
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                  style={{ background: relColor + '22', color: relColor }}>{relLabel}</span>
+                <span className="ml-auto text-[10px] font-bold" style={{ color: tierColor }}>{pct}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-base">{conn.node.icon ?? '◈'}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-white truncate">{conn.node.title}</p>
+                  <p className="text-[9px]" style={{ color: cc }}>{conn.node.category}</p>
+                </div>
+                <ChevronRight size={12} className="text-purple-500 flex-shrink-0" />
+              </div>
+              {/* Score bar */}
+              <div className="mt-2 h-0.5 rounded-full bg-slate-800 overflow-hidden">
+                <div className="h-full rounded-full" style={{ width: `${pct}%`, background: tierColor }} />
+              </div>
+            </motion.button>
+          );
+        })}
+
+        {connections.length > 5 && (
+          <button onClick={openFull}
+            className="w-full py-2.5 rounded-xl text-xs text-purple-400 border border-purple-900/30 hover:border-purple-500/40 hover:bg-white/5 transition-all">
+            +{connections.length - 5} more connections in full view
+          </button>
+        )}
+      </div>
+
+      {/* History trail */}
+      {(rabbitHoleChain?.length ?? 0) > 0 && (
+        <div className="p-3 border-t border-purple-900/20 flex-shrink-0">
+          <p className="text-[9px] text-slate-600 uppercase tracking-wider mb-2">Trail</p>
+          <div className="flex flex-col gap-1">
+            {(rabbitHoleChain ?? []).map((id, i) => {
+              const n = staticNodes.find(x => x.id === id);
+              return (
+                <button key={id + i} onClick={() => setRabbitHoleNodeId(id)}
+                  className="flex items-center gap-2 text-[10px] text-slate-500 hover:text-white transition-colors text-left">
+                  <span>{n?.icon ?? '◈'}</span>{n?.title ?? id}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

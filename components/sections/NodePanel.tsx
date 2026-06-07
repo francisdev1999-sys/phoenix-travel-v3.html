@@ -46,9 +46,13 @@ export default function NodePanel({ node, onClose }: Props) {
   const geoNeighbors = getGeographicNeighbors(node.id);
   const nodeColor = node.color ?? CATEGORY_COLORS[node.category] ?? '#7c3aed';
 
+  const { setRabbitHoleNodeId } = useUserStore();
+
   const handleRabbitHole = () => {
     startRabbitHole(node.id);
-    setCurrentView('graph');
+    setRabbitHoleNodeId(node.id);
+    setCurrentView('rabbit-hole');
+    onClose();
   };
 
   return (

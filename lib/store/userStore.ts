@@ -29,14 +29,17 @@ interface UserStore {
   progress: UserProgress;
   audioEnabled: boolean;
   rabbitHoleChain: string[];
-  currentView: 'landing' | 'graph' | 'theory' | 'universe' | 'timeline' | 'evidence-board' | 'globe' | 'dashboard' | 'diagnostics' | 'sources' | 'admin';
+  rabbitHoleNodeId: string | null;
+  currentView: 'landing' | 'graph' | 'theory' | 'universe' | 'timeline' | 'evidence-board' | 'globe' | 'dashboard' | 'diagnostics' | 'sources' | 'admin' | 'rabbit-hole';
   selectedTheory: string | null;
   searchQuery: string;
 
   exploreTheory: (theoryId: string) => void;
   discoverConnection: (fromId: string, toId: string) => void;
   toggleAudio: () => void;
-  setCurrentView: (view: 'landing' | 'graph' | 'theory' | 'universe' | 'timeline' | 'evidence-board' | 'globe' | 'dashboard' | 'diagnostics' | 'sources' | 'admin') => void;
+  setCurrentView: (view: 'landing' | 'graph' | 'theory' | 'universe' | 'timeline' | 'evidence-board' | 'globe' | 'dashboard' | 'diagnostics' | 'sources' | 'admin' | 'rabbit-hole') => void;
+  setRabbitHoleNodeId: (id: string | null) => void;
+  setRabbitHoleChain: (chain: string[]) => void;
   setSelectedTheory: (id: string | null) => void;
   setSearchQuery: (query: string) => void;
   startRabbitHole: (theoryId: string) => void;
@@ -61,6 +64,7 @@ export const useUserStore = create<UserStore>()(
       },
       audioEnabled: false,
       rabbitHoleChain: [],
+      rabbitHoleNodeId: null,
       currentView: 'landing',
       selectedTheory: null,
       searchQuery: '',
@@ -121,6 +125,10 @@ export const useUserStore = create<UserStore>()(
       toggleAudio: () => set((state) => ({ audioEnabled: !state.audioEnabled })),
 
       setCurrentView: (view) => set({ currentView: view }),
+
+      setRabbitHoleNodeId: (id) => set({ rabbitHoleNodeId: id }),
+
+      setRabbitHoleChain: (chain) => set({ rabbitHoleChain: chain }),
 
       setSelectedTheory: (id) => set({ selectedTheory: id }),
 
