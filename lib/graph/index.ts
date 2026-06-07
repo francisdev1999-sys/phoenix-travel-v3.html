@@ -275,6 +275,9 @@ export const validateGraph = () => {
   diag.low_confidence_edges.forEach(e =>
     issues.push(`Low-confidence edge ${e.id} (${e.from} → ${e.to}): ${e.confidence_score}`)
   );
+  nodes.forEach(n => {
+    if (!n.sources?.length) issues.push(`Node "${n.id}" has no sources — add entries to NODE_SOURCES`);
+  });
   return { valid: issues.length === 0, issues, diagnostics: diag };
 };
 

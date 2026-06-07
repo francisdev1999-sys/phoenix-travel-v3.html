@@ -16,7 +16,6 @@ const prisma = new PrismaClient();
 // ---------------------------------------------------------------------------
 
 interface SeedSource {
-  id: string;               // used as cuid placeholder; Prisma will assign real cuid
   slug: string;             // stable key for upsert / SourceLink linkage
   title: string;
   sourceType: string;
@@ -1710,12 +1709,13 @@ async function main() {
   let linksCreated = 0;
   let sourcesFailed = 0;
 
-  for (const src of SOURCES) {
+  // Use slug-prefixed doi as stable unique key for sources without a real DOI
+  const stableDoi = (src: SeedSource) => src.doi ?? `seed:${src.slug}`;
+
+  await Promise.all(SOURCES.map(async (src) => {
     try {
-      // Upsert source by slug stored in notes field as identifier
-      // We use createMany with skipDuplicates for idempotency
       const created = await prisma.source.upsert({
-        where: { doi: src.doi ?? `NODOIPLACEHOLDER_${src.slug}` },
+        where: { doi: stableDoi(src) },
         create: {
           title: src.title,
           sourceType: src.sourceType,
@@ -1724,7 +1724,7 @@ async function main() {
           publisher: src.publisher,
           journal: src.journal,
           url: src.url,
-          doi: src.doi,
+          doi: stableDoi(src),
           notes: `[seed:${src.slug}] ${src.notes ?? ''}`.trim(),
           credibilityScore: src.credibilityScore,
           status: 'approved',
@@ -1732,7 +1732,6 @@ async function main() {
           language: 'en',
         },
         update: {
-          // On conflict, update credibility and notes but leave status
           credibilityScore: src.credibilityScore,
           notes: `[seed:${src.slug}] ${src.notes ?? ''}`.trim(),
         },
@@ -1740,8 +1739,7 @@ async function main() {
 
       sourcesCreated++;
 
-      // Create SourceLink records for each linked node
-      for (const nodeId of src.nodeIds) {
+      await Promise.all(src.nodeIds.map(async (nodeId) => {
         try {
           await prisma.sourceLink.upsert({
             where: {
@@ -1763,17 +1761,17 @@ async function main() {
             },
           });
           linksCreated++;
-        } catch (linkErr) {
-          // Unique constraint violation or other — skip
+        } catch {
+          // Unique constraint violation — link already exists
         }
-      }
+      }));
 
       process.stdout.write(`  ✓ ${src.slug}\n`);
     } catch (err) {
       console.error(`  ✗ Failed: ${src.slug} — ${(err as Error).message}`);
       sourcesFailed++;
     }
-  }
+  }));
 
   console.log(`\n📊 Seed complete:`);
   console.log(`   Sources created/updated: ${sourcesCreated}`);

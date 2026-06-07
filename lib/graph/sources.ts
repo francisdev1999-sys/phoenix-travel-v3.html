@@ -7,9 +7,7 @@ import { ResearchSource } from './types';
 
 export const NODE_SOURCES: Record<string, ResearchSource[]> = {
 
-  // ═══════════════════════════════════════════
-  // ANCIENT CIVILIZATIONS
-  // ═══════════════════════════════════════════
+  // ── ANCIENT CIVILIZATIONS ──
 
   'gobekli-tepe': [
     {
@@ -427,9 +425,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
     },
   ],
 
-  // ═══════════════════════════════════════════
-  // EGYPT & ANCIENT ENGINEERING
-  // ═══════════════════════════════════════════
+  // ── EGYPT & ANCIENT ENGINEERING ──
 
   'great-pyramid': [
     {
@@ -587,9 +583,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
     },
   ],
 
-  // ═══════════════════════════════════════════
-  // RELIGIOUS TEXTS & MYTHOLOGY
-  // ═══════════════════════════════════════════
+  // ── RELIGIOUS TEXTS & MYTHOLOGY ──
 
   'book-of-enoch': [
     {
@@ -930,9 +924,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
     },
   ],
 
-  // ═══════════════════════════════════════════
-  // UFO / UAP
-  // ═══════════════════════════════════════════
+  // ── UFO / UAP ──
 
   'roswell-incident': [
     {
@@ -1106,9 +1098,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
     },
   ],
 
-  // ═══════════════════════════════════════════
-  // HUMAN ORIGINS
-  // ═══════════════════════════════════════════
+  // ── HUMAN ORIGINS ──
 
   'human-evolution': [
     {
@@ -1342,9 +1332,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
     },
   ],
 
-  // ═══════════════════════════════════════════
-  // CONSCIOUSNESS & REALITY
-  // ═══════════════════════════════════════════
+  // ── CONSCIOUSNESS & REALITY ──
 
   'simulation-hypothesis': [
     {
@@ -1518,9 +1506,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
     },
   ],
 
-  // ═══════════════════════════════════════════
-  // SECRET SOCIETIES & ESOTERIC
-  // ═══════════════════════════════════════════
+  // ── SECRET SOCIETIES & ESOTERIC ──
 
   'freemasonry': [
     {
@@ -1717,9 +1703,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
     },
   ],
 
-  // ═══════════════════════════════════════════
-  // GLOBAL MYSTERIES
-  // ═══════════════════════════════════════════
+  // ── GLOBAL MYSTERIES ──
 
   'bronze-age-collapse': [
     {
@@ -1914,9 +1898,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
     },
   ],
 
-  // ═══════════════════════════════════════════
-  // LEGENDS & FOLKLORE
-  // ═══════════════════════════════════════════
+  // ── LEGENDS & FOLKLORE ──
 
   'giants-ancient-texts': [
     {
