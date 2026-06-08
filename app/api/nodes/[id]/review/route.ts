@@ -22,6 +22,9 @@ export async function POST(req: NextRequest, { params }: Params) {
   if (!['approved', 'rejected', 'needs_revision'].includes(action)) {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   }
+  if (reviewNotes && reviewNotes.length > 2000) {
+    return NextResponse.json({ error: 'Review notes must be 2000 characters or fewer' }, { status: 400 });
+  }
 
   // ── Non-approval: just update proposal status ────────────────────────────
   if (action !== 'approved') {

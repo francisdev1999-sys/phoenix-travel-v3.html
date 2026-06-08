@@ -9,20 +9,26 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Super-admin only' }, { status: 403 });
   }
 
-  const limit = Math.min(100, Number(req.nextUrl.searchParams.get('limit') ?? 50));
+  const page  = Math.max(1, Number(req.nextUrl.searchParams.get('page')  ?? 1));
+  const limit = Math.min(100, Math.max(10, Number(req.nextUrl.searchParams.get('limit') ?? 50)));
+  const skip  = (page - 1) * limit;
 
-  const users = await prisma.user.findMany({
-    where:   { approvedCount: { gt: 0 } },
-    orderBy: { approvedCount: 'desc' },
-    take:    limit,
-    select: {
-      id: true, name: true, email: true, image: true, role: true,
-      createdAt: true, lastActiveAt: true,
-      trustScore: true, approvedCount: true,
-      submissionCount: true, rejectedCount: true,
-      isBanned: true,
-    },
-  });
+  const [total, users] = await Promise.all([
+    prisma.user.count({ where: { approvedCount: { gt: 0 } } }),
+    prisma.user.findMany({
+      where:   { approvedCount: { gt: 0 } },
+      orderBy: { approvedCount: 'desc' },
+      take:    limit,
+      skip,
+      select: {
+        id: true, name: true, email: true, image: true, role: true,
+        createdAt: true, lastActiveAt: true,
+        trustScore: true, approvedCount: true,
+        submissionCount: true, rejectedCount: true,
+        isBanned: true,
+      },
+    }),
+  ]);
 
   const userIds = users.map(u => u.id);
 
@@ -81,5 +87,11 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  return NextResponse.json(result);
+  return NextResponse.json(result, {
+    headers: {
+      'X-Total-Count': String(total),
+      'X-Total-Pages': String(Math.ceil(total / limit)),
+      'X-Page':        String(page),
+    },
+  });
 }

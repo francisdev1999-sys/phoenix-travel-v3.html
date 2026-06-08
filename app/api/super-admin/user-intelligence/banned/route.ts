@@ -10,13 +10,16 @@ export async function GET(req: NextRequest) {
   }
 
   const statusFilter = req.nextUrl.searchParams.get('status') ?? 'banned';
-  const limit        = Math.min(200, Number(req.nextUrl.searchParams.get('limit') ?? 100));
+  const page         = Math.max(1, Number(req.nextUrl.searchParams.get('page')  ?? 1));
+  const limit        = Math.min(100, Math.max(10, Number(req.nextUrl.searchParams.get('limit') ?? 50)));
+  const skip         = (page - 1) * limit;
 
   // banned via User.isBanned
   const bannedUsers = await prisma.user.findMany({
     where:   { isBanned: true },
     orderBy: { updatedAt: 'desc' },
     take:    limit,
+    skip,
     select: {
       id: true, name: true, email: true, image: true, role: true,
       createdAt: true, lastActiveAt: true, updatedAt: true,
@@ -91,5 +94,8 @@ export async function GET(req: NextRequest) {
     statusType:       m.status,
   }));
 
-  return NextResponse.json(statusFilter === 'banned' ? banned : moderated);
+  const result = statusFilter === 'banned' ? banned : moderated;
+  return NextResponse.json(result, {
+    headers: { 'X-Total-Count': String(result.length), 'X-Page': String(page) },
+  });
 }

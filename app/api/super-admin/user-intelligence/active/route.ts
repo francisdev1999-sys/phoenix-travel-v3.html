@@ -9,29 +9,35 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Super-admin only' }, { status: 403 });
   }
 
-  const limit = Math.min(100, Number(req.nextUrl.searchParams.get('limit') ?? 50));
+  const page   = Math.max(1, Number(req.nextUrl.searchParams.get('page')  ?? 1));
+  const limit  = Math.min(100, Math.max(10, Number(req.nextUrl.searchParams.get('limit') ?? 50)));
+  const skip   = (page - 1) * limit;
   const d30ago = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-  const users = await prisma.user.findMany({
-    where:   { lastActiveAt: { gte: d30ago } },
-    orderBy: { activityScore: 'desc' },
-    take:    limit,
-    select: {
-      id: true, name: true, email: true, image: true, role: true,
-      createdAt: true, lastActiveAt: true,
-      trustScore: true, activityScore: true,
-      submissionCount: true, approvedCount: true, rejectedCount: true,
-      isBanned: true,
-      moderationStatus: { select: { status: true } },
-      _count: {
-        select: {
-          nodeExplorations: true,
-          connectionDiscoveries: true,
-          activityEvents: true,
+  const [total, users] = await Promise.all([
+    prisma.user.count({ where: { lastActiveAt: { gte: d30ago } } }),
+    prisma.user.findMany({
+      where:   { lastActiveAt: { gte: d30ago } },
+      orderBy: { activityScore: 'desc' },
+      take:    limit,
+      skip,
+      select: {
+        id: true, name: true, email: true, image: true, role: true,
+        createdAt: true, lastActiveAt: true,
+        trustScore: true, activityScore: true,
+        submissionCount: true, approvedCount: true, rejectedCount: true,
+        isBanned: true,
+        moderationStatus: { select: { status: true } },
+        _count: {
+          select: {
+            nodeExplorations: true,
+            connectionDiscoveries: true,
+            activityEvents: true,
+          },
         },
       },
-    },
-  });
+    }),
+  ]);
 
   // Fetch submission counts per user from proposal tables
   const userIds = users.map(u => u.id);
@@ -80,5 +86,11 @@ export async function GET(req: NextRequest) {
     sourceSubmissions: sourceMap[u.id] ?? 0,
   }));
 
-  return NextResponse.json(result);
+  return NextResponse.json(result, {
+    headers: {
+      'X-Total-Count': String(total),
+      'X-Total-Pages': String(Math.ceil(total / limit)),
+      'X-Page':        String(page),
+    },
+  });
 }

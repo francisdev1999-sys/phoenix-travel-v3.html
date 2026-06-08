@@ -10,13 +10,16 @@ export async function GET(req: NextRequest) {
   }
 
   const threshold = Number(req.nextUrl.searchParams.get('threshold') ?? 15);
-  const limit     = Math.min(200, Number(req.nextUrl.searchParams.get('limit') ?? 100));
+  const page      = Math.max(1, Number(req.nextUrl.searchParams.get('page')  ?? 1));
+  const limit     = Math.min(100, Math.max(10, Number(req.nextUrl.searchParams.get('limit') ?? 50)));
+  const skip      = (page - 1) * limit;
 
   // Users with elevated spam scores
   const spamProfiles = await prisma.userRiskProfile.findMany({
     where:   { spamScore: { gte: threshold } },
     orderBy: { spamScore: 'desc' },
     take:    limit,
+    skip,
     include: {
       user: {
         select: {
@@ -72,5 +75,8 @@ export async function GET(req: NextRequest) {
     detectionSource:  'rejection_rate' as const,
   }));
 
-  return NextResponse.json([...fromProfiles, ...fromRejections]);
+  const result = [...fromProfiles, ...fromRejections];
+  return NextResponse.json(result, {
+    headers: { 'X-Total-Count': String(result.length), 'X-Page': String(page) },
+  });
 }

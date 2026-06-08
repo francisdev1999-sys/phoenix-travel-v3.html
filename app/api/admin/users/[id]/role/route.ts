@@ -43,6 +43,10 @@ export async function POST(
     );
   }
 
+  if (id === session.user.id) {
+    return NextResponse.json({ error: 'You cannot change your own role' }, { status: 403 });
+  }
+
   const target = await prisma.user.findUnique({ where: { id }, select: { id: true, role: true } });
   if (!target) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 

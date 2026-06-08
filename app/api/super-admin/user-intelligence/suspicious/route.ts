@@ -11,11 +11,12 @@ export async function GET(req: NextRequest) {
   }
 
   const refresh = req.nextUrl.searchParams.get('refresh') === 'true';
-  const limit   = Math.min(200, Number(req.nextUrl.searchParams.get('limit') ?? 100));
+  const page    = Math.max(1, Number(req.nextUrl.searchParams.get('page')  ?? 1));
+  const limit   = Math.min(100, Math.max(10, Number(req.nextUrl.searchParams.get('limit') ?? 50)));
+  const skip    = (page - 1) * limit;
 
-  // If refresh requested, recompute risk for all users without a recent profile
   if (refresh) {
-    const staleAt = new Date(Date.now() - 30 * 60 * 1000); // older than 30 min
+    const staleAt = new Date(Date.now() - 30 * 60 * 1000);
     const staleUsers = await prisma.user.findMany({
       where: {
         OR: [
@@ -29,22 +30,28 @@ export async function GET(req: NextRequest) {
     await Promise.allSettled(staleUsers.map(u => computeAndSaveRiskProfile(u.id)));
   }
 
-  const profiles = await prisma.userRiskProfile.findMany({
-    where:   { riskLevel: { in: ['watch', 'suspicious', 'high_risk'] } },
-    orderBy: { riskScore: 'desc' },
-    take:    limit,
-    include: {
-      user: {
-        select: {
-          id: true, name: true, email: true, image: true, role: true,
-          createdAt: true, lastActiveAt: true,
-          trustScore: true, submissionCount: true,
-          approvedCount: true, rejectedCount: true, isBanned: true,
-          moderationStatus: { select: { status: true } },
+  const riskWhere = { riskLevel: { in: ['watch', 'suspicious', 'high_risk'] as string[] } };
+
+  const [total, profiles] = await Promise.all([
+    prisma.userRiskProfile.count({ where: riskWhere }),
+    prisma.userRiskProfile.findMany({
+      where: riskWhere,
+      orderBy: { riskScore: 'desc' },
+      take:    limit,
+      skip,
+      include: {
+        user: {
+          select: {
+            id: true, name: true, email: true, image: true, role: true,
+            createdAt: true, lastActiveAt: true,
+            trustScore: true, submissionCount: true,
+            approvedCount: true, rejectedCount: true, isBanned: true,
+            moderationStatus: { select: { status: true } },
+          },
         },
       },
-    },
-  });
+    }),
+  ]);
 
   const result = profiles.map(p => ({
     ...p.user,
@@ -57,5 +64,11 @@ export async function GET(req: NextRequest) {
     lastCalculatedAt: p.lastCalculatedAt,
   }));
 
-  return NextResponse.json(result);
+  return NextResponse.json(result, {
+    headers: {
+      'X-Total-Count': String(total),
+      'X-Total-Pages': String(Math.ceil(total / limit)),
+      'X-Page':        String(page),
+    },
+  });
 }

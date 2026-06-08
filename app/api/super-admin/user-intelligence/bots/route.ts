@@ -10,7 +10,9 @@ export async function GET(req: NextRequest) {
   }
 
   const threshold = Number(req.nextUrl.searchParams.get('threshold') ?? 20);
-  const limit     = Math.min(200, Number(req.nextUrl.searchParams.get('limit') ?? 100));
+  const page      = Math.max(1, Number(req.nextUrl.searchParams.get('page')  ?? 1));
+  const limit     = Math.min(100, Math.max(10, Number(req.nextUrl.searchParams.get('limit') ?? 50)));
+  const skip      = (page - 1) * limit;
   const h1ago     = new Date(Date.now() - 60 * 60 * 1000);
 
   // Users with elevated bot scores
@@ -18,6 +20,7 @@ export async function GET(req: NextRequest) {
     where:   { botScore: { gte: threshold } },
     orderBy: { botScore: 'desc' },
     take:    limit,
+    skip,
     include: {
       user: {
         select: {
@@ -84,5 +87,8 @@ export async function GET(req: NextRequest) {
     detectionSource:  'velocity' as const,
   }));
 
-  return NextResponse.json([...fromProfiles, ...fromVelocity]);
+  const result = [...fromProfiles, ...fromVelocity];
+  return NextResponse.json(result, {
+    headers: { 'X-Total-Count': String(result.length), 'X-Page': String(page) },
+  });
 }

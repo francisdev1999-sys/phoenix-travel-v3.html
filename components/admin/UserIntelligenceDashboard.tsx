@@ -358,11 +358,14 @@ function SectionTable({ section, users, onAction, loading }: {
 // ── Main dashboard ────────────────────────────────────────────────────────────
 
 export default function UserIntelligenceDashboard() {
-  const [section, setSection]   = useState<Section>('overview');
-  const [overview, setOverview] = useState<OverviewData | null>(null);
-  const [users,    setUsers]    = useState<UserRow[]>([]);
-  const [loading,  setLoading]  = useState(false);
+  const [section,    setSection]   = useState<Section>('overview');
+  const [overview,   setOverview]  = useState<OverviewData | null>(null);
+  const [users,      setUsers]     = useState<UserRow[]>([]);
+  const [loading,    setLoading]   = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [page,       setPage]      = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   const ENDPOINT: Record<Section, string> = {
     overview:     '/api/super-admin/user-intelligence',
@@ -374,27 +377,42 @@ export default function UserIntelligenceDashboard() {
     banned:       '/api/super-admin/user-intelligence/banned',
   };
 
-  const load = useCallback(async (sec: Section, refresh = false) => {
+  const load = useCallback(async (sec: Section, pg = 1, refresh = false) => {
     setLoading(true);
     try {
-      const url = ENDPOINT[sec] + (refresh && sec === 'suspicious' ? '?refresh=true' : '');
-      const res = await fetch(url);
+      const params = new URLSearchParams({ page: String(pg), limit: '50' });
+      if (refresh && sec === 'suspicious') params.set('refresh', 'true');
+      const url = sec === 'overview' ? ENDPOINT[sec] : `${ENDPOINT[sec]}?${params}`;
+      const res  = await fetch(url);
       const data = await res.json();
-      if (sec === 'overview') setOverview(data);
-      else setUsers(Array.isArray(data) ? data : []);
+      if (sec === 'overview') {
+        setOverview(data);
+      } else {
+        setUsers(Array.isArray(data) ? data : []);
+        setTotalCount(Number(res.headers.get('X-Total-Count') ?? data.length));
+        setTotalPages(Number(res.headers.get('X-Total-Pages') ?? 1));
+      }
     } catch { /* ignore */ }
     setLoading(false);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setUsers([]);
-    load(section);
+    setPage(1);
+    setTotalPages(1);
+    setTotalCount(0);
+    load(section, 1);
   }, [section]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await load(section, true);
+    await load(section, page, true);
     setRefreshing(false);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    load(section, newPage);
   };
 
   const handleAction = async (userId: string, action: string, payload: Record<string, unknown>) => {
@@ -523,13 +541,38 @@ export default function UserIntelligenceDashboard() {
                     ' · Scores are calculated on demand and cached for 30 minutes'}
                 </p>
                 {section === 'suspicious' && (
-                  <button onClick={() => load(section, true)} disabled={loading}
+                  <button onClick={() => load(section, page, true)} disabled={loading}
                     className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1">
                     <RefreshCw size={11} className={loading ? 'animate-spin' : ''} /> Recalculate all scores
                   </button>
                 )}
               </div>
               <SectionTable section={section} users={users} onAction={handleAction} loading={loading} />
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-3 border-t border-purple-900/20">
+                  <p className="text-[10px] text-slate-500">
+                    {totalCount} total · page {page} of {totalPages}
+                  </p>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => handlePageChange(page - 1)}
+                      disabled={page <= 1 || loading}
+                      className="px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed border border-purple-900/20 hover:border-purple-500/30 transition-all"
+                    >
+                      ← Prev
+                    </button>
+                    <button
+                      onClick={() => handlePageChange(page + 1)}
+                      disabled={page >= totalPages || loading}
+                      className="px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed border border-purple-900/20 hover:border-purple-500/30 transition-all"
+                    >
+                      Next →
+                    </button>
+                  </div>
+                </div>
+              )}
             </>
           )}
 

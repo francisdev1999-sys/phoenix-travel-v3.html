@@ -191,6 +191,12 @@ export async function logActivity(
       },
     }),
   ]);
+
+  // Hard cap at 1000 — prevents rank system distortion for long-time users
+  await prisma.user.updateMany({
+    where: { id: userId, activityScore: { gt: 1000 } },
+    data:  { activityScore: 1000 },
+  });
 }
 
 export async function getUserBadges(userId: string) {

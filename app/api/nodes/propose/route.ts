@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { EVIDENCE_LEVELS, NODE_CATEGORIES, isValidScore } from '@/lib/validation/enums';
 import { checkTrustGate, checkSubmissionRate, validateNodeSubmission, checkDuplicate } from '@/lib/quality-gates';
 import { logActivity } from '@/lib/rank-system';
+import { rateLimit } from '@/lib/rate-limiter';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -32,6 +33,12 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  // 20 proposal attempts per minute per user (DB submission limits still apply below)
+  const rl = rateLimit(`propose-node:${session.user.id}`, 20, 60_000);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: 'Too many requests.' }, { status: 429 });
+  }
 
   // ── Quality gates ─────────────────────────────────────────────────────────
   const dbUser = await prisma.user.findUnique({
