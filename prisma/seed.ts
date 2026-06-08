@@ -326,7 +326,7 @@ async function seedSources() {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-async function main() {
+export async function main() {
   console.log('🌱 Nexus Archive — Foundation Seed\n');
   console.log(`   Nodes:   ${staticNodes.length}`);
   console.log(`   Edges:   ${staticEdges.length}`);
@@ -340,6 +340,8 @@ async function main() {
   console.log('\n✅ Seed complete.\n');
 }
 
-main()
-  .catch(e => { console.error(e); process.exit(1); })
-  .finally(() => prisma.$disconnect());
+if (require.main === module) {
+  main()
+    .catch(e => { console.error(e); process.exit(1); })
+    .finally(() => prisma.$disconnect());
+}
