@@ -81,6 +81,16 @@ export default function NavBar() {
   const isAdmin = role === 'owner' || role === 'admin';
   const navItems = isAdmin ? [...NAV_BASE, NAV_ADMIN] : NAV_BASE;
 
+  // Detect whether Google OAuth is actually configured by checking the
+  // /api/auth/providers endpoint once on mount.
+  const [authAvailable, setAuthAvailable] = useState<boolean | null>(null);
+  useEffect(() => {
+    fetch('/api/auth/providers')
+      .then(r => r.json())
+      .then(d => setAuthAvailable(d && Object.keys(d).length > 0))
+      .catch(() => setAuthAvailable(false));
+  }, []);
+
   const handleNav = (id: string) => {
     setCurrentView(id as Parameters<typeof setCurrentView>[0]);
     setMobileOpen(false);
@@ -335,14 +345,25 @@ export default function NavBar() {
                   </AnimatePresence>
                 </>
               ) : (
-                <button
-                  onClick={() => signIn('google')}
-                  disabled={status === 'loading'}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-700/50 hover:bg-purple-600/60 text-purple-200 border border-purple-500/30 transition-all disabled:opacity-50"
-                >
-                  <LogIn size={12} />
-                  <span className="hidden sm:block">Sign In</span>
-                </button>
+                <div className="relative group">
+                  <button
+                    onClick={() => {
+                      if (authAvailable === false) return;
+                      signIn('google', { callbackUrl: window.location.href });
+                    }}
+                    disabled={status === 'loading' || authAvailable === false}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-700/50 hover:bg-purple-600/60 text-purple-200 border border-purple-500/30 transition-all disabled:opacity-50"
+                  >
+                    <LogIn size={12} />
+                    <span className="hidden sm:block">Sign In</span>
+                  </button>
+                  {authAvailable === false && (
+                    <div className="absolute right-0 top-full mt-1.5 w-52 px-3 py-2 rounded-lg bg-slate-900 border border-red-800/50 text-[10px] text-red-400 shadow-xl z-50 hidden group-hover:block">
+                      Google OAuth not configured.<br />
+                      Set <span className="font-mono">AUTH_GOOGLE_ID</span> and <span className="font-mono">AUTH_GOOGLE_SECRET</span> env vars.
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 

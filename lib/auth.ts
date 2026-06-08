@@ -5,9 +5,8 @@ import { prisma } from '@/lib/db';
 
 // ── Role hierarchy ────────────────────────────────────────────────────────────
 // owner > admin > reviewer > contributor > user
-// Only 'owner' and 'admin' reach the admin panel.
-// Role is assigned on sign-in: ADMIN_EMAIL → 'owner', everyone else → 'user'.
-// Promote other users by directly editing the role column in the DB.
+// ADMIN_EMAIL → 'owner' on every sign-in.
+// Promote other users by setting role in DB directly.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type UserRole = 'owner' | 'admin' | 'reviewer' | 'contributor' | 'user';
@@ -20,7 +19,6 @@ export function isAdminSession(
 ): boolean {
   if (!session?.user) return false;
   if (session.user.role && ADMIN_ROLES.includes(session.user.role as UserRole)) return true;
-  // Fallback for the very first request after sign-in before role propagates
   return session.user.email === process.env.ADMIN_EMAIL;
 }
 
@@ -33,8 +31,14 @@ declare module 'next-auth' {
     role?: string;
   }
 }
+declare module '@auth/core/jwt' {
+  interface JWT {
+    id?:   string;
+    role?: string;
+  }
+}
 
-// ── Provider and DB detection ─────────────────────────────────────────────────
+// ── Runtime flags ─────────────────────────────────────────────────────────────
 const hasDB     = !!process.env.DATABASE_URL;
 const hasGoogle = !!(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
 
@@ -59,9 +63,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     : [],
 
   callbacks: {
+    // ── 1. signIn: upgrade role for the owner email ──────────────────────────
     async signIn({ user }) {
-      // Assign owner role to the admin email on every sign-in.
-      // Runs once per login session — never on every request.
       if (hasDB && user?.email === process.env.ADMIN_EMAIL) {
         try {
           await prisma.user.update({
@@ -69,19 +72,45 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             data:  { role: 'owner' },
           });
         } catch {
-          // User record may not exist yet on the very first ever sign-in
-          // (the adapter creates it *after* signIn returns true). The role
-          // will be corrected on the second sign-in. No action needed.
+          // User row may not exist yet on the very first sign-in; the adapter
+          // creates it after signIn returns true. Role corrected next sign-in.
         }
       }
       return true;
     },
 
-    session({ session, user }) {
+    // ── 2. jwt: write id + role into the JWT (JWT-session mode only) ─────────
+    // Runs on first sign-in and on every token refresh.
+    // In database-session mode this callback is NOT called.
+    async jwt({ token, user }) {
       if (user) {
+        // 'user' is populated only on the initial sign-in request
+        token.id = user.id;
+        token.role =
+          user.email === process.env.ADMIN_EMAIL
+            ? 'owner'
+            : (user.role ?? 'user');
+      }
+      return token;
+    },
+
+    // ── 3. session: expose id + role to client ───────────────────────────────
+    // 'user' is populated  → database-session mode (adapter present)
+    // 'token' is populated → JWT-session mode (no adapter)
+    session({ session, user, token }) {
+      if (user) {
+        // Database session mode
         session.user.id   = user.id;
         session.user.role = (user.role as UserRole | undefined) ?? 'user';
-        // Hard-enforce owner role for the admin email regardless of DB state
+        // Hard-enforce owner role for ADMIN_EMAIL regardless of DB state
+        if (session.user.email === process.env.ADMIN_EMAIL) {
+          session.user.role = 'owner';
+        }
+      } else if (token) {
+        // JWT session mode
+        session.user.id   = (token.id as string | undefined) ?? '';
+        session.user.role = (token.role as UserRole | undefined) ?? 'user';
+        // Same hard-enforcement
         if (session.user.email === process.env.ADMIN_EMAIL) {
           session.user.role = 'owner';
         }
