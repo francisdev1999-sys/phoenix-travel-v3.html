@@ -7,11 +7,13 @@
  * Run: npx tsx prisma/seed.ts
  */
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { nodes as staticNodes, edges as staticEdges } from '../lib/graph';
 import { NODE_SOURCES } from '../lib/graph/sources';
 import type { ResearchSource } from '../lib/graph/types';
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const prisma = new PrismaClient({ adapter });
 
 // Category slug → id mapping (built during category seeding)
 const categoryIdMap = new Map<string, string>();
