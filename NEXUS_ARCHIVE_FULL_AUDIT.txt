@@ -1,0 +1,1576 @@
+================================================================================
+       THE NEXUS ARCHIVE — COMPLETE PLATFORM AUDIT
+       Date: 2026-06-08  |  Branch: main / claude/check-this-out-IPPoO
+================================================================================
+
+TABLE OF CONTENTS
+─────────────────
+ 1. Project Overview
+ 2. Technology Stack
+ 3. Database Schema (All Models)
+ 4. Migration History
+ 5. API Routes (All 40+)
+ 6. Library Layer (All Modules)
+ 7. Component Inventory
+ 8. Feature Systems (Deep Dive)
+     8.1  Authentication & Sessions
+     8.2  Role-Based Access Control (RBAC)
+     8.3  Trust Score Engine
+     8.4  Rank & Badge System
+     8.5  Quality Gates & Risk Classifier
+     8.6  Source Credibility Engine
+     8.7  AI Research Review System
+     8.8  Relationship Suggestion Engine
+     8.9  Community Submission Workflows
+     8.10 Admin Review Workflows
+     8.11 Audit Logging
+     8.12 Import Batch System
+     8.13 Platform Governance & Moderation
+     8.14 Knowledge Graph (Static + DB)
+     8.15 Rabbit Hole Feature
+     8.16 Gamification & User Progression
+     8.17 Background Job Queue
+     8.18 Vector Embeddings & Search
+     8.19 Error Handling & URL Navigation
+ 9. Admin Panel Modules
+10. Configuration & Environment
+11. Audit Results — System Status
+12. Known Limitations & Next Steps
+
+
+================================================================================
+ 1. PROJECT OVERVIEW
+================================================================================
+
+Name:     THE NEXUS ARCHIVE
+Purpose:  A community-driven, research-grade knowledge graph for exploring
+          alternative history theories, ancient mysteries, archaeological
+          anomalies, UAP research, mythology, and suppressed history.
+
+Key Principles:
+  - Every claim must trace back to a cited source
+  - Trust is earned, not assumed
+  - Content quality is enforced at every layer (gate → validate → review)
+  - Ranks and badges are recognition only — they NEVER grant authority
+  - The audit trail is immutable — no event is ever deleted
+
+
+================================================================================
+ 2. TECHNOLOGY STACK
+================================================================================
+
+Runtime & Framework
+  Next.js           16.2.7   App Router, RSC, Server Actions
+  React             19.2.4
+  TypeScript        5.x      Strict mode
+
+Database & ORM
+  PostgreSQL        (via Railway managed DB)
+  Prisma            7.8.0    ORM + migrations + adapter-pg
+  pg (node-postgres)         Connection pooling via @prisma/adapter-pg
+  pgvector                   1536-dim vector embeddings
+  pg_trgm                    Trigram GIN indexes for fuzzy search & duplicate detection
+
+Authentication
+  NextAuth          5.0.0-beta.31   Auth.js v5
+  Google OAuth      Provider (always enabled)
+  GitHub OAuth      Provider (conditional on env vars)
+
+AI / ML
+  Anthropic SDK     (claude-sonnet-4-6)   Deep research review
+  OpenAI            text-embedding-3-small  Node & source embeddings
+
+State Management
+  Zustand           5.0.14   Client-side (NOT persisted for currentView)
+
+3D & Animation
+  Three.js          0.184.0
+  React Three Fiber 9.6.1
+  @react-three/drei 10.7.7
+  Framer Motion     12.40.0
+  GSAP              3.15.0
+
+Styling
+  Tailwind CSS      4.x      (PostCSS plugin)
+  Lucide React      1.17.0   Icons
+
+Package Manager   npm
+Node Requirement  >= 18.18.0
+
+Build Scripts
+  npm run dev       Development server
+  npm run build     prisma generate + next build
+  npm run start     DB migrate + production server
+  npm run lint      ESLint 9
+
+
+================================================================================
+ 3. DATABASE SCHEMA (ALL MODELS)
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+ AUTHENTICATION MODELS (NextAuth standard)
+────────────────────────────────────────────────────────────────────────────────
+
+Account
+  id, userId, type, provider, providerAccountId
+  refresh_token, access_token, expires_at, token_type, scope, id_token, session_state
+  Relations: User
+
+Session
+  id, sessionToken, userId, expires
+  Relations: User
+
+VerificationToken
+  identifier, token, expires
+
+────────────────────────────────────────────────────────────────────────────────
+ USER MODEL (Core)
+────────────────────────────────────────────────────────────────────────────────
+
+User
+  id, name, email, emailVerified, image
+  createdAt, updatedAt
+
+  Role & Status
+    role          String @default("user")
+                  Values: owner | admin | moderation_admin | reviewer |
+                          source_verifier | verified_contributor |
+                          contributor | user | banned
+    isBanned      Boolean @default(false)
+    banReason     String?
+    banExpiresAt  DateTime?
+    warningCount  Int @default(0)
+
+  Reputation Metrics
+    trustScore      Float @default(50)    Range: 0–100
+    activityScore   Float @default(0)     Cumulative, per-action weights
+    rank            String @default("New Seeker")
+    lastActiveAt    DateTime?
+
+  Contribution Counters
+    submissionCount Int @default(0)
+    approvedCount   Int @default(0)
+    rejectedCount   Int @default(0)
+
+  Relations
+    accounts, sessions
+    progress          UserProgress?
+    permissions       UserPermission?
+    trustEvents       UserTrustEvent[]
+    activityLogs      UserActivityLog[]
+    earnedBadges      UserBadge[]
+    reportsSubmitted  Report[]  @relation("reporter")
+    reportsAgainst    Report[]  @relation("reported")
+    modActions        ModerationAction[] @relation("subject")
+    modByMe           ModerationAction[] @relation("moderator")
+    proposedNodes     ProposedNode[]
+    proposedEdges     ProposedEdge[]
+    submittedSources  Source[]
+
+────────────────────────────────────────────────────────────────────────────────
+ GOVERNANCE MODELS
+────────────────────────────────────────────────────────────────────────────────
+
+UserPermission (11 granular flags per user)
+  id, userId (unique)
+  canApproveSources     Boolean @default(false)
+  canApproveNodes       Boolean @default(false)
+  canApproveEdges       Boolean @default(false)
+  canPublishNodes       Boolean @default(false)
+  canAssignRoles        Boolean @default(false)
+  canBanUsers           Boolean @default(false)
+  canRunAiReview        Boolean @default(false)
+  canViewPlatformHealth Boolean @default(false)
+  canViewCosts          Boolean @default(false)
+  canManageImports      Boolean @default(false)
+  canViewAuditLog       Boolean @default(false)
+  updatedAt, updatedBy
+
+UserTrustEvent (append-only audit trail)
+  id, userId, delta Float, reason, detail?, createdBy, createdAt
+  Reason values: approved_node | approved_source | approved_relationship |
+                 rejected_content | fake_source | spam_submission |
+                 moderator_warning | misinformation_flag | reviewer_endorsement |
+                 account_age_bonus | low_rejection_rate_bonus |
+                 high_credibility_sources | admin_adjustment
+
+UserActivityLog
+  id, userId, actionType, detail Json, createdAt
+  Action types: login | node_view | search | save | submit | comment
+
+Badge (19 seeded)
+  id, name, description, icon, category
+  Seeded badges (with categories):
+    Membership:    founding-member, one-year
+    Streak:        streak-7, streak-30, streak-100
+    Contribution:  evidence-builder, reliable-contributor
+    Specialty:     source-hunter, graph-connector, critical-thinker,
+                   trusted-researcher, ancient-specialist, mythology-specialist,
+                   uap-researcher, archaeology-contributor, timeline-mapper
+    Authority:     source-verifier, reviewer, admin
+
+UserBadge
+  userId, badgeId, awardedAt, awardedBy
+  @@unique([userId, badgeId])  — award is idempotent
+
+Report (community reporting)
+  id, submittedBy, reportedUserId?, entityType?, entityId?
+  reason: spam | misinformation | fake_source | harassment | low_quality | other
+  detail?, status: open | investigating | resolved | dismissed
+  resolvedBy?, resolvedAt?, resolveNote?, createdAt
+
+ModerationAction
+  id, userId, moderatorId
+  actionType: warning | suspension | ban | unban | trust_adjustment |
+              badge_award | role_change
+  reason, detail Json, expiresAt?, createdAt
+
+────────────────────────────────────────────────────────────────────────────────
+ USER PROGRESSION MODELS
+────────────────────────────────────────────────────────────────────────────────
+
+UserProgress
+  id, userId (unique), level, xp, theoriesExplored, connectionsDiscovered
+  lastActiveAt, createdAt, updatedAt
+
+NodeExploration
+  id, userId, nodeId, exploredAt
+  @@unique([userId, nodeId])
+
+ConnectionDiscovery
+  id, userId, edgeId, discoveredAt
+  @@unique([userId, edgeId])
+
+UserAchievement
+  id, userId, achievementId, unlockedAt
+  @@unique([userId, achievementId])
+
+────────────────────────────────────────────────────────────────────────────────
+ KNOWLEDGE GRAPH MODELS
+────────────────────────────────────────────────────────────────────────────────
+
+Category
+  id, slug (unique), name, parentId? (self-relation for hierarchy)
+
+Node
+  id (slug, PK), title, categoryId
+  description, mainstreamView?
+  evidenceLevel: verified | strong_evidence | debated | speculative | mythological
+  confidenceScore Float (0–1)
+  lat?, lon?, region?, country?
+  year?, dateStart?, dateEnd?
+  status: draft | published
+  adminReviewStatus: ready_to_review | review_required | needs_enrichment | soft_rejected
+  version Int, publishedAt?
+  importBatchId?
+  createdBy?, createdAt, updatedAt
+  Relations: category, tags, claims, criticisms, openQuestions,
+             sourceLinks, outgoingEdges, incomingEdges, versions,
+             embedding, adjacency, aiReviews
+
+NodeTag
+  nodeId, tag
+  @@unique([nodeId, tag])
+
+Claim
+  id, nodeId, text, orderIndex
+  Relations: sourceLinks
+
+Criticism
+  id, nodeId, text, orderIndex
+  Relations: sourceLinks
+
+OpenQuestion
+  id, nodeId, text, orderIndex
+
+Edge
+  id, fromNodeId, toNodeId
+  relationship: historical | geographical | textual | thematic |
+                influence | contradictory | speculative
+  description, explanation?, historicalBasis?
+  strengthScore Float, confidence Float
+  evidenceLevel, status: draft | published
+  importBatchId?
+  createdBy?, createdAt, updatedAt
+
+NodeVersion
+  id, nodeId, version Int, snapshot Json
+  changedBy, changeNote?, createdAt
+  @@unique([nodeId, version])
+
+────────────────────────────────────────────────────────────────────────────────
+ SOURCE MODELS
+────────────────────────────────────────────────────────────────────────────────
+
+Source
+  id, title, sourceType, author?, publicationYear?, publisher?, journal?
+  volume?, issue?, pages?, url?, doi?, isbn?, abstract?, notes?
+  language @default("en")
+  credibilityScore Float, credibilityFactors Json
+  credibilityOverride Float?, overrideReason?, overriddenBy?, overriddenAt?
+  status: pending | approved | rejected
+  reviewNotes?, reviewedAt?, reviewedBy?
+  submittedBy, importBatchId?
+  createdAt, updatedAt
+  Relations: submitter, links, embedding
+
+SourceLink
+  id, sourceId
+  Legacy: targetType?, targetId?, claimIndex?
+  FK pattern: nodeId?, edgeId?, claimId?, criticismId?
+  linkType: primary | supports | context | contradicts | references
+  relevanceScore Float @default(0.7)
+  notes?, createdBy?, createdAt
+  @@unique([sourceId, nodeId])
+  @@unique([sourceId, claimId])
+
+SourceEmbedding
+  id, sourceId (unique), embedding Float[] (1536 dims), createdAt
+
+────────────────────────────────────────────────────────────────────────────────
+ COMMUNITY SUBMISSION MODELS
+────────────────────────────────────────────────────────────────────────────────
+
+ProposedNode
+  id, nodeId? (desired slug), label, category, description
+  evidenceLevel, confidence Float, mainstreamView?
+  claims Json [], criticisms Json [], openQuestions Json [], tags Json []
+  region?, country?, dateStart?, dateEnd?
+  status: pending | approved | rejected | needs_revision
+  reviewNotes?, reviewedAt?, reviewedBy?
+  submittedBy, createdAt, updatedAt
+  Relations: submitter
+
+ProposedEdge
+  id, fromNodeId, toNodeId, relationship, description
+  evidenceLevel, confidence Float, strengthScore Float
+  explanation?, historicalBasis?
+  status: pending | approved | rejected | needs_revision
+  reviewNotes?, reviewedAt?, reviewedBy?
+  submittedBy, createdAt, updatedAt
+  Relations: submitter
+
+RelationshipSuggestion
+  id, fromNodeId, toNodeId, suggestedRelationship
+  reason, evidenceBasis?, confidence Float, riskLevel: low|medium|high
+  signalBreakdown Json
+  status: pending | approved | rejected | revised
+  reviewedBy?, reviewedAt?, reviewerNote?, promotedEdgeId?
+  createdAt, updatedAt
+
+────────────────────────────────────────────────────────────────────────────────
+ IMPORT & ADMIN MODELS
+────────────────────────────────────────────────────────────────────────────────
+
+ImportBatch
+  id, importedBy
+  parsedCount, acceptedCount, rejectedCount, warningCount Int
+  validationReport Json
+  status: committed | rolled_back
+  rolledBackAt?, rolledBackBy?, rollbackNote?
+  createdAt
+
+AuditLog
+  id, userId?, userEmail?, action, entityType, entityId, detail Json, createdAt
+  Actions: publish | unpublish | archive | restore | edit | approve | reject |
+           needs_revision | import | rollback | bulk_approve | bulk_reject |
+           bulk_publish | ban | unban | warning | suspension | role_change |
+           trust_adjustment + any custom string
+
+AiResearchReview
+  id, nodeId, model, promptVersion
+  reviewJson Json, tokenCount Int, estimatedCostUsd Float
+  createdBy, createdAt
+
+────────────────────────────────────────────────────────────────────────────────
+ INFRASTRUCTURE MODELS
+────────────────────────────────────────────────────────────────────────────────
+
+IngestionJob (background job queue)
+  id, type: embed-node | embed-source | rebuild-adjacency
+  payload Json, status: pending | processing | done | failed
+  priority Int @default(0), attempts Int @default(0), lastError?
+  createdAt, processedAt?
+
+NodeEmbedding
+  id, nodeId (unique), embedding Float[] (1536), createdAt
+
+AdjacencyCache
+  id, nodeId (unique), hops1 Json, hops2 Json, updatedAt
+
+PlatformMetric
+  id, date DateTime, metricName, metricValue Float, metricMeta Json
+  @@unique([date, metricName])
+
+
+================================================================================
+ 4. MIGRATION HISTORY
+================================================================================
+
+ # | Migration Name                             | Description
+───┼────────────────────────────────────────────┼─────────────────────────────
+ 1 | 20260606000000_init                        | Initial schema bootstrap
+ 2 | 20260608000000_foundation_architecture     | Core graph models, auth
+ 3 | 20260608000001_tier0_constraints           | Unique constraints, GIN indexes
+ 4 | 20260608000002_tier1_import_batch          | Import batch & rollback system
+ 5 | 20260608000003_tier2_admin_workflow        | Admin review, audit log
+ 6 | 20260608000004_user_roles                  | Role enum, role checks
+ 7 | 20260608000005_relationship_suggestions    | Suggestion engine model
+ 8 | 20260608000006_source_credibility_engine   | Credibility scoring system
+ 9 | 20260608000007_ai_research_review          | AI review model, job queue
+10 | 20260608000008_governance_system           | Governance: trust, ranks,
+   |                                            | badges, permissions, reports,
+   |                                            | moderation, platform metrics
+
+
+================================================================================
+ 5. API ROUTES (ALL 40+)
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+ AUTHENTICATION
+────────────────────────────────────────────────────────────────────────────────
+
+GET  /api/auth/[...nextauth]    NextAuth session handler
+POST /api/auth/[...nextauth]    OAuth callback handler
+
+────────────────────────────────────────────────────────────────────────────────
+ USER
+────────────────────────────────────────────────────────────────────────────────
+
+GET  /api/user/profile          Public or own profile
+                                Own: auto-triggers evaluateBadges + refreshUserRank
+                                Returns: trust, activity, rank, badges, counters
+
+GET  /api/progress              Client-side user exploration progress
+
+────────────────────────────────────────────────────────────────────────────────
+ KNOWLEDGE GRAPH — NODES
+────────────────────────────────────────────────────────────────────────────────
+
+GET    /api/nodes/propose       List proposed nodes (paginated, status filter)
+                                Non-admin: own + approved only
+POST   /api/nodes/propose       Submit node proposal
+                                Gates: trust ≥ 20, rate limit, content validation,
+                                       duplicate detection (pg_trgm)
+                                Returns: proposal + warnings + risk level
+                                Side-effect: submissionCount++, logActivity
+
+GET    /api/nodes/drafts        Admin draft queue with per-node quality scores
+
+GET    /api/nodes/[id]          Single node: content, neighbours, sources,
+                                research score, AI review (if exists)
+PATCH  /api/nodes/[id]          Admin edit (increments version, creates NodeVersion)
+
+POST   /api/nodes/[id]/review   Admin approve / reject / needs_revision
+                                Approve: creates live Node from ProposedNode,
+                                         creates NodeVersion v1, upserts Category,
+                                         fires trust event +5 (approved_node),
+                                         increments approvedCount,
+                                         evaluateBadges + refreshUserRank
+                                Reject: fires trust event -3 (rejected_content),
+                                        increments rejectedCount,
+                                        evaluateBadges + refreshUserRank
+
+POST   /api/nodes/[id]/publish  Move draft → published
+                                Enqueues: embed-node, rebuild-adjacency jobs
+                                Triggers: suggestion engine run
+
+GET    /api/nodes/[id]/source-quality   Source credibility assessment for node
+GET    /api/nodes/[id]/sources          List sources linked to node
+POST   /api/nodes/[id]/sources          Create source-node link
+GET    /api/nodes/[id]/versions         Version history (admin only)
+
+────────────────────────────────────────────────────────────────────────────────
+ KNOWLEDGE GRAPH — EDGES
+────────────────────────────────────────────────────────────────────────────────
+
+GET  /api/edges/propose         List edge proposals (status filter)
+POST /api/edges/propose         Submit edge proposal
+                                Gates: trust ≥ 20, rate limit
+                                Validation: self-loop guard, enum checks
+                                Side-effect: submissionCount++, logActivity
+
+POST /api/edges/[id]/review     Admin approve / reject / needs_revision
+                                Approve: trust +2 (approved_relationship),
+                                         approvedCount++, badges, rank
+                                Reject: trust -3, rejectedCount++, badges, rank
+
+────────────────────────────────────────────────────────────────────────────────
+ SOURCES
+────────────────────────────────────────────────────────────────────────────────
+
+GET  /api/sources               List sources (page, status, type, q, mine filters)
+                                Non-admin: approved + own only
+POST /api/sources               Submit new source
+                                Gates: trust ≥ 20, rate limit
+                                Validation: sourceType enum check
+                                Auto-computes credibility score on create
+                                Side-effect: submissionCount++, logActivity
+
+GET   /api/sources/[id]         Source detail
+PATCH /api/sources/[id]         Admin edit source metadata
+
+POST  /api/sources/[id]/review  Admin approve / reject / needs_revision
+                                Approve: trust +3 (approved_source),
+                                         approvedCount++, badges, rank,
+                                         triggers source-quality re-compute
+                                         on all linked nodes
+                                Reject: trust -3, rejectedCount++, badges, rank
+
+POST  /api/sources/[id]/override        Admin manually set credibility score
+GET   /api/sources/[id]/links           Sources linked to specific targets
+POST  /api/sources/duplicate-check      Duplicate detection before submission
+
+────────────────────────────────────────────────────────────────────────────────
+ GRAPH & SEARCH
+────────────────────────────────────────────────────────────────────────────────
+
+GET  /api/graph                 Viewport-based graph retrieval
+                                Falls back to static data if DB unavailable
+
+GET  /api/rabbit-hole/[nodeId]  Compute rabbit-hole traversal from node
+                                Returns: path[], next suggestions, depth
+
+GET  /api/search                Full-text search
+                                Uses tsvector + trigram GIN indexes
+
+────────────────────────────────────────────────────────────────────────────────
+ ADMIN — USERS & GOVERNANCE
+────────────────────────────────────────────────────────────────────────────────
+
+GET  /api/admin/users                   List all users
+                                        Filters: search, role, banned
+                                        Sort: trustScore, activityScore, createdAt
+                                        Includes: rank, badges, counters
+
+POST /api/admin/users/[id]/role         Change user role
+                                        Owner-only for admin-level assignments
+                                        Cannot demote another admin unless owner
+
+GET  /api/admin/users/[id]/permissions  Fetch user's effective permission flags
+POST /api/admin/users/[id]/permissions  Update permission flags
+                                        Owner-only for admin-level flags
+                                        Validates flag names against AllPermissions
+
+POST /api/admin/users/[id]/ban          Ban or unban user
+                                        Requires canBanUsers permission
+                                        Cannot ban admins unless owner
+                                        Logs ModerationAction record
+                                        Optional: expiresAt for temp bans
+
+GET  /api/admin/users/[id]/trust        Trust event history (paginated)
+POST /api/admin/users/[id]/trust        Manual trust adjustment
+                                        Delta capped at ±50 per action
+                                        Uses reason: admin_adjustment
+
+────────────────────────────────────────────────────────────────────────────────
+ ADMIN — MODERATION
+────────────────────────────────────────────────────────────────────────────────
+
+GET   /api/admin/moderation/reports          List reports
+                                             Mod+ access required
+                                             Filters: status, entityType
+POST  /api/admin/moderation/reports          Submit a report (any auth user)
+                                             Prevents duplicate open reports
+PATCH /api/admin/moderation/reports/[id]     Resolve / dismiss / investigate
+                                             Logs to AuditLog
+
+GET  /api/admin/moderation/actions           Moderation history (filterable by userId)
+POST /api/admin/moderation/actions           Log mod action (warning, suspension, etc.)
+                                             Fires trust event on 'moderator_warning'
+
+────────────────────────────────────────────────────────────────────────────────
+ ADMIN — ANALYTICS & HEALTH
+────────────────────────────────────────────────────────────────────────────────
+
+GET  /api/admin/stats             Quick stats: pending/approved/rejected by type
+
+GET  /api/admin/platform-health   Full platform analytics
+                                  Requires: super-admin or canViewPlatformHealth
+                                  Returns: DAU/WAU/MAU, signups, role distribution,
+                                           content counts, queue depths,
+                                           moderation activity, top nodes
+                                  AI cost section: only if canViewCosts
+
+GET  /api/admin/reports           Aggregate reports by category
+
+────────────────────────────────────────────────────────────────────────────────
+ ADMIN — AI REVIEW
+────────────────────────────────────────────────────────────────────────────────
+
+POST /api/admin/ai-review         Trigger AI research review on a node
+                                  Manual execution only (no auto-trigger)
+                                  Monthly budget: $15 warning, $20 hard stop
+                                  Caches: returns existing if node unchanged
+
+GET  /api/admin/ai-review/usage   Monthly token & cost usage breakdown
+
+────────────────────────────────────────────────────────────────────────────────
+ ADMIN — RELATIONSHIP SUGGESTIONS
+────────────────────────────────────────────────────────────────────────────────
+
+GET  /api/admin/suggestions              List suggestions
+                                         Filters: status, confidence threshold
+POST /api/admin/suggestions/[id]/review  Approve → creates draft Edge
+                                         Reject or Revise with note
+
+────────────────────────────────────────────────────────────────────────────────
+ ADMIN — AUDIT & IMPORT
+────────────────────────────────────────────────────────────────────────────────
+
+GET  /api/audit-log                              Paginated audit log (admin only)
+                                                 Filters: action, entityType, userId
+
+POST /api/import/batch                           Batch import nodes/edges from JSON
+                                                 Validates all records first
+                                                 Writes atomic batch or rejects all
+GET  /api/import/batch/[batchId]                 Batch report: per-record validation
+POST /api/import/batch/[batchId]/rollback        Atomically delete batch records
+POST /api/import/batch/[batchId]/bulk-action     Bulk: publish, archive, etc.
+
+────────────────────────────────────────────────────────────────────────────────
+ BACKGROUND JOBS
+────────────────────────────────────────────────────────────────────────────────
+
+POST /api/jobs/process    Process job queue
+                          Handles: embed-node, embed-source, rebuild-adjacency
+
+
+================================================================================
+ 6. LIBRARY LAYER (ALL MODULES)
+================================================================================
+
+FILE                          SIZE   PURPOSE
+──────────────────────────────────────────────────────────────────────────────
+lib/db.ts                      51L   Prisma client export (write + read replica)
+lib/auth.ts                   143L   NextAuth config, role types, session helpers
+lib/permissions.ts            195L   RBAC — role hierarchy, permission flags,
+                                      defaultPermissionsForRole, getUserPermissions
+lib/trust-score.ts            129L   Trust engine — applyTrustEvent, TRUST_DELTAS,
+                                      getTrustEvents, runMonthlyTrustPass
+lib/trust-utils.ts             19L   Client-safe: trustLevel(), trustColor()
+                                      (no Prisma import — safe for browser bundles)
+lib/rank-system.ts            202L   Ranks (10 tiers), computeRank, refreshUserRank,
+                                      awardBadge (idempotent), evaluateBadges,
+                                      logActivity, ACTIVITY_WEIGHTS, getUserBadges
+lib/quality-gates.ts          213L   checkTrustGate, checkSubmissionRate,
+                                      validateNodeSubmission, checkDuplicate,
+                                      classifyRisk (GREEN/YELLOW/RED),
+                                      SUBMISSION_LIMITS per role
+lib/source-credibility.ts     145L   computeCredibility() — multi-factor scoring:
+                                      sourceType, DOI, ISBN, peer review, author,
+                                      journal, publisher prestige
+lib/source-quality.ts         141L   assessSourceQuality() for per-node scoring
+lib/source-types.ts            92L   SOURCE_TYPES enum, colors, metadata
+lib/ai-review.ts              436L   runAiReview() — Claude integration,
+                                      budget enforcement, caching, full JSON schema
+lib/suggestion-engine.ts      359L   Rule-based suggestion: 7 signals, feedback loop,
+                                      MIN_SCORE 0.25, MAX_PER_NODE 15
+lib/audit.ts                   63L   writeAuditLog(), logAudit() (any string action)
+lib/validation/enums.ts        81L   Runtime enum arrays: EVIDENCE_LEVELS,
+                                      RELATIONSHIP_TYPES, SOURCE_TYPES,
+                                      NODE_CATEGORIES, LINK_TYPES, isValidScore()
+lib/validation/schema.ts      352L   validateNode(), validateEdge() — deterministic,
+                                      no DB calls. Returns errors (hard) + warnings (soft)
+lib/validation/iqs.ts         158L   Integrated Quality Score — multi-factor
+                                      draft node quality assessment
+lib/validation/duplicates.ts  100L   checkSourceDuplicate() — similarity scoring
+lib/retrieval/graph.ts        285L   getNodeFromDB(), getNeighboursFromDB(),
+                                      computeResearchScoreFromDB(),
+                                      getViewportNodes(), getFocusedViewport()
+lib/retrieval/rabbit-hole.ts  314L   computeRabbitHoleFromDB() — traversal algorithm
+lib/rabbit-hole.ts            249L   computeRabbitHole() — depth tracking
+lib/jobs/queue.ts             100L   enqueue(), dequeue(), completeJob(), failJob(),
+                                      getQueueStats() — Prisma-based, no ext deps
+lib/cache/node-cache.ts        81L   SSR-safe node data caching layer
+lib/graph/index.ts            310L   Static graph: nodes, edges, types, enriched sources
+lib/graph/nodes.ts           1050L   100+ static node definitions with full content
+lib/graph/edges.ts             79L   Static relationship definitions
+lib/graph/types.ts            119L   TypeScript interfaces for graph domain
+lib/graph/sources.ts         2172L   Curated source library (NODE_SOURCES map)
+lib/data/theories.ts          937L   Legacy static theory data (DB fallback)
+lib/data/timeline.ts           18L   Static timeline events
+lib/data/sites.ts              16L   Static ancient site locations
+lib/store/userStore.ts        210L   Zustand store: progress, currentView,
+                                      selectedTheory, rabbitHoleChain, audio
+lib/types.ts                   95L   Core TypeScript interfaces
+
+
+================================================================================
+ 7. COMPONENT INVENTORY
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+ LAYOUT (components/layout/)
+────────────────────────────────────────────────────────────────────────────────
+
+AppShell.tsx
+  - Main app wrapper; lazy-loads all major views
+  - Manages view switching via Zustand currentView
+  - URL sync: pushState/replaceState on view change
+  - Back-button handling: popstate listener sets currentView
+  - Keyboard shortcuts: r → rabbit hole, / → search
+  - ParticleField background, chat bubble, rabbit hole entry modal
+
+NavBar.tsx
+  - Auth status (sign in / user avatar menu)
+  - View switcher buttons
+  - Search input
+
+AppErrorBoundary.tsx
+  - React class component (required for componentDidCatch)
+  - Catches any unhandled render error
+  - Shows "Reload Archive" recovery button
+  - Prevents white screen of death on navigation crash
+
+────────────────────────────────────────────────────────────────────────────────
+ SECTIONS (components/sections/) — Major Views
+────────────────────────────────────────────────────────────────────────────────
+
+LandingPage.tsx         Hero screen, CTA, animated intro
+KnowledgeGraph.tsx      Force-directed canvas graph (primary visualization)
+UniverseView.tsx        Spherical 3D orbital visualization
+TimelineExplorer.tsx    Temporal, date-sorted theory browsing
+EvidenceBoard.tsx       Claims, sources, supports/contradicts view
+AncientGlobe.tsx        Geographic globe with location-based clustering
+Dashboard.tsx           User progress, rank, XP, achievements
+NodePanel.tsx           Detailed node content + sources + neighbours
+TheoryPanel.tsx         Deep-dive: full theory, evidence, criticisms
+RabbitHoleView.tsx      Sequential rabbit hole traversal
+RabbitHoleMode.tsx      Rabbit hole UI wrapper
+AIAssistant.tsx         Chat/Q&A interface with AI response display
+SourceIngestion.tsx     Source submission and review UI
+AdminPanel.tsx          Admin dashboard — tabs for all admin modules
+GraphDiagnostics.tsx    Graph structure inspection, index metrics
+
+────────────────────────────────────────────────────────────────────────────────
+ ADMIN (components/admin/)
+────────────────────────────────────────────────────────────────────────────────
+
+AdminStats.tsx              Quick stats: pending/approved/rejected counts
+AdminReports.tsx            Analytics by category, user activity
+DraftNodeQueue.tsx          Draft queue with inline editing, quality indicators
+InlineNodeEditor.tsx        Edit node fields inline (title, desc, evidence, claims)
+NodeVersionHistory.tsx      Version timeline, rollback interface, diff view
+NodeSourceManager.tsx       Add/remove/edit source links for a node
+ProposedNodeCard.tsx        Proposal card: preview + approve/reject buttons
+ProposedEdgeCard.tsx        Edge proposal card
+ProposeNodeForm.tsx         Admin form to create a node proposal
+ProposeEdgeForm.tsx         Admin form to create an edge proposal
+ReviewActions.tsx           Approve / reject / needs-revision UI with notes
+UserManagement.tsx          Role assignment, ban/unban, permission updates
+                            Imports trustColor from lib/trust-utils (client-safe)
+ModerationQueue.tsx         Reports list, status filter tabs, resolve/dismiss
+RelationshipSuggestions.tsx Suggestion review: filter, approve → edge, reject/revise
+AiResearchReview.tsx        AI review output display: consensus, evidence, risk flags
+AuditLogDisplay.tsx         Paginated audit trail viewer
+PlatformHealthDashboard.tsx Platform metrics: users, content, queues, AI cost
+ImportBatchList.tsx         Import batch list: status, counts
+ImportBatchDetail.tsx       Per-record validation detail, rollback button
+TextFieldModal.tsx          Reusable modal for long-text editing
+
+────────────────────────────────────────────────────────────────────────────────
+ RESEARCH (components/research/)
+────────────────────────────────────────────────────────────────────────────────
+
+ClaimBlock.tsx          Single claim with source links
+Criticism.tsx           Counter-argument display
+EvidenceBadge.tsx       Color-coded evidence level badge
+SourceCard.tsx          Source metadata: title, author, year, DOI, credibility
+RelationshipCard.tsx    Edge display: nodes, type, strength, confidence
+ConfidenceMeter.tsx     Visual confidence gauge
+ResearchScore.tsx       Composite research quality score display
+
+────────────────────────────────────────────────────────────────────────────────
+ SOURCES (components/sources/)
+────────────────────────────────────────────────────────────────────────────────
+
+SourceSubmitForm.tsx    Multi-step submit: form → dup check → confirm → done
+SourceCard.tsx          Compact source preview
+SourceDetailPanel.tsx   Full source view: metadata, links, review notes
+SourceBrowse.tsx        Filterable, sortable source library
+SourceReviewQueue.tsx   Admin queue of pending sources
+SourceStrengthBadge.tsx Composite credibility score badge
+NodeSourceStrength.tsx  Per-node aggregate source quality
+
+────────────────────────────────────────────────────────────────────────────────
+ RABBIT HOLE (components/rabbit-hole/)
+────────────────────────────────────────────────────────────────────────────────
+
+PathCard.tsx            Path segment in rabbit hole traversal
+ConnectionCard.tsx      Relationship between two nodes in the path
+
+────────────────────────────────────────────────────────────────────────────────
+ EFFECTS (components/effects/)
+────────────────────────────────────────────────────────────────────────────────
+
+ParticleField.tsx       Ambient particle canvas background (performance-optimized)
+TunnelEffect.tsx        Tunnel/wormhole visual for transitions
+
+
+================================================================================
+ 8. FEATURE SYSTEMS (DEEP DIVE)
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+ 8.1 AUTHENTICATION & SESSIONS
+────────────────────────────────────────────────────────────────────────────────
+
+Provider:  NextAuth v5 (Auth.js beta.31)
+Strategy:  OAuth-only (no email/password)
+Providers: Google OAuth (always enabled)
+           GitHub OAuth (enabled if AUTH_GITHUB_ID + AUTH_GITHUB_SECRET set)
+
+Session Type Augmentation:
+  - session.user.id    (always present)
+  - session.user.role  (loaded from DB on each session callback)
+  - session.user.email
+
+Server Helpers (lib/auth.ts):
+  auth()                     Returns current server session
+  isAdminSession(s)          role IN [owner, admin]
+  isModOrAboveSession(s)     role IN [owner, admin, moderation_admin]
+  isReviewerOrAboveSession(s) role IN [owner, admin, ..., reviewer]
+
+Environment Variables:
+  AUTH_SECRET           Required
+  NEXTAUTH_URL or AUTH_URL  Required
+  AUTH_GOOGLE_ID        Required
+  AUTH_GOOGLE_SECRET    Required
+  AUTH_GITHUB_ID        Optional
+  AUTH_GITHUB_SECRET    Optional
+
+────────────────────────────────────────────────────────────────────────────────
+ 8.2 ROLE-BASED ACCESS CONTROL (RBAC)
+────────────────────────────────────────────────────────────────────────────────
+
+9-Level Role Hierarchy (highest → lowest):
+  1. owner               Full control, cannot be demoted by non-owner
+  2. admin               Platform management, user governance
+  3. moderation_admin    Moderation-focused admin
+  4. reviewer            Content review, suggestion approval
+  5. source_verifier     Source approval only
+  6. verified_contributor Elevated submission rights
+  7. contributor         Standard contributor
+  8. user                Default role for new accounts
+  9. banned              Cannot submit, effectively locked out
+
+Role Change Rules:
+  - Only owner can assign/demote admin roles
+  - Cannot change role of another admin unless you are owner
+  - Role changes logged to AuditLog
+
+11 Granular Permission Flags (UserPermission model):
+  canApproveSources       canApproveNodes       canApproveEdges
+  canPublishNodes         canAssignRoles        canBanUsers
+  canRunAiReview          canViewPlatformHealth canViewCosts
+  canManageImports        canViewAuditLog
+
+Default Permissions by Role (lib/permissions.ts):
+  owner:              all flags true
+  admin:              all flags true
+  moderation_admin:   canBanUsers, canViewAuditLog
+  reviewer:           canApproveNodes, canApproveEdges, canApproveSources
+  source_verifier:    canApproveSources
+  others:             all false (explicit grant required)
+
+────────────────────────────────────────────────────────────────────────────────
+ 8.3 TRUST SCORE ENGINE
+────────────────────────────────────────────────────────────────────────────────
+
+Range:    0–100  (new user default: 50)
+Storage:  User.trustScore (live value) + UserTrustEvent[] (append-only log)
+Purpose:  Measures contribution quality, not activity volume.
+
+Trust Deltas:
+  approved_node              +5
+  approved_source            +3
+  approved_relationship      +2
+  rejected_content           -3
+  fake_source               -10
+  spam_submission            -8
+  moderator_warning         -15
+  misinformation_flag       -20
+  reviewer_endorsement      +10
+  account_age_bonus          +1   (per quarter, max 8 per user)
+  low_rejection_rate_bonus   +0.5 (monthly, if <10% reject with 10+ submissions)
+  high_credibility_sources   +2   (monthly, if avg credibility > 0.8)
+  admin_adjustment            0   (custom delta provided by caller)
+
+Key Functions (lib/trust-score.ts):
+  applyTrustEvent(userId, reason, delta?, detail?, createdBy)
+    → Appends event, clamps score 0–100, updates User.trustScore
+  getTrustEvents(userId, limit=50)
+    → Returns event history descending
+  runMonthlyTrustPass()
+    → Batch: awards low_rejection_rate_bonus + account_age_bonus
+
+Trust Gates (minimum to submit):
+  isBanned: true  → blocked always
+  trustScore < 20 → blocked (403)
+
+Display Helpers (lib/trust-utils.ts — client-safe, no Prisma):
+  trustLevel(score): "Very Low" | "Low" | "Moderate" | "High" | "Very High"
+  trustColor(score): Tailwind CSS color class
+
+────────────────────────────────────────────────────────────────────────────────
+ 8.4 RANK & BADGE SYSTEM
+────────────────────────────────────────────────────────────────────────────────
+
+10 Rank Tiers (lib/rank-system.ts):
+  Rank Name              minActivity  minTrust  minApproved  manualOnly
+  ─────────────────────────────────────────────────────────────────────
+  New Seeker                    0         0          0         no
+  Active Seeker                20         0          0         no
+  Archive Explorer             50        21          0         no
+  Source Contributor           30        30          1         no
+  Evidence Builder             40        40          3         no
+  Trusted Seeker               50        60          5         no
+  Verified Contributor         60        75         10         no
+  Research Ally                70        85         20         no
+  Archive Fellow               80        90         30         no
+  Council Reviewer              0         0          0         YES
+
+Council Reviewer is manual-only — cannot be earned, only granted by admin.
+Ranks are recognition only. They NEVER grant system permissions.
+
+Rank Computation:
+  computeRank(activityScore, trustScore, approvedCount)
+    → Walks ranks highest-first, returns first all-conditions-met rank
+  refreshUserRank(userId)
+    → Fetches user, recomputes, updates DB if changed
+
+Badge System (19 badges):
+  evaluateBadges(userId) checks 10 automatic conditions:
+    founding-member       Account created within 90 days of platform launch (2026-01-01)
+    one-year              Account age ≥ 365 days
+    evidence-builder      approvedCount ≥ 3
+    reliable-contributor  submissionCount ≥ 10 AND rejectionRate < 10%
+    trusted-researcher    trustScore ≥ 80
+    source-verifier       role IN [source_verifier, reviewer, admin, owner]
+    reviewer              role IN [reviewer, admin, owner]
+    admin                 role IN [admin, owner]
+    source-hunter         ≥ 5 approved sources submitted
+    graph-connector       ≥ 5 approved edges submitted
+
+  awardBadge(userId, badgeId, awardedBy='system') is idempotent — safe to call multiple times.
+
+Activity Weights (ACTIVITY_WEIGHTS):
+  login:      2
+  node_view:  1
+  search:     0.5
+  save:       1
+  submit:     3
+  comment:    1.5
+
+logActivity(userId, actionType, detail?)
+  → Creates UserActivityLog record
+  → Increments User.activityScore by weight
+  → Updates User.lastActiveAt
+
+────────────────────────────────────────────────────────────────────────────────
+ 8.5 QUALITY GATES & RISK CLASSIFIER
+────────────────────────────────────────────────────────────────────────────────
+
+Applied to all three submission endpoints (nodes, edges, sources).
+
+Gate 1 — Trust Gate (checkTrustGate):
+  Fail if: isBanned OR trustScore < 20
+  Returns: { allowed: bool, reason: string }
+
+Gate 2 — Rate Limit (checkSubmissionRate):
+  Counts UserActivityLog entries for today by userId
+  Daily limits per role:
+    owner / admin / moderation_admin:  200
+    reviewer:                          100
+    source_verifier:                    50
+    verified_contributor:               30
+    contributor:                        20
+    user (default):                     10
+  Returns: { allowed: bool, count: int, limit: int }
+
+Gate 3 — Content Validation (validateNodeSubmission, nodes only):
+  Hard fails (400):
+    title < 10 chars
+    description < 100 chars
+    URL-like title or description (spam)
+    All-caps title (shouting pattern)
+  Soft warnings:
+    No tags provided
+    No claims provided
+    description < 300 chars
+    Evidence level = 'speculative' or 'mythological'
+  Returns: { passed: bool, errors: [], warnings: [], risk: RiskLevel }
+
+Gate 4 — Risk Classifier (classifyRisk):
+  HIGH_RISK_KEYWORDS (22):   alien, reptilian, portal, time travel, teleportation,
+                              mind control, suppressed history, chemtrails, flat earth,
+                              new world order, illuminati, crisis actor, false flag,
+                              deep state, nanobots, microchip, vaccine, 5g, cloning,
+                              hologram, simulation, hollow earth
+  MEDIUM_RISK_KEYWORDS (10): conspiracy, cover-up, hidden truth, secret society,
+                              shadow government, ancient astronaut, forbidden knowledge,
+                              alternative timeline, lost technology, forbidden history
+  RED:    any HIGH_RISK keyword in title or description
+  YELLOW: any MEDIUM_RISK keyword, OR evidenceLevel IN [speculative, mythological]
+  GREEN:  none of the above
+
+Gate 5 — Duplicate Detection (checkDuplicate, nodes only):
+  Uses pg_trgm: similarity(label, existing.title) > 0.6
+  If match found: 409 with similarTitles[]
+
+────────────────────────────────────────────────────────────────────────────────
+ 8.6 SOURCE CREDIBILITY ENGINE
+────────────────────────────────────────────────────────────────────────────────
+
+File: lib/source-credibility.ts
+Function: computeCredibility({ sourceType, doi, isbn, url, author,
+                               publicationYear, journal, publisher })
+
+Multi-factor scoring (0–1):
+
+Factor                  Weight    Condition
+──────────────────────────────────────────────────────────────
+Source type base          40%     Academic Paper: 0.9
+                                  Archaeological Report: 0.85
+                                  Government Document: 0.8
+                                  Historical Text: 0.75
+                                  Museum Archive: 0.75
+                                  Book (publisher): 0.7
+                                  News Investigation: 0.6
+                                  Religious Text: 0.5
+                                  Folklore Collection: 0.4
+DOI present              +15%     Peer-reviewed indicator
+ISBN present              +5%     Published book
+URL present               +3%     Accessible online
+Author present            +5%     Attribution
+Publication year          +5%     Recency scoring
+Journal present          +10%     Academic journal
+Publisher present         +5%     Publisher authority
+
+credibilityFactors Json stored on record for transparency.
+
+Admin Override:
+  POST /api/sources/[id]/override
+  Sets: credibilityOverride, overrideReason, overriddenBy, overriddenAt
+
+Display Labels:
+  0.8+   Highly Credible
+  0.6+   Moderately Credible
+  0.4+   Low Credibility
+  <0.4   Unreliable
+
+Source Quality Effect:
+  When a source is approved → triggers source-quality recompute on all linked nodes.
+  Aggregate quality of linked sources contributes to node's research score.
+
+────────────────────────────────────────────────────────────────────────────────
+ 8.7 AI RESEARCH REVIEW SYSTEM
+────────────────────────────────────────────────────────────────────────────────
+
+File: lib/ai-review.ts
+Trigger: Manual only (POST /api/admin/ai-review, requires canRunAiReview)
+
+Model: claude-sonnet-4-6
+Prompt Versioning: Tracked in AiResearchReview.promptVersion
+
+Monthly Budget Enforcement:
+  $15.00 → Warning returned (review still runs)
+  $20.00 → Hard stop (403 returned, no API call)
+
+Caching:
+  Returns existing review if: node exists AND review was created after node's updatedAt.
+  Stores: AiResearchReview record with full reviewJson.
+
+AI Review JSON Schema (AiReviewJson):
+  summary               String   Plain language summary of the node's topic
+  supportingEvidence[]  { description, sourceType, strength: low|medium|high }
+  contradictoryEvidence[] { description, sourceType, strength: low|medium|high }
+  academicConsensus     String   What mainstream scholarship says
+  sourceAnalysis        { total, credible, concerning, missingTypes[] }
+  hallucinationRisk     low | medium | high
+  redFlags[]            String[] Concerns about the content
+  recommendations[]     String[] Suggested improvements
+  overallAssessment     String
+
+Usage tracking: GET /api/admin/ai-review/usage
+  Returns: monthly token count, cost, per-model breakdown, per-node breakdown
+
+────────────────────────────────────────────────────────────────────────────────
+ 8.8 RELATIONSHIP SUGGESTION ENGINE
+────────────────────────────────────────────────────────────────────────────────
+
+File: lib/suggestion-engine.ts
+Trigger: Runs automatically when a node is published.
+
+7 Signal Weights:
+  Tag overlap         30%   Jaccard similarity of tag sets
+  Date proximity      20%   Year distance (closer = higher score)
+  Source overlap      15%   Shared approved sources
+  Category match      15%   Same or related categories
+  Geo proximity       10%   Distance between lat/lon coordinates
+  Evidence compat     10%   Complementary evidence levels
+
+Feedback Loop:
+  Reviewer approval rate adjusts confidence multiplier.
+  If recent approvals > recent rejections: confidence × 1.1
+  If recent rejections > recent approvals: confidence × 0.9
+
+Thresholds:
+  MIN_SCORE: 0.25  (anything below is noise — not saved)
+  MAX_PER_NODE: 15 suggestions per node per publish event
+
+Output:
+  RelationshipSuggestion records with: reason, evidenceBasis, confidence,
+  riskLevel, signalBreakdown (full JSON for transparency), status: pending
+
+Review:
+  POST /api/admin/suggestions/[id]/review
+  Approve → creates draft Edge (reviewer must publish separately)
+  Reject  → status: rejected
+  Revise  → status: revised + reviewerNote
+
+────────────────────────────────────────────────────────────────────────────────
+ 8.9 COMMUNITY SUBMISSION WORKFLOWS
+────────────────────────────────────────────────────────────────────────────────
+
+All three submission types (ProposedNode, ProposedEdge, Source) follow the same
+quality gate pipeline:
+
+  1. Session check (401 if not authenticated)
+  2. Trust gate (403 if banned or trust < 20)
+  3. Rate limit (429 if daily limit exceeded)
+  4. Body parsing + field validation
+  5. Risk/duplicate checks (nodes only)
+  6. Database creation with status: pending
+  7. Fire-and-forget: submissionCount++, logActivity (submit, weight: 3)
+  8. Return 201 with warnings and risk level (nodes)
+
+Non-admin users can view:
+  - Their own submissions (any status)
+  - All approved content
+
+────────────────────────────────────────────────────────────────────────────────
+ 8.10 ADMIN REVIEW WORKFLOWS
+────────────────────────────────────────────────────────────────────────────────
+
+Three-stage lifecycle for nodes: pending → approved/rejected/needs_revision
+  needs_revision → user can resubmit (they see the status + reviewNotes)
+
+On Approve (ProposedNode):
+  1. Derive nodeId slug from proposal.nodeId or label
+  2. Guard: 409 if slug already exists as a live node
+  3. Upsert Category (creates new category if needed)
+  4. Transaction:
+     a. Create Node (status: draft)
+     b. Create NodeTags (many)
+     c. Create Claims (many, with orderIndex)
+     d. Create Criticisms (many, with orderIndex)
+     e. Create OpenQuestions (many, with orderIndex)
+     f. Create NodeVersion v1 (full snapshot)
+     g. Update ProposedNode (status: approved, nodeId set)
+  5. writeAuditLog(approve)
+  6. Fire-and-forget on submitter:
+     applyTrustEvent(+5, approved_node)
+     approvedCount++
+     evaluateBadges()
+     refreshUserRank()
+  7. Return: { proposal, node: { id, status: draft, title }, message }
+  Note: Node enters as DRAFT — admin must explicitly publish to make it live.
+
+On Reject:
+  1. Update ProposedNode status: rejected + reviewNotes
+  2. writeAuditLog(reject)
+  3. Fire-and-forget on submitter:
+     applyTrustEvent(-3, rejected_content)
+     rejectedCount++
+     evaluateBadges()
+     refreshUserRank()
+
+Source review follows the same pattern but also triggers source-quality recompute
+on all linked nodes when approved.
+
+Edge review applies trust events (+2 approve / -3 reject) on the edge submitter.
+
+────────────────────────────────────────────────────────────────────────────────
+ 8.11 AUDIT LOGGING
+────────────────────────────────────────────────────────────────────────────────
+
+File: lib/audit.ts
+Model: AuditLog (immutable — no updates or deletes ever)
+
+All major admin actions are logged:
+  publish / unpublish / archive / restore / edit
+  approve / reject / needs_revision
+  import / rollback / bulk_approve / bulk_reject / bulk_publish
+  ban / unban / warning / suspension / role_change / trust_adjustment
+
+Fields: userId, userEmail, action, entityType, entityId, detail Json, createdAt
+
+View: GET /api/audit-log (admin only, paginated, filterable)
+Display: AuditLogDisplay component in admin panel
+
+────────────────────────────────────────────────────────────────────────────────
+ 8.12 IMPORT BATCH SYSTEM
+────────────────────────────────────────────────────────────────────────────────
+
+Purpose: Bulk import nodes/edges from structured JSON.
+
+POST /api/import/batch:
+  1. Parse all records (does not abort on first error)
+  2. Validate every record against validation/schema.ts
+  3. If all valid → atomic write (all or nothing)
+  4. Returns ImportBatch record with full validation report
+
+GET /api/import/batch/[batchId]:
+  Full per-record breakdown: accepted[], rejected[] with reason, warnings[]
+
+POST /api/import/batch/[batchId]/rollback:
+  Atomically deletes all records created by the batch.
+  Sets batch status: rolled_back + metadata.
+  Writes AuditLog(rollback).
+
+POST /api/import/batch/[batchId]/bulk-action:
+  Batch publish, archive, etc. on all nodes in a batch.
+
+────────────────────────────────────────────────────────────────────────────────
+ 8.13 PLATFORM GOVERNANCE & MODERATION
+────────────────────────────────────────────────────────────────────────────────
+
+User Reports:
+  POST /api/admin/moderation/reports  (any authenticated user)
+    Reasons: spam, misinformation, fake_source, harassment, low_quality, other
+    Deduplication: cannot open duplicate report on same entity
+  PATCH /api/admin/moderation/reports/[id]
+    Actions: investigating → resolved / dismissed
+    Logs to AuditLog
+
+Moderation Actions:
+  POST /api/admin/moderation/actions
+    Types: warning, suspension, ban, unban, trust_adjustment, badge_award, role_change
+    Warning fires: applyTrustEvent(-15, moderator_warning)
+    Supports: expiresAt for temporary suspensions/bans
+
+Ban System:
+  POST /api/admin/users/[id]/ban
+    Sets User.isBanned + banReason + optional banExpiresAt
+    Cannot ban another admin unless you are owner
+    Requires canBanUsers permission
+    Logs ModerationAction
+
+Trust Management:
+  GET  /api/admin/users/[id]/trust  → full event history
+  POST /api/admin/users/[id]/trust  → manual adjustment (delta capped ±50)
+
+Platform Health Dashboard:
+  Requires: super-admin role OR canViewPlatformHealth permission
+  Metrics returned:
+    Users: DAU, WAU, MAU, signups (7d), banned count, role distribution
+    Content: live nodes, live edges, approved sources
+    Queues: pending proposals (nodes, edges, sources), draft nodes
+    Moderation: open reports, active bans, recent actions (7d)
+    AI: only if canViewCosts — monthly tokens, cost, budget status
+    Top: 5 most-viewed nodes
+
+────────────────────────────────────────────────────────────────────────────────
+ 8.14 KNOWLEDGE GRAPH (STATIC + DB)
+────────────────────────────────────────────────────────────────────────────────
+
+Static Layer (lib/graph/):
+  100+ hand-curated nodes covering:
+    Ancient Civilizations (Göbekli Tepe, Sumerian, Indus Valley, etc.)
+    Egyptian Engineering (Great Pyramid, Sphinx, Dendera, etc.)
+    UFO / UAP (Roswell, UAP Programs, Phoenix Lights, etc.)
+    Religious Texts & Mythology (Book of Enoch, Vedas, Quetzalcoatl, etc.)
+    Lost Civilizations (Atlantis, Lemuria, Tartaria, etc.)
+    Cryptoarchaeology (Puma Punku, Nazca Lines, Yonaguni, etc.)
+  2000+ curated source citations
+  Serves as fallback if DB is unavailable
+
+Dynamic DB Layer (PostgreSQL):
+  Same content seeded via prisma/seed.ts
+  Enables: user submissions, version history, source linking, AI review
+
+Retrieval Strategy:
+  getNodeFromDB()     → full node with claims, criticisms, questions, sources
+  getNeighboursFromDB() → 1-hop neighbours with edge metadata
+  getViewportNodes()  → pagination + filtering for graph visualization
+  Falls back to static TypeScript data if DB not available
+
+Node Quality Score (Integrated Quality Score):
+  Multi-factor: source coverage, claim strength, evidence density, tag count,
+                description length, evidence level, credibility of linked sources
+
+────────────────────────────────────────────────────────────────────────────────
+ 8.15 RABBIT HOLE FEATURE
+────────────────────────────────────────────────────────────────────────────────
+
+Entry: Keyboard shortcut R or button in AppShell
+State: Managed in Zustand (rabbitHoleChain)
+
+Algorithm (lib/retrieval/rabbit-hole.ts):
+  1. Start at selected node
+  2. Fetch 1-hop neighbours
+  3. Score each neighbour: edge strength + confidence + shared tags + category affinity
+  4. Return top N suggestions for "next stop"
+  5. Depth tracked and displayed
+
+UI:
+  RabbitHoleView.tsx shows sequential path with PathCard components
+  Each step reveals new connections, depth indicator
+
+Progress Tracking:
+  ConnectionDiscovery records created on each new connection
+  NodeExploration records created on each new node visit
+  Both feed into Dashboard XP and achievement checks
+
+────────────────────────────────────────────────────────────────────────────────
+ 8.16 GAMIFICATION & USER PROGRESSION
+────────────────────────────────────────────────────────────────────────────────
+
+XP Levels (Zustand / UserProgress):
+  0 XP    → Curious Visitor
+  100 XP  → Researcher
+  500 XP  → (level 3)
+  ...
+  2000 XP → Rabbit Hole Master
+
+10 Achievements:
+  First Discovery, Ancient Explorer, Pyramid Researcher, etc.
+
+Activity Score (separate from XP, server-side):
+  Feeds into rank computation (see section 8.4)
+
+Rank display on user profile and Dashboard.
+Badge display: icon grid, awardedAt date.
+
+────────────────────────────────────────────────────────────────────────────────
+ 8.17 BACKGROUND JOB QUEUE
+────────────────────────────────────────────────────────────────────────────────
+
+File: lib/jobs/queue.ts
+Model: IngestionJob (Prisma-based, no external dependencies)
+
+Job Types:
+  embed-node         Generate vector embedding for a node (OpenAI)
+  embed-source       Generate vector embedding for a source
+  rebuild-adjacency  Rebuild AdjacencyCache for a node
+
+Status Flow:  pending → processing → done / failed
+Priority:     Int field (higher = processed first)
+Retry:        attempts counter, lastError stored for debugging
+
+Trigger: POST /api/jobs/process (can be called by cron or manually)
+Stats: getQueueStats() returns counts by status and type
+
+────────────────────────────────────────────────────────────────────────────────
+ 8.18 VECTOR EMBEDDINGS & SEARCH
+────────────────────────────────────────────────────────────────────────────────
+
+Node Embeddings:
+  Model: text-embedding-3-small (OpenAI, 1536 dims)
+  Stored: NodeEmbedding.embedding Float[] (pgvector)
+  Generated: via embed-node background job after publish
+
+Source Embeddings:
+  Model: text-embedding-3-small
+  Stored: SourceEmbedding.embedding Float[] (pgvector)
+  Generated: via embed-source background job after source approval
+
+Adjacency Cache:
+  AdjacencyCache per hot node: hops1 Json, hops2 Json
+  Rebuilt by: rebuild-adjacency background job
+  Purpose: Sub-millisecond graph traversal for popular nodes
+
+Search:
+  Full-text: tsvector + GIN indexes
+  Fuzzy: pg_trgm trigram GIN indexes
+  Semantic: pgvector cosine similarity (for future semantic search)
+
+────────────────────────────────────────────────────────────────────────────────
+ 8.19 ERROR HANDLING & URL NAVIGATION
+────────────────────────────────────────────────────────────────────────────────
+
+AppErrorBoundary (components/layout/AppErrorBoundary.tsx):
+  React class component wrapping the entire app in app/layout.tsx
+  getDerivedStateFromError() → sets hasError: true
+  componentDidCatch() → logs to console
+  Fallback: "An unexpected error occurred. Reload Archive." button
+  Prevents white screen of death on any unhandled render error
+
+URL Sync in AppShell.tsx:
+  isInitialMountRef: Ref to distinguish first render from navigation
+  On mount: window.history.replaceState({ view: currentView }) — no new entry
+  On view change: window.history.pushState({ view }) — creates browser history entry
+  URL format: / (landing) | #graph | #universe | #timeline | etc.
+
+Back Button (popstate):
+  useEffect registers popstate listener
+  e.state.view validated against validViews array
+  If valid → setCurrentView(view)
+  If invalid/null → setCurrentView('landing') fallback
+  Listener cleaned up on unmount
+
+Result: Browser back/forward buttons work correctly across all views.
+        No crash on navigation — error boundary catches any render failures.
+
+
+================================================================================
+ 9. ADMIN PANEL MODULES
+================================================================================
+
+AdminPanel.tsx renders tabbed views filtered by user role.
+
+Tab                Component                   Access Required
+──────────────────────────────────────────────────────────────────────────────
+Proposals          ProposedNodeCard/EdgeCard    admin+
+Draft Queue        DraftNodeQueue               admin+
+Source Review      SourceReviewQueue            admin+ or canApproveSources
+Suggestions        RelationshipSuggestions      reviewer+
+Users              UserManagement               admin+
+Moderation         ModerationQueue              moderation_admin+
+Platform Health    PlatformHealthDashboard      ownerOnly (or permission)
+AI Review          AiResearchReview             canRunAiReview
+Import             ImportBatchList/Detail       canManageImports
+Audit Log          AuditLogDisplay              canViewAuditLog
+Stats              AdminStats                   admin+
+Reports            AdminReports                 admin+
+
+
+================================================================================
+ 10. CONFIGURATION & ENVIRONMENT
+================================================================================
+
+Required Environment Variables:
+  DATABASE_URL          PostgreSQL connection string
+  AUTH_SECRET           NextAuth secret key
+  NEXTAUTH_URL          App public URL (or AUTH_URL)
+  AUTH_GOOGLE_ID        Google OAuth client ID
+  AUTH_GOOGLE_SECRET    Google OAuth client secret
+  NEXT_PUBLIC_ADMIN_EMAIL  Admin email for UI rendering hints
+
+Optional Environment Variables:
+  AUTH_GITHUB_ID        GitHub OAuth client ID
+  AUTH_GITHUB_SECRET    GitHub OAuth client secret
+  ANTHROPIC_API_KEY     Claude API key (AI research review feature)
+  OPENAI_API_KEY        OpenAI API key (vector embeddings)
+  DATABASE_URL_READ     Read replica connection string (falls back to DATABASE_URL)
+
+next.config.ts exposes:
+  NEXT_PUBLIC_ADMIN_EMAIL to client bundles
+  Note: Server-side role verification is always authoritative.
+
+Key Build Rules:
+  lib/trust-utils.ts is deliberately kept Prisma-free for client bundle safety.
+  Client components must import trustLevel/trustColor from lib/trust-utils,
+  NOT from lib/trust-score (which imports Prisma → pg → Node.js-only modules).
+
+
+================================================================================
+ 11. AUDIT RESULTS — SYSTEM STATUS
+================================================================================
+
+Last Full Audit: 2026-06-08
+Build Status: ✅ CLEAN (0 TypeScript errors, 0 ESLint warnings)
+
+ System                          Status  Notes
+────────────────────────────────────────────────────────────────────────────────
+ Authentication (NextAuth v5)    ✅ PASS  Google + optional GitHub OAuth
+ Role Hierarchy (9 levels)       ✅ PASS  All role checks server-side
+ Permission Flags (11 flags)     ✅ PASS  Per-user granular overrides
+ Trust Score Engine              ✅ PASS  Append-only, 13 event reasons
+ Rank System (10 tiers)          ✅ PASS  computeRank wired + refreshUserRank
+ Badge System (19 badges)        ✅ PASS  Idempotent award, 10 auto-checks
+ Quality Gates                   ✅ PASS  All 3 submission routes protected
+ Risk Classifier                 ✅ PASS  22 high-risk, 10 medium-risk keywords
+ Rate Limiting                   ✅ PASS  Per-role daily limits enforced
+ Duplicate Detection             ✅ PASS  pg_trgm similarity > 0.6
+ Source Credibility Engine       ✅ PASS  Multi-factor score + admin override
+ Node Review → Trust Events      ✅ PASS  approve +5 / reject -3 fires correctly
+ Edge Review → Trust Events      ✅ PASS  approve +2 / reject -3 fires correctly
+ Source Review → Trust Events    ✅ PASS  approve +3 / reject -3 fires correctly
+ approvedCount / rejectedCount   ✅ PASS  Incremented correctly on review
+ evaluateBadges + refreshUserRank✅ PASS  Fire-and-forget after every review
+ AI Research Review              ✅ PASS  Budget capped, cached, manual-only
+ Relationship Suggestion Engine  ✅ PASS  7 signals, feedback loop, MIN_SCORE
+ Import Batch System             ✅ PASS  Atomic write + rollback
+ Audit Logging                   ✅ PASS  All admin actions logged immutably
+ Background Job Queue            ✅ PASS  Prisma-based, no external deps
+ URL Navigation / Back Button    ✅ PASS  pushState + popstate handler
+ Error Boundary                  ✅ PASS  Catches any render crash
+ Vector Embeddings               ✅ PASS  1536-dim pgvector on nodes + sources
+ Rabbit Hole Traversal           ✅ PASS  Score-ranked next-node suggestions
+ Gamification / XP               ✅ PASS  Zustand + UserProgress in DB
+ Client Bundle Safety            ✅ PASS  trust-utils.ts is Prisma-free
+
+ Previously Fixed Critical Issues:
+  ✅ AdminPanel.tsx Tab TypeScript type error (allTabs / tabs split)
+  ✅ Client bundle importing server Prisma chain (trust-utils.ts extraction)
+  ✅ Prisma InputJsonValue type error in logActivity (JSON.parse/stringify)
+  ✅ Back-button crash (URL sync + popstate + error boundary)
+
+
+================================================================================
+ 12. KNOWN LIMITATIONS & NEXT STEPS
+================================================================================
+
+Partially Implemented / Pending:
+───────────────────────────────
+  streak-7 / streak-30 / streak-100 badges
+    → evaluateBadges() does not yet check consecutive login days.
+    → Requires querying UserActivityLog for date continuity.
+
+  ancient-specialist / mythology-specialist / uap-researcher /
+  archaeology-contributor / timeline-mapper / critical-thinker badges
+    → Specialty badges are seeded in DB but award conditions not yet coded
+      in evaluateBadges().
+
+  Monthly Trust Pass trigger
+    → runMonthlyTrustPass() exists in lib/trust-score.ts
+    → No cron endpoint or admin trigger button yet.
+    → Needs: POST /api/admin/trigger/monthly-trust-pass (owner-only)
+
+  Public Report Endpoint
+    → Community reporting currently only creates reports via
+      /api/admin/moderation/reports (accessible to authenticated users).
+    → A cleaner public-facing POST /api/report endpoint would improve UX.
+
+  Semantic Search
+    → NodeEmbedding and SourceEmbedding models exist with pgvector.
+    → No semantic search query endpoint implemented yet.
+    → GET /api/search currently uses tsvector + trigram only.
+
+  Email Notifications
+    → No email sent to submitters on review decisions.
+    → Could use: Resend / SendGrid with NextAuth email.
+
+  Real-time Queue Updates
+    → Admin panels poll on mount.
+    → No WebSocket or SSE for live queue updates yet.
+
+  Moderation Expiry Enforcement
+    → banExpiresAt is stored but not checked at login.
+    → Need middleware to auto-unban expired users on session creation.
+
+  GitHub OAuth Specialty Badge
+    → No badge for linking a GitHub account (though provider is ready).
+
+Optional Enhancements Considered:
+──────────────────────────────────
+  AI auto-review on publish (not just manual)
+  Leaderboard endpoint
+  RSS feed for newly approved nodes
+  Webhook for external integrations
+  CSV export for admin reports
+
+
+================================================================================
+ END OF AUDIT
+================================================================================
+Generated: 2026-06-08
+Repository: francisdev1999-sys/phoenix-travel-v3.html
+Branches: main, claude/check-this-out-IPPoO
+Build: ✅ Clean (npm run build — 0 errors, 0 warnings)
+================================================================================
