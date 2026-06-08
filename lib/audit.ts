@@ -6,7 +6,7 @@ export type AuditAction =
   | 'import' | 'rollback'
   | 'bulk_approve' | 'bulk_reject' | 'bulk_publish';
 
-export type AuditEntityType = 'node' | 'edge' | 'batch';
+export type AuditEntityType = 'node' | 'edge' | 'batch' | 'suggestion';
 
 interface AuditEntry {
   userId?:    string | null;
