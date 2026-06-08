@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ExternalLink, Link2, X, Calendar, User, BookOpen, Hash } from 'lucide-react';
-import { SOURCE_TYPE_COLORS, STATUS_COLORS, CREDIBILITY_LABEL } from '@/lib/source-credibility';
+import { SOURCE_TYPE_COLORS, STATUS_COLORS, CREDIBILITY_LABEL, effectiveCredibility } from '@/lib/source-credibility';
 import type { SourceRecord } from '@/lib/source-types';
 
 interface Props {
@@ -20,12 +20,38 @@ export default function SourceDetailPanel({ source, isAdmin, onClose, onReview }
   const [reviewAction, setReviewAction] = useState<'approved' | 'rejected' | 'needs_revision'>('approved');
   const [reviewNotes, setReviewNotes] = useState('');
   const [reviewing, setReviewing] = useState(false);
+  const [overrideValue, setOverrideValue] = useState('');
+  const [overrideReason, setOverrideReason] = useState('');
+  const [overriding, setOverriding] = useState(false);
+  const [overrideMsg, setOverrideMsg] = useState('');
 
   const typeColor = SOURCE_TYPE_COLORS[source.sourceType] ?? '#94a3b8';
   const statColor = STATUS_COLORS[source.status] ?? '#94a3b8';
-  const credColor = source.credibilityScore >= 0.75 ? '#22c55e'
-                  : source.credibilityScore >= 0.5  ? '#eab308'
-                  :                                   '#ef4444';
+  const effScore  = effectiveCredibility(source as { credibilityScore: number; credibilityOverride?: number | null });
+  const credColor = effScore >= 0.75 ? '#22c55e' : effScore >= 0.5 ? '#eab308' : '#ef4444';
+
+  const handleOverride = async () => {
+    const val = overrideValue === '' ? null : parseFloat(overrideValue);
+    if (val !== null && (isNaN(val) || val < 0 || val > 1)) {
+      setOverrideMsg('Score must be between 0 and 1');
+      return;
+    }
+    setOverriding(true); setOverrideMsg('');
+    try {
+      const res = await fetch(`/api/sources/${source.id}/override`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credibilityOverride: val, overrideReason: overrideReason.trim() || undefined }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setOverrideMsg(`Override set to ${Math.round((data.effectiveScore ?? 0) * 100)}%`);
+        setOverrideValue(''); setOverrideReason('');
+      } else {
+        setOverrideMsg(data.error ?? 'Override failed');
+      }
+    } finally { setOverriding(false); }
+  };
 
   const handleReview = async () => {
     setReviewing(true);
@@ -229,23 +255,31 @@ export default function SourceDetailPanel({ source, isAdmin, onClose, onReview }
 
         {tab === 'Credibility' && (
           <div className="flex flex-col gap-4">
+            {/* Effective score bar */}
             <div className="flex items-center gap-4">
               <div className="flex-1">
                 <div className="h-3 rounded-full bg-slate-800 overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all"
-                    style={{ width: `${source.credibilityScore * 100}%`, background: credColor }}
+                    style={{ width: `${effScore * 100}%`, background: credColor }}
                   />
                 </div>
               </div>
               <span className="text-sm font-bold" style={{ color: credColor }}>
-                {CREDIBILITY_LABEL(source.credibilityScore)} &middot; {Math.round(source.credibilityScore * 100)}%
+                {CREDIBILITY_LABEL(effScore)} · {Math.round(effScore * 100)}%
               </span>
             </div>
 
+            {/* Override notice */}
+            {(source as { credibilityOverride?: number | null }).credibilityOverride != null && (
+              <div className="px-3 py-2 rounded-lg bg-amber-900/20 border border-amber-700/30 text-[10px] text-amber-300">
+                Admin override active (auto-score: {Math.round(source.credibilityScore * 100)}%)
+              </div>
+            )}
+
             {source.credibilityFactors && (
               <div className="flex flex-col gap-2">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Score breakdown</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Auto-score breakdown</p>
                 {Object.entries(source.credibilityFactors as Record<string, number>).map(([k, v]) => (
                   <div key={k} className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/3">
                     <span className="text-xs text-slate-400 capitalize">{k.replace(/_/g, ' ')}</span>
@@ -254,6 +288,40 @@ export default function SourceDetailPanel({ source, isAdmin, onClose, onReview }
                     </span>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Admin override panel — requirement: admin must approve final credibility */}
+            {isAdmin && (
+              <div className="flex flex-col gap-2 pt-2 border-t border-slate-800/60">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Admin credibility override</p>
+                <p className="text-[10px] text-slate-500">
+                  Override the auto-computed score. Leave blank to clear an existing override.
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    min="0" max="1" step="0.01"
+                    value={overrideValue}
+                    onChange={e => setOverrideValue(e.target.value)}
+                    placeholder="0.00 – 1.00"
+                    className="w-28 px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700/50 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-700/60"
+                  />
+                  <input
+                    value={overrideReason}
+                    onChange={e => setOverrideReason(e.target.value)}
+                    placeholder="Reason (optional)"
+                    className="flex-1 px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700/50 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-700/60"
+                  />
+                  <button
+                    onClick={handleOverride}
+                    disabled={overriding}
+                    className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-amber-700 hover:bg-amber-600 transition-colors disabled:opacity-40"
+                  >
+                    {overriding ? '…' : 'Set'}
+                  </button>
+                </div>
+                {overrideMsg && <p className="text-[10px] text-amber-300">{overrideMsg}</p>}
               </div>
             )}
           </div>

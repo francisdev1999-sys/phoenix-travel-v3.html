@@ -25,16 +25,38 @@ export async function POST(req: NextRequest, { params }: Params) {
   const updated = await prisma.source.update({
     where: { id },
     data: {
-      status: action,
+      status:     action,
       reviewNotes: reviewNotes?.trim() || null,
-      reviewedAt: new Date(),
-      reviewedBy: session.user.id,
+      reviewedAt:  new Date(),
+      reviewedBy:  session.user.id,
     },
     include: {
       submitter: { select: { id: true, name: true, email: true, image: true } },
-      links: true,
+      links:     { select: { nodeId: true } },
     },
   });
 
-  return NextResponse.json(updated);
+  // When a source is approved its credibility becomes active — the node quality
+  // scores for every linked node are now stale. We re-compute them inline since
+  // the set is small (one source rarely links to more than ~10 nodes).
+  if (action === 'approved') {
+    const linkedNodeIds = [
+      ...new Set(updated.links.map(l => l.nodeId).filter(Boolean) as string[]),
+    ];
+
+    if (linkedNodeIds.length > 0) {
+      // Fire and forget — quality computation failure must not break the review flow.
+      Promise.allSettled(
+        linkedNodeIds.map(nodeId =>
+          fetch(
+            `${process.env.NEXTAUTH_URL ?? process.env.AUTH_URL ?? ''}/api/nodes/${nodeId}/source-quality`,
+            { cache: 'no-store' },
+          ).catch(() => null),
+        ),
+      );
+    }
+  }
+
+  const { links: _links, ...rest } = updated;
+  return NextResponse.json(rest);
 }

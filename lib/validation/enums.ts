@@ -58,6 +58,16 @@ export const EDGE_SOURCE_TYPES = [
   'journalistic',
 ] as const;
 
+// Source link classification — used in NodeSourceManager and API validation.
+// 'primary' is the most authoritative; 'context' provides background only.
+export const LINK_TYPES = [
+  'primary',
+  'supports',
+  'context',
+  'contradicts',
+  'references',
+] as const;
+
 /** Returns true if v is a finite number in [0, 1]. */
 export function isValidScore(v: unknown): v is number {
   return typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1;

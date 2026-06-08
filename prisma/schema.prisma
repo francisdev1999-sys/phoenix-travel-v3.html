@@ -397,6 +397,11 @@ model Source {
   credibilityScore   Float @default(0.5)
   credibilityFactors Json?
 
+  // Admin can override the auto-computed score; overriddenBy is a User.id
+  credibilityOverride Float?
+  overriddenBy        String?
+  overrideReason      String? @db.Text
+
   status      String    @default("pending")
   reviewNotes String?   @db.Text
   reviewedAt  DateTime?
@@ -442,9 +447,10 @@ model SourceLink {
   claimId     String?
   criticismId String?
 
-  linkType    String  @default("supports") // supports | contradicts | references
-  notes       String?
-  createdAt   DateTime @default(now())
+  linkType      String  @default("supports") // supports | contradicts | context | primary | references
+  relevanceScore Float  @default(0.5)       // 0–1: how relevant is this source to this specific target
+  notes         String?
+  createdAt     DateTime @default(now())
 
   source      Source     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
   node        Node?      @relation(fields: [nodeId],      references: [id], onDelete: Cascade)

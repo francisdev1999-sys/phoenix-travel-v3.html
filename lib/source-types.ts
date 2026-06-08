@@ -58,8 +58,11 @@ export interface SourceRecord {
   abstract?: string | null;
   notes?: string | null;
   language: string;
-  credibilityScore: number;
+  credibilityScore:    number;
   credibilityFactors?: Record<string, number> | null;
+  credibilityOverride?: number | null;
+  overriddenBy?:        string | null;
+  overrideReason?:      string | null;
   status: string;
   reviewNotes?: string | null;
   reviewedAt?: string | null;
