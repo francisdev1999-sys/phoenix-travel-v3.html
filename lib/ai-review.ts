@@ -338,7 +338,7 @@ function extractJson(raw: string): AiReviewJson {
     throw new Error('AI response missing required fields');
   }
 
-  return obj as AiReviewJson;
+  return obj as unknown as AiReviewJson;
 }
 
 // ── Budget check ──────────────────────────────────────────────────────────────
