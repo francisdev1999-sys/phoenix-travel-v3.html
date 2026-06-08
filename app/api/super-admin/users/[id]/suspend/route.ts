@@ -20,9 +20,14 @@ export async function POST(req: NextRequest, { params }: Params) {
   const { reason, durationDays } = await req.json();
   if (!reason?.trim()) return NextResponse.json({ error: 'Reason required' }, { status: 400 });
 
-  const expiresAt = durationDays
-    ? new Date(Date.now() + Number(durationDays) * 24 * 60 * 60 * 1000)
-    : null;
+  let expiresAt: Date | null = null;
+  if (durationDays !== undefined && durationDays !== null) {
+    const days = Number(durationDays);
+    if (!Number.isInteger(days) || days < 1 || days > 3650) {
+      return NextResponse.json({ error: 'durationDays must be an integer between 1 and 3650' }, { status: 400 });
+    }
+    expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+  }
 
   await prisma.$transaction([
     prisma.userModerationStatus.upsert({

@@ -165,7 +165,7 @@ export async function computeAndSaveRiskProfile(userId: string): Promise<RiskRes
     recentEvents1h:       events1h.length,
     distinctPaths1h:      distinctPaths,
     maxSamePathRepeats:   maxSamePathRepeat,
-    confirmedSpamCount:   submittedAll,
+    confirmedSpamCount:   0, // TODO: wire real spam flags when ProposedNode.isSpam added
     reportCount:          0,
     role:                 user.role,
     trustScore:           user.trustScore,

@@ -3,6 +3,7 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import Google from 'next-auth/providers/google';
 import GitHub from 'next-auth/providers/github';
 import { prisma } from '@/lib/db';
+import { authConfig } from '@/lib/auth.config';
 
 // ── Role hierarchy ────────────────────────────────────────────────────────────
 // owner > admin > moderation_admin > reviewer > source_verifier
@@ -99,6 +100,8 @@ const providers = [
 ];
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
+
   secret: process.env.AUTH_SECRET ?? 'nexus-dev-secret-set-AUTH_SECRET-in-production',
 
   ...(hasDB ? { adapter: PrismaAdapter(prisma) } : {}),
@@ -106,6 +109,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers,
 
   callbacks: {
+    ...authConfig.callbacks,
+
     async signIn({ user }) {
       if (hasDB && user?.email === process.env.ADMIN_EMAIL) {
         try {
@@ -118,34 +123,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       }
       return true;
-    },
-
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role =
-          user.email === process.env.ADMIN_EMAIL
-            ? 'owner'
-            : (user.role ?? 'user');
-      }
-      return token;
-    },
-
-    session({ session, user, token }) {
-      if (user) {
-        session.user.id   = user.id;
-        session.user.role = (user.role as UserRole | undefined) ?? 'user';
-        if (session.user.email === process.env.ADMIN_EMAIL) {
-          session.user.role = 'owner';
-        }
-      } else if (token) {
-        session.user.id   = (token.id as string | undefined) ?? '';
-        session.user.role = (token.role as UserRole | undefined) ?? 'user';
-        if (session.user.email === process.env.ADMIN_EMAIL) {
-          session.user.role = 'owner';
-        }
-      }
-      return session;
     },
   },
 });
