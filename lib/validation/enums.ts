@@ -19,6 +19,7 @@ export const RELATIONSHIP_TYPES = [
   'thematic',
   'influence',
   'contradictory',
+  'speculative',
 ] as const;
 
 export const SOURCE_TYPES = [

@@ -87,6 +87,7 @@ async function embedNode(nodeId: string) {
     node.mainstreamView,
     node.tags.map(t => t.tag).join(' '),
     node.claims.map(c => c.text).join(' '),
+    node.criticisms.map(c => c.text).join(' '),
   ].filter(Boolean).join(' ').slice(0, 8000);
 
   const embedding = await generateEmbedding(text);
