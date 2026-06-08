@@ -424,7 +424,7 @@ export async function runAiReview(
       nodeId,
       model:         AI_REVIEW_MODEL,
       promptVersion: PROMPT_VERSION,
-      reviewJson:    review as unknown as Record<string, unknown>,
+      reviewJson:    JSON.parse(JSON.stringify(review)),
       inputTokens,
       outputTokens,
       estimatedCost,
