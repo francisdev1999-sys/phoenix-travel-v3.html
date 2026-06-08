@@ -4,12 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Globe, BarChart3, Clock, MapPin, Grid3X3, User,
   Volume2, VolumeX, Menu, X, LogIn, LogOut, Activity, BookMarked,
-  ShieldCheck, Rabbit, Loader2,
+  ShieldCheck, Rabbit, Loader2, Trophy,
 } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { nodes as staticNodes } from '@/lib/graph';
 import { CATEGORY_COLORS, EVIDENCE_COLORS } from '@/lib/graph';
+import UserProfilePanel from '@/components/sections/UserProfilePanel';
 
 const NAV_BASE = [
   { id: 'graph',          label: 'Knowledge Graph', icon: Grid3X3 },
@@ -68,6 +69,7 @@ export default function NavBar() {
   const [mobileOpen, setMobileOpen]     = useState(false);
   const [searchOpen, setSearchOpen]     = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [query, setQuery]               = useState('');
   const [results, setResults]           = useState<SearchResult[]>([]);
   const [searching, setSearching]       = useState(false);
@@ -334,6 +336,13 @@ export default function NavBar() {
                           )}
                         </div>
                         <button
+                          onClick={() => { setUserMenuOpen(false); setProfileOpen(true); }}
+                          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-purple-300 hover:bg-purple-900/20 transition-all"
+                        >
+                          <Trophy size={12} />
+                          My Profile
+                        </button>
+                        <button
                           onClick={() => { setUserMenuOpen(false); signOut(); }}
                           className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-red-400 hover:bg-red-900/20 transition-all"
                         >
@@ -410,6 +419,8 @@ export default function NavBar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <UserProfilePanel open={profileOpen} onClose={() => setProfileOpen(false)} />
     </>
   );
 }
