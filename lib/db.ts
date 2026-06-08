@@ -21,12 +21,11 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createClient(connectionString: string | undefined): PrismaClient {
-  if (!connectionString) {
-    // Return a dummy client that will error on first query.
-    // Callers must catch — all DB-dependent routes degrade gracefully.
-    return new PrismaClient();
-  }
-  const adapter = new PrismaPg({ connectionString });
+  // Always pass the adapter — PrismaPg with an empty/missing URL won't
+  // open a connection until the first query, so the build succeeds even
+  // when DATABASE_URL is unset. Queries will fail at runtime and must be
+  // caught by callers (all DB routes degrade gracefully via try/catch).
+  const adapter = new PrismaPg({ connectionString: connectionString ?? '' });
   return new PrismaClient({ adapter });
 }
 
