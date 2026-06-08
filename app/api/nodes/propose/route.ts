@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   // 20 proposal attempts per minute per user (DB submission limits still apply below)
-  const rl = rateLimit(`propose-node:${session.user.id}`, 20, 60_000);
+  const rl = await rateLimit(`propose-node:${session.user.id}`, 20, 60_000);
   if (!rl.allowed) {
     return NextResponse.json({ error: 'Too many requests.' }, { status: 429 });
   }

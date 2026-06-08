@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth, isOwnerSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { writeAuditLog } from '@/lib/audit';
+import { sendUnbanNotification } from '@/lib/email';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const target = await prisma.user.findUnique({
     where:  { id },
-    select: { id: true, isBanned: true },
+    select: { id: true, isBanned: true, email: true, name: true },
   });
   if (!target) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
@@ -41,6 +42,10 @@ export async function POST(req: NextRequest, { params }: Params) {
     entityId:   id,
     detail:    { note: note?.trim() || null },
   });
+
+  if (target.email) {
+    void sendUnbanNotification(target.email, target.name ?? 'Researcher');
+  }
 
   return NextResponse.json({ success: true, isBanned: false });
 }

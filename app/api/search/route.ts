@@ -30,7 +30,7 @@ const TRGM_THRESHOLD = 0.15;
 export async function GET(req: NextRequest) {
   // 30 searches per minute per IP
   const ip  = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
-  const rl  = rateLimit(`search:${ip}`, 30, 60_000);
+  const rl  = await rateLimit(`search:${ip}`, 30, 60_000);
   if (!rl.allowed) {
     return NextResponse.json(
       { error: 'Too many requests — please slow down.' },

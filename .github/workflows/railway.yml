@@ -39,6 +39,9 @@ jobs:
           AUTH_URL:           "http://localhost:3000"
           ADMIN_EMAIL:        "ci@ci.com"
           NEXTAUTH_URL:       "http://localhost:3000"
+          SENTRY_DSN:         ""
+          SENTRY_ORG:         ""
+          SENTRY_PROJECT:     ""
 
   deploy:
     name: Deploy

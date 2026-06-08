@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth, isOwnerSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { writeAuditLog } from '@/lib/audit';
+import { sendBanNotification } from '@/lib/email';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -13,7 +14,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'Super-admin only' }, { status: 403 });
   }
 
-  const target = await prisma.user.findUnique({ where: { id }, select: { id: true, role: true } });
+  const target = await prisma.user.findUnique({ where: { id }, select: { id: true, role: true, email: true, name: true } });
   if (!target) return NextResponse.json({ error: 'User not found' }, { status: 404 });
   if (target.role === 'owner') return NextResponse.json({ error: 'Cannot ban the owner' }, { status: 403 });
 
@@ -42,6 +43,11 @@ export async function POST(req: NextRequest, { params }: Params) {
     entityId:   id,
     detail:    { reason: reason.trim(), expiresAt },
   });
+
+  // Fire-and-forget email — never blocks the response
+  if (target.email) {
+    void sendBanNotification(target.email, target.name ?? 'Researcher', reason.trim(), expiresAt);
+  }
 
   return NextResponse.json({ success: true, isBanned: true, reason: reason.trim(), expiresAt });
 }
