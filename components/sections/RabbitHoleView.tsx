@@ -115,7 +115,7 @@ function NodeHeader({ node, score }: { node: GraphNode; score: number }) {
             {node.category}
           </span>
           <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: evColor + '18', color: evColor }}>
-            {node.evidence_level.replace('_', ' ')}
+            {(node.evidence_level ?? 'unknown').replace('_', ' ')}
           </span>
         </div>
         <h2 className="text-base font-bold text-white leading-snug">{node.title}</h2>

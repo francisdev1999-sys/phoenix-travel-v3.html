@@ -97,16 +97,22 @@ export async function GET(_req: NextRequest, { params }: Params) {
   const { nodeId } = await params;
   const nodeMap = makeNodeMap();
 
+  // Try DB first; fall back to in-memory when DB is unavailable OR returns null.
+  // Previously, a null return (node absent from DB) short-circuited to 404 and
+  // never reached the static-data fallback — that caused "Node not found" for
+  // any node not yet in the DB.
+  let dbData = null;
   try {
-    const data = await computeRabbitHoleFromDB(nodeId);
-    if (data) return NextResponse.json(enrichResponse(data, nodeMap));
-    return NextResponse.json({ error: 'Node not found' }, { status: 404 });
+    dbData = await computeRabbitHoleFromDB(nodeId);
   } catch (err) {
     console.warn('[rabbit-hole] DB unavailable, falling back to in-memory:', err);
   }
 
-  const data = computeRabbitHole(nodeId, staticNodes, staticEdges);
-  if (!data) return NextResponse.json({ error: 'Node not found' }, { status: 404 });
+  if (dbData) return NextResponse.json(enrichResponse(dbData, nodeMap));
 
-  return NextResponse.json(enrichResponse({ ...data, sources: [], sourceCountMap: {} }, nodeMap));
+  // DB returned null or threw — use static in-memory graph
+  const memData = computeRabbitHole(nodeId, staticNodes, staticEdges);
+  if (!memData) return NextResponse.json({ error: 'Node not found' }, { status: 404 });
+
+  return NextResponse.json(enrichResponse({ ...memData, sources: [], sourceCountMap: {} }, nodeMap));
 }

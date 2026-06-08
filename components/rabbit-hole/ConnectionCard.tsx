@@ -39,7 +39,7 @@ export default function ConnectionCard({ conn, onExplore, sourceCount = 0, index
             {relLabel}
           </span>
           <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ background: evColor + '18', color: evColor }}>
-            {node.evidence_level.replace('_', ' ')}
+            {(node.evidence_level ?? 'unknown').replace('_', ' ')}
           </span>
           {direction === 'incoming' && (
             <span className="text-[9px] text-slate-600 ml-auto">← references this</span>
