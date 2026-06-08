@@ -13,6 +13,7 @@ import ResearchScore from '@/components/research/ResearchScore';
 import SourceCard from '@/components/research/SourceCard';
 import RelationshipCard from '@/components/research/RelationshipCard';
 import ClaimBlock from '@/components/research/ClaimBlock';
+import NodeSourceStrength from '@/components/sources/NodeSourceStrength';
 
 type Tab = 'overview' | 'claims' | 'criticisms' | 'mainstream' | 'relationships' | 'sources' | 'questions';
 
@@ -248,6 +249,7 @@ export default function NodePanel({ node, onClose }: Props) {
 
             {activeTab === 'sources' && (
               <>
+                <NodeSourceStrength nodeId={node.id} />
                 {(!node.sources || node.sources.length === 0) ? (
                   <div className="p-4 rounded-xl bg-slate-900/40 border border-white/5 text-center">
                     <div className="text-slate-600 text-sm">No sources catalogued yet.</div>
