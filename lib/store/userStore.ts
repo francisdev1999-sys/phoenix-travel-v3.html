@@ -30,6 +30,8 @@ interface UserStore {
   audioEnabled: boolean;
   rabbitHoleChain: string[];
   rabbitHoleNodeId: string | null;
+  /** Not persisted — signals RabbitHoleView to load a specific node on mount */
+  pendingRabbitHoleNodeId: string | null;
   currentView: 'landing' | 'graph' | 'theory' | 'universe' | 'timeline' | 'evidence-board' | 'globe' | 'dashboard' | 'diagnostics' | 'sources' | 'admin' | 'rabbit-hole';
   selectedTheory: string | null;
   searchQuery: string;
@@ -42,6 +44,7 @@ interface UserStore {
   setRabbitHoleChain: (chain: string[]) => void;
   setSelectedTheory: (id: string | null) => void;
   setSearchQuery: (query: string) => void;
+  setPendingRabbitHoleNodeId: (id: string | null) => void;
   startRabbitHole: (theoryId: string) => void;
   extendRabbitHole: (theoryId: string) => void;
   resetRabbitHole: () => void;
@@ -65,6 +68,7 @@ export const useUserStore = create<UserStore>()(
       audioEnabled: false,
       rabbitHoleChain: [],
       rabbitHoleNodeId: null,
+      pendingRabbitHoleNodeId: null,
       currentView: 'landing',
       selectedTheory: null,
       searchQuery: '',
@@ -129,6 +133,8 @@ export const useUserStore = create<UserStore>()(
       setRabbitHoleNodeId: (id) => set({ rabbitHoleNodeId: id }),
 
       setRabbitHoleChain: (chain) => set({ rabbitHoleChain: chain }),
+
+      setPendingRabbitHoleNodeId: (id) => set({ pendingRabbitHoleNodeId: id }),
 
       setSelectedTheory: (id) => set({ selectedTheory: id }),
 

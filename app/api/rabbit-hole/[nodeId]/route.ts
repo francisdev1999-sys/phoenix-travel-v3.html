@@ -97,22 +97,40 @@ export async function GET(_req: NextRequest, { params }: Params) {
   const { nodeId } = await params;
   const nodeMap = makeNodeMap();
 
-  // Try DB first; fall back to in-memory when DB is unavailable OR returns null.
-  // Previously, a null return (node absent from DB) short-circuited to 404 and
-  // never reached the static-data fallback — that caused "Node not found" for
-  // any node not yet in the DB.
+  // If the node exists in the static graph, always serve static data.
+  // Static data has all 58 edges fully connected; the DB may have the node
+  // published but edges unpublished (seeding lag), which would yield empty
+  // connections from the DB path.  Static is always authoritative for the
+  // 42 bundled nodes.
+  const memData = computeRabbitHole(nodeId, staticNodes, staticEdges);
+  if (memData) {
+    // Also attempt to attach sources from DB, but don't fail if DB is down.
+    let sources: unknown[] = [];
+    let sourceCountMap: Record<string, number> = {};
+    try {
+      const dbData = await computeRabbitHoleFromDB(nodeId);
+      if (dbData) {
+        const d = dbData as unknown as Record<string, unknown>;
+        sources       = d.sources as unknown[] ?? [];
+        sourceCountMap = d.sourceCountMap as Record<string, number> ?? {};
+      }
+    } catch {
+      // DB unavailable — serve static without sources
+    }
+    return NextResponse.json(
+      enrichResponse({ ...memData, sources, sourceCountMap }, nodeMap)
+    );
+  }
+
+  // Node is not in the static graph — try DB (DB-only nodes, future additions)
   let dbData = null;
   try {
     dbData = await computeRabbitHoleFromDB(nodeId);
   } catch (err) {
-    console.warn('[rabbit-hole] DB unavailable, falling back to in-memory:', err);
+    console.warn('[rabbit-hole] DB unavailable, falling back to 404:', err);
   }
 
   if (dbData) return NextResponse.json(enrichResponse(dbData, nodeMap));
 
-  // DB returned null or threw — use static in-memory graph
-  const memData = computeRabbitHole(nodeId, staticNodes, staticEdges);
-  if (!memData) return NextResponse.json({ error: 'Node not found' }, { status: 404 });
-
-  return NextResponse.json(enrichResponse({ ...memData, sources: [], sourceCountMap: {} }, nodeMap));
+  return NextResponse.json({ error: 'Node not found' }, { status: 404 });
 }

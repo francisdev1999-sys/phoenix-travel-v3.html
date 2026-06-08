@@ -131,10 +131,10 @@ function NodeHeader({ node, score }: { node: GraphNode; score: number }) {
 
 // ── Main view ─────────────────────────────────────────────────────────────────
 export default function RabbitHoleView() {
-  const { rabbitHoleNodeId, setRabbitHoleNodeId } = useUserStore();
-  // Always start with empty state — don't auto-load a stale persisted nodeId on mount.
-  // The user explicitly picks a node via search, featured nodes, or by navigating from the graph.
-  const [currentId, setCurrentId] = useState<string>('');
+  const { rabbitHoleNodeId, setRabbitHoleNodeId, pendingRabbitHoleNodeId, setPendingRabbitHoleNodeId } = useUserStore();
+  // Start from a pending node if the user navigated here via search/graph,
+  // otherwise show the empty search prompt (don't auto-load stale persisted state).
+  const [currentId, setCurrentId] = useState<string>(() => pendingRabbitHoleNodeId ?? '');
   const [history,   setHistory]   = useState<string[]>([]);
   const [data,      setData]      = useState<ApiData | null>(null);
   const [loading,   setLoading]   = useState(false);
@@ -142,6 +142,11 @@ export default function RabbitHoleView() {
   const [tab,       setTab]       = useState<Tab>('connections');
   const [relFilter, setRelFilter] = useState<string>('');
   const abortRef = useRef<AbortController | null>(null);
+
+  // Clear the pending node signal immediately after consuming it on mount
+  useEffect(() => {
+    if (pendingRabbitHoleNodeId) setPendingRabbitHoleNodeId(null);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const load = useCallback(async (id: string) => {
     if (!id) return;
