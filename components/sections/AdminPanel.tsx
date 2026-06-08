@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useSession, signIn } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, Network, GitBranch, BookMarked, Activity, FileWarning, Plus, Loader2, Package, InboxIcon, Sparkles } from 'lucide-react';
+import { ShieldCheck, Network, GitBranch, BookMarked, Activity, FileWarning, Plus, Loader2, Package, InboxIcon, Sparkles, Users, BarChart3, AlertOctagon } from 'lucide-react';
 import AdminStats from '@/components/admin/AdminStats';
 import ProposedNodeCard from '@/components/admin/ProposedNodeCard';
 import ProposedEdgeCard from '@/components/admin/ProposedEdgeCard';
@@ -15,8 +15,11 @@ import ImportBatchList from '@/components/admin/ImportBatchList';
 import ImportBatchDetail from '@/components/admin/ImportBatchDetail';
 import DraftNodeQueue from '@/components/admin/DraftNodeQueue';
 import RelationshipSuggestions from '@/components/admin/RelationshipSuggestions';
+import UserManagement from '@/components/admin/UserManagement';
+import ModerationQueue from '@/components/admin/ModerationQueue';
+import PlatformHealthDashboard from '@/components/admin/PlatformHealthDashboard';
 
-type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports' | 'imports' | 'drafts' | 'suggestions';
+type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports' | 'imports' | 'drafts' | 'suggestions' | 'users' | 'moderation' | 'platform';
 
 export default function AdminPanel() {
   const { data: session, status } = useSession();
@@ -89,7 +92,9 @@ export default function AdminPanel() {
     );
   }
 
-  const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
+  const isOwner = role === 'owner';
+
+  const allTabs: { id: Tab; label: string; icon: React.ReactNode; ownerOnly?: boolean }[] = [
     { id: 'overview',    label: 'Overview',      icon: <ShieldCheck size={13} /> },
     { id: 'drafts',      label: 'Draft Queue',   icon: <InboxIcon size={13} /> },
     { id: 'imports',     label: 'Imports',       icon: <Package size={13} /> },
@@ -97,9 +102,13 @@ export default function AdminPanel() {
     { id: 'edges',       label: 'Relationships', icon: <GitBranch size={13} /> },
     { id: 'sources',     label: 'Sources',       icon: <BookMarked size={13} /> },
     { id: 'suggestions', label: 'Suggestions',   icon: <Sparkles size={13} /> },
+    { id: 'users',       label: 'Users',         icon: <Users size={13} /> },
+    { id: 'moderation',  label: 'Moderation',    icon: <AlertOctagon size={13} /> },
     { id: 'diagnostics', label: 'Diagnostics',   icon: <Activity size={13} /> },
     { id: 'reports',     label: 'Reports',       icon: <FileWarning size={13} /> },
+    { id: 'platform',    label: 'Platform',      icon: <BarChart3 size={13} />, ownerOnly: true },
   ];
+  const tabs = allTabs.filter(t => !t.ownerOnly || isOwner);
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -246,7 +255,10 @@ export default function AdminPanel() {
           {tab === 'suggestions' && <RelationshipSuggestions />}
           {tab === 'diagnostics' && <GraphDiagnostics />}
 
-          {tab === 'reports' && <AdminReports />}
+          {tab === 'users'      && <UserManagement />}
+          {tab === 'moderation' && <ModerationQueue />}
+          {tab === 'platform'   && <PlatformHealthDashboard />}
+          {tab === 'reports'    && <AdminReports />}
         </motion.div>
       </AnimatePresence>
     </div>

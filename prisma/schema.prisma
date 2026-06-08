@@ -53,25 +53,53 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  // Role hierarchy: owner > admin > reviewer > contributor > user
+  // Role hierarchy: owner > admin > moderation_admin > reviewer > source_verifier > verified_contributor > contributor > user | banned
   role          String    @default("user")
   createdAt     DateTime  @default(now())
+  lastActiveAt  DateTime  @default(now())
 
-  accounts            Account[]
-  sessions            Session[]
-  progress            UserProgress?
-  submitted           Source[]             @relation("SubmittedSources")
-  reviewed            Source[]             @relation("ReviewedSources")
-  submittedNodes      ProposedNode[]       @relation("SubmittedNodes")
-  reviewedNodes       ProposedNode[]       @relation("ReviewedNodes")
-  submittedEdges      ProposedEdge[]       @relation("SubmittedEdges")
-  reviewedEdges       ProposedEdge[]       @relation("ReviewedEdges")
-  nodeExplorations    NodeExploration[]
+  // Trust & activity
+  trustScore      Float   @default(50)
+  activityScore   Float   @default(0)
+  rank            String  @default("New Seeker")
+
+  // Moderation state
+  isBanned        Boolean  @default(false)
+  banReason       String?  @db.Text
+  banExpiresAt    DateTime?
+  warningCount    Int      @default(0)
+
+  // Submission counters (denormalized for performance)
+  submissionCount Int      @default(0)
+  approvedCount   Int      @default(0)
+  rejectedCount   Int      @default(0)
+
+  accounts              Account[]
+  sessions              Session[]
+  progress              UserProgress?
+  permissions           UserPermission?
+  trustEvents           UserTrustEvent[]
+  activityLogs          UserActivityLog[]
+  earnedBadges          UserBadge[]
+  submitted             Source[]               @relation("SubmittedSources")
+  reviewed              Source[]               @relation("ReviewedSources")
+  submittedNodes        ProposedNode[]         @relation("SubmittedNodes")
+  reviewedNodes         ProposedNode[]         @relation("ReviewedNodes")
+  submittedEdges        ProposedEdge[]         @relation("SubmittedEdges")
+  reviewedEdges         ProposedEdge[]         @relation("ReviewedEdges")
+  nodeExplorations      NodeExploration[]
   connectionDiscoveries ConnectionDiscovery[]
-  achievements        UserAchievement[]
-  aiReviews           AiResearchReview[]     @relation("AiReviewCreator")
+  achievements          UserAchievement[]
+  aiReviews             AiResearchReview[]     @relation("AiReviewCreator")
+  reportsSubmitted      Report[]               @relation("ReportSubmitter")
+  reportsAgainst        Report[]               @relation("ReportedUser")
+  modActions            ModerationAction[]     @relation("ModeratedUser")
+  modByMe               ModerationAction[]     @relation("ModeratorUser")
 
   @@index([role])
+  @@index([trustScore])
+  @@index([isBanned])
+  @@index([lastActiveAt])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -648,4 +676,134 @@ model AiResearchReview {
   @@index([nodeId])
   @@index([createdAt])
   @@index([createdBy])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GOVERNANCE — PERMISSIONS, TRUST, ACTIVITY, BADGES, MODERATION
+// ─────────────────────────────────────────────────────────────────────────────
+
+model UserPermission {
+  userId                  String   @id
+  canApproveSources       Boolean  @default(false)
+  canApproveRelationships Boolean  @default(false)
+  canApproveNodes         Boolean  @default(false)
+  canPublishNodes         Boolean  @default(false)
+  canAssignRoles          Boolean  @default(false)
+  canBanUsers             Boolean  @default(false)
+  canRunAiReview          Boolean  @default(false)
+  canViewPlatformHealth   Boolean  @default(false)
+  canViewTraffic          Boolean  @default(false)
+  canViewCosts            Boolean  @default(false)
+  canViewSecurityLogs     Boolean  @default(false)
+  updatedAt               DateTime @updatedAt
+  updatedBy               String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserTrustEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  delta     Float
+  reason    String   // 'approved_node' | 'rejected_content' | 'moderator_warning' | 'reviewer_endorsement' | etc.
+  detail    String?  @db.Text
+  createdBy String?  // moderator userId or 'system'
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model UserActivityLog {
+  id         String   @id @default(cuid())
+  userId     String
+  actionType String   // 'login' | 'node_view' | 'search' | 'save' | 'submit' | 'comment'
+  detail     Json?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([actionType])
+  @@index([createdAt])
+}
+
+model Badge {
+  id          String @id
+  name        String
+  description String
+  icon        String
+  category    String // 'membership' | 'activity' | 'contribution' | 'specialty' | 'authority'
+
+  holders UserBadge[]
+}
+
+model UserBadge {
+  userId    String
+  badgeId   String
+  awardedAt DateTime @default(now())
+  awardedBy String?
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, badgeId])
+  @@index([userId])
+  @@index([badgeId])
+}
+
+model Report {
+  id             String    @id @default(cuid())
+  submittedBy    String
+  reportedUserId String?
+  entityType     String    // 'node' | 'source' | 'edge' | 'user' | 'proposed_node'
+  entityId       String
+  reason         String    // 'spam' | 'misinformation' | 'fake_source' | 'harassment' | 'low_quality' | 'other'
+  detail         String?   @db.Text
+  status         String    @default("open") // open | investigating | resolved | dismissed
+  resolvedBy     String?
+  resolvedAt     DateTime?
+  resolveNote    String?   @db.Text
+  createdAt      DateTime  @default(now())
+
+  submitter    User  @relation("ReportSubmitter", fields: [submittedBy],    references: [id], onDelete: Cascade)
+  reportedUser User? @relation("ReportedUser",    fields: [reportedUserId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([submittedBy])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model ModerationAction {
+  id          String    @id @default(cuid())
+  userId      String
+  moderatorId String
+  actionType  String    // 'warning' | 'suspension' | 'ban' | 'unban' | 'trust_adjustment' | 'badge_award' | 'role_change'
+  reason      String    @db.Text
+  detail      Json?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  user      User @relation("ModeratedUser", fields: [userId],      references: [id], onDelete: Cascade)
+  moderator User @relation("ModeratorUser", fields: [moderatorId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([moderatorId])
+  @@index([actionType])
+  @@index([createdAt])
+}
+
+model PlatformMetric {
+  id          String   @id @default(cuid())
+  date        DateTime
+  metricName  String
+  metricValue Float
+  metricMeta  Json?
+
+  @@unique([date, metricName])
+  @@index([date])
+  @@index([metricName])
 }

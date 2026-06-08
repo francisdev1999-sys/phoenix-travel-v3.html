@@ -17,6 +17,32 @@ interface AuditEntry {
   detail?:    Record<string, unknown>;
 }
 
+/** Flexible audit logger — accepts any action string (used by governance routes). */
+export async function logAudit(entry: {
+  userId?:    string | null;
+  userEmail?: string | null;
+  action:     string;
+  entityType: string;
+  entityId:   string;
+  detail?:    Record<string, unknown>;
+}): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (prisma as any).auditLog.create({
+      data: {
+        userId:     entry.userId    ?? null,
+        userEmail:  entry.userEmail ?? null,
+        action:     entry.action,
+        entityType: entry.entityType,
+        entityId:   entry.entityId,
+        detail:     entry.detail ?? null,
+      },
+    });
+  } catch (err) {
+    console.error('[audit] write failed:', err);
+  }
+}
+
 export async function writeAuditLog(entry: AuditEntry): Promise<void> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
