@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useSession, signIn } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, Network, GitBranch, BookMarked, Activity, FileWarning, Plus, Loader2, Package, InboxIcon, Sparkles, Users, BarChart3, AlertOctagon } from 'lucide-react';
+import { ShieldCheck, Network, GitBranch, BookMarked, Activity, FileWarning, Plus, Loader2, Package, InboxIcon, Sparkles, Users, BarChart3, AlertOctagon, Brain } from 'lucide-react';
 import AdminStats from '@/components/admin/AdminStats';
 import ProposedNodeCard from '@/components/admin/ProposedNodeCard';
 import ProposedEdgeCard from '@/components/admin/ProposedEdgeCard';
@@ -18,13 +18,15 @@ import RelationshipSuggestions from '@/components/admin/RelationshipSuggestions'
 import UserManagement from '@/components/admin/UserManagement';
 import ModerationQueue from '@/components/admin/ModerationQueue';
 import PlatformHealthDashboard from '@/components/admin/PlatformHealthDashboard';
+import UserIntelligenceDashboard from '@/components/admin/UserIntelligenceDashboard';
 
-type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports' | 'imports' | 'drafts' | 'suggestions' | 'users' | 'moderation' | 'platform';
+type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports' | 'imports' | 'drafts' | 'suggestions' | 'users' | 'moderation' | 'platform' | 'intelligence';
 
 export default function AdminPanel() {
   const { data: session, status } = useSession();
   const role    = (session?.user as { role?: string })?.role ?? 'user';
   const isAdmin = role === 'owner' || role === 'admin';
+  const isOwner = role === 'owner';
   const [tab, setTab] = useState<Tab>('overview');
   const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
   const [proposingNode, setProposingNode] = useState(false);
@@ -92,21 +94,20 @@ export default function AdminPanel() {
     );
   }
 
-  const isOwner = role === 'owner';
-
   const allTabs: { id: Tab; label: string; icon: React.ReactNode; ownerOnly?: boolean }[] = [
-    { id: 'overview',    label: 'Overview',      icon: <ShieldCheck size={13} /> },
-    { id: 'drafts',      label: 'Draft Queue',   icon: <InboxIcon size={13} /> },
-    { id: 'imports',     label: 'Imports',       icon: <Package size={13} /> },
-    { id: 'nodes',       label: 'Nodes',         icon: <Network size={13} /> },
-    { id: 'edges',       label: 'Relationships', icon: <GitBranch size={13} /> },
-    { id: 'sources',     label: 'Sources',       icon: <BookMarked size={13} /> },
-    { id: 'suggestions', label: 'Suggestions',   icon: <Sparkles size={13} /> },
-    { id: 'users',       label: 'Users',         icon: <Users size={13} /> },
-    { id: 'moderation',  label: 'Moderation',    icon: <AlertOctagon size={13} /> },
-    { id: 'diagnostics', label: 'Diagnostics',   icon: <Activity size={13} /> },
-    { id: 'reports',     label: 'Reports',       icon: <FileWarning size={13} /> },
-    { id: 'platform',    label: 'Platform',      icon: <BarChart3 size={13} />, ownerOnly: true },
+    { id: 'overview',     label: 'Overview',      icon: <ShieldCheck size={13} /> },
+    { id: 'drafts',       label: 'Draft Queue',   icon: <InboxIcon size={13} /> },
+    { id: 'imports',      label: 'Imports',       icon: <Package size={13} /> },
+    { id: 'nodes',        label: 'Nodes',         icon: <Network size={13} /> },
+    { id: 'edges',        label: 'Relationships', icon: <GitBranch size={13} /> },
+    { id: 'sources',      label: 'Sources',       icon: <BookMarked size={13} /> },
+    { id: 'suggestions',  label: 'Suggestions',   icon: <Sparkles size={13} /> },
+    { id: 'users',        label: 'Users',         icon: <Users size={13} /> },
+    { id: 'moderation',   label: 'Moderation',    icon: <AlertOctagon size={13} /> },
+    { id: 'diagnostics',  label: 'Diagnostics',   icon: <Activity size={13} /> },
+    { id: 'reports',      label: 'Reports',       icon: <FileWarning size={13} /> },
+    { id: 'platform',     label: 'Platform',      icon: <BarChart3 size={13} />, ownerOnly: true },
+    { id: 'intelligence', label: 'User Intel',    icon: <Brain size={13} />,    ownerOnly: true },
   ];
   const tabs = allTabs.filter(t => !t.ownerOnly || isOwner);
 
@@ -255,10 +256,11 @@ export default function AdminPanel() {
           {tab === 'suggestions' && <RelationshipSuggestions />}
           {tab === 'diagnostics' && <GraphDiagnostics />}
 
-          {tab === 'users'      && <UserManagement />}
-          {tab === 'moderation' && <ModerationQueue />}
-          {tab === 'platform'   && <PlatformHealthDashboard />}
-          {tab === 'reports'    && <AdminReports />}
+          {tab === 'users'        && <UserManagement />}
+          {tab === 'moderation'   && <ModerationQueue />}
+          {tab === 'platform'     && <PlatformHealthDashboard />}
+          {tab === 'reports'      && <AdminReports />}
+          {tab === 'intelligence' && isOwner && <UserIntelligenceDashboard />}
         </motion.div>
       </AnimatePresence>
     </div>

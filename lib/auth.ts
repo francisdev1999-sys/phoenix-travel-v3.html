@@ -51,6 +51,14 @@ export function isReviewerOrAboveSession(
   return session.user.email === process.env.ADMIN_EMAIL;
 }
 
+/** True only for the platform owner (super-admin). */
+export function isOwnerSession(
+  session: { user?: { role?: string; email?: string | null } } | null,
+): boolean {
+  if (!session?.user) return false;
+  return session.user.role === 'owner' || session.user.email === process.env.ADMIN_EMAIL;
+}
+
 // ── NextAuth type augmentation ────────────────────────────────────────────────
 declare module 'next-auth' {
   interface Session {

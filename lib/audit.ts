@@ -4,9 +4,12 @@ export type AuditAction =
   | 'publish' | 'unpublish' | 'archive' | 'restore'
   | 'edit' | 'approve' | 'reject' | 'needs_revision'
   | 'import' | 'rollback'
-  | 'bulk_approve' | 'bulk_reject' | 'bulk_publish';
+  | 'bulk_approve' | 'bulk_reject' | 'bulk_publish'
+  | 'warn' | 'restrict' | 'suspend' | 'ban' | 'unban'
+  | 'role_change' | 'trust_adjustment'
+  | (string & {}); // allow arbitrary strings for future extensibility
 
-export type AuditEntityType = 'node' | 'edge' | 'batch' | 'suggestion';
+export type AuditEntityType = 'node' | 'edge' | 'batch' | 'suggestion' | 'user' | (string & {});
 
 interface AuditEntry {
   userId?:    string | null;

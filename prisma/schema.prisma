@@ -56,7 +56,8 @@ model User {
   // Role hierarchy: owner > admin > moderation_admin > reviewer > source_verifier > verified_contributor > contributor > user | banned
   role          String    @default("user")
   createdAt     DateTime  @default(now())
-  lastActiveAt  DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastActiveAt  DateTime?
 
   // Trust & activity
   trustScore      Float   @default(50)
@@ -95,11 +96,15 @@ model User {
   reportsAgainst        Report[]               @relation("ReportedUser")
   modActions            ModerationAction[]     @relation("ModeratedUser")
   modByMe               ModerationAction[]     @relation("ModeratorUser")
+  riskProfile           UserRiskProfile?
+  activityEvents        UserActivityEvent[]
+  moderationStatus      UserModerationStatus?
 
   @@index([role])
   @@index([trustScore])
   @@index([isBanned])
   @@index([lastActiveAt])
+  @@index([createdAt])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -705,9 +710,9 @@ model UserTrustEvent {
   id        String   @id @default(cuid())
   userId    String
   delta     Float
-  reason    String   // 'approved_node' | 'rejected_content' | 'moderator_warning' | 'reviewer_endorsement' | etc.
+  reason    String
   detail    String?  @db.Text
-  createdBy String?  // moderator userId or 'system'
+  createdBy String?
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -719,7 +724,7 @@ model UserTrustEvent {
 model UserActivityLog {
   id         String   @id @default(cuid())
   userId     String
-  actionType String   // 'login' | 'node_view' | 'search' | 'save' | 'submit' | 'comment'
+  actionType String
   detail     Json?
   createdAt  DateTime @default(now())
 
@@ -735,7 +740,7 @@ model Badge {
   name        String
   description String
   icon        String
-  category    String // 'membership' | 'activity' | 'contribution' | 'specialty' | 'authority'
+  category    String
 
   holders UserBadge[]
 }
@@ -758,11 +763,11 @@ model Report {
   id             String    @id @default(cuid())
   submittedBy    String
   reportedUserId String?
-  entityType     String    // 'node' | 'source' | 'edge' | 'user' | 'proposed_node'
+  entityType     String
   entityId       String
-  reason         String    // 'spam' | 'misinformation' | 'fake_source' | 'harassment' | 'low_quality' | 'other'
+  reason         String
   detail         String?   @db.Text
-  status         String    @default("open") // open | investigating | resolved | dismissed
+  status         String    @default("open")
   resolvedBy     String?
   resolvedAt     DateTime?
   resolveNote    String?   @db.Text
@@ -781,7 +786,7 @@ model ModerationAction {
   id          String    @id @default(cuid())
   userId      String
   moderatorId String
-  actionType  String    // 'warning' | 'suspension' | 'ban' | 'unban' | 'trust_adjustment' | 'badge_award' | 'role_change'
+  actionType  String
   reason      String    @db.Text
   detail      Json?
   expiresAt   DateTime?
@@ -806,4 +811,56 @@ model PlatformMetric {
   @@unique([date, metricName])
   @@index([date])
   @@index([metricName])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// USER RISK & ACTIVITY INTELLIGENCE
+// ─────────────────────────────────────────────────────────────────────────────
+
+model UserRiskProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  riskScore        Float    @default(0)
+  riskLevel        String   @default("low")
+  spamScore        Float    @default(0)
+  botScore         Float    @default(0)
+  lastCalculatedAt DateTime @default(now())
+  reasons          Json     @default("[]")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([riskScore])
+  @@index([riskLevel])
+  @@index([lastCalculatedAt])
+}
+
+model UserActivityEvent {
+  id            String   @id @default(cuid())
+  userId        String
+  eventType     String
+  path          String?
+  metadata      Json     @default("{}")
+  ipHash        String?
+  userAgentHash String?
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([ipHash, createdAt])
+  @@index([eventType, createdAt])
+}
+
+model UserModerationStatus {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  status    String   @default("active")
+  reason    String?
+  changedBy String?
+  changedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([changedAt])
 }
