@@ -201,12 +201,14 @@ model Node {
   claims          Claim[]
   criticisms      Criticism[]
   openQuestions   OpenQuestion[]
-  sourceLinks     SourceLink[]
-  edgesFrom       Edge[]         @relation("EdgeFrom")
-  edgesTo         Edge[]         @relation("EdgeTo")
-  versions        NodeVersion[]
-  embedding       NodeEmbedding?
-  adjacencyCache  AdjacencyCache?
+  sourceLinks       SourceLink[]
+  edgesFrom         Edge[]                   @relation("EdgeFrom")
+  edgesTo           Edge[]                   @relation("EdgeTo")
+  versions          NodeVersion[]
+  embedding         NodeEmbedding?
+  adjacencyCache    AdjacencyCache?
+  suggestionsFrom   RelationshipSuggestion[] @relation("SuggestionFrom")
+  suggestionsTo     RelationshipSuggestion[] @relation("SuggestionTo")
 
   @@index([categoryId])
   @@index([status])
@@ -555,6 +557,54 @@ model ImportBatch {
 // ─────────────────────────────────────────────────────────────────────────────
 // AUDIT LOG  (immutable record of admin actions)
 // ─────────────────────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RELATIONSHIP SUGGESTIONS  (rule-based graph intelligence, human review gate)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model RelationshipSuggestion {
+  id               String    @id @default(cuid())
+  fromNodeId       String
+  toNodeId         String
+
+  // Requirement #10: connection classification
+  relationshipType String    // contradiction | source_relationship | geographical | historical | thematic | textual | speculative
+
+  // Requirement #9: every connection needs these
+  reason           String    @db.Text
+  evidenceBasis    String    @db.Text
+  confidenceScore  Float     @default(0.5)
+  riskLevel        String    @default("medium")  // low | medium | high
+
+  // Signal breakdown for transparency and future weight adjustment
+  signalBreakdown  Json      @default("{}")
+
+  // Requirement #5: reviewer decision tracking
+  status           String    @default("pending")  // pending | approved | rejected | revised
+  reviewedBy       String?
+  reviewerEmail    String?
+  reviewedAt       DateTime?
+  reviewNote       String?   @db.Text
+  promotedEdgeId   String?
+
+  // Generation metadata
+  triggeredByNodeId String?
+  generationMethod  String   @default("rule_based")
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  fromNode Node @relation("SuggestionFrom", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  toNode   Node @relation("SuggestionTo",   fields: [toNodeId],   references: [id], onDelete: Cascade)
+
+  @@unique([fromNodeId, toNodeId])
+  @@index([status])
+  @@index([fromNodeId])
+  @@index([toNodeId])
+  @@index([confidenceScore])
+  @@index([triggeredByNodeId])
+  @@index([createdAt])
+}
 
 model AuditLog {
   id         String   @id @default(cuid())

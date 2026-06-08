@@ -13,6 +13,7 @@ import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { enqueue } from '@/lib/jobs/queue';
 import { writeAuditLog } from '@/lib/audit';
+import { generateSuggestionsForNode } from '@/lib/suggestion-engine';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -102,10 +103,11 @@ export async function POST(_req: NextRequest, { params }: Params) {
     detail: { previousStatus: node.status },
   });
 
-  // Enqueue background jobs (non-blocking — failures don't roll back the publish)
+  // Non-blocking background work — failures don't roll back the publish
   await Promise.allSettled([
     enqueue('embed-node',        { nodeId: id }, 60),
     enqueue('rebuild-adjacency', { nodeId: id }, 60),
+    generateSuggestionsForNode(id),
   ]);
 
   return NextResponse.json({

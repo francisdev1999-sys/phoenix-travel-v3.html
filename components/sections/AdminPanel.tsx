@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useSession, signIn } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, Network, GitBranch, BookMarked, Activity, FileWarning, Plus, Loader2, Package, InboxIcon } from 'lucide-react';
+import { ShieldCheck, Network, GitBranch, BookMarked, Activity, FileWarning, Plus, Loader2, Package, InboxIcon, Sparkles } from 'lucide-react';
 import AdminStats from '@/components/admin/AdminStats';
 import ProposedNodeCard from '@/components/admin/ProposedNodeCard';
 import ProposedEdgeCard from '@/components/admin/ProposedEdgeCard';
@@ -14,8 +14,9 @@ import GraphDiagnostics from '@/components/sections/GraphDiagnostics';
 import ImportBatchList from '@/components/admin/ImportBatchList';
 import ImportBatchDetail from '@/components/admin/ImportBatchDetail';
 import DraftNodeQueue from '@/components/admin/DraftNodeQueue';
+import RelationshipSuggestions from '@/components/admin/RelationshipSuggestions';
 
-type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports' | 'imports' | 'drafts';
+type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports' | 'imports' | 'drafts' | 'suggestions';
 
 export default function AdminPanel() {
   const { data: session, status } = useSession();
@@ -95,6 +96,7 @@ export default function AdminPanel() {
     { id: 'nodes',       label: 'Nodes',         icon: <Network size={13} /> },
     { id: 'edges',       label: 'Relationships', icon: <GitBranch size={13} /> },
     { id: 'sources',     label: 'Sources',       icon: <BookMarked size={13} /> },
+    { id: 'suggestions', label: 'Suggestions',   icon: <Sparkles size={13} /> },
     { id: 'diagnostics', label: 'Diagnostics',   icon: <Activity size={13} /> },
     { id: 'reports',     label: 'Reports',       icon: <FileWarning size={13} /> },
   ];
@@ -241,6 +243,7 @@ export default function AdminPanel() {
 
           {tab === 'sources' && <SourceReviewQueue />}
 
+          {tab === 'suggestions' && <RelationshipSuggestions />}
           {tab === 'diagnostics' && <GraphDiagnostics />}
 
           {tab === 'reports' && <AdminReports />}
