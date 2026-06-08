@@ -54,6 +54,37 @@ export default function AppShell() {
     setSidePanel(null);
   }, [currentView]);
 
+  const isInitialMountRef = useRef(true);
+
+  // Sync currentView → browser history so back/forward navigate within the app
+  useEffect(() => {
+    const hash = currentView === 'landing' ? '' : `#${currentView}`;
+
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      window.history.replaceState({ view: currentView }, '', hash || '/');
+      return;
+    }
+
+    // If hash already matches, this render was triggered by popstate — skip push
+    if (window.location.hash === hash) return;
+
+    window.history.pushState({ view: currentView }, '', hash || '/');
+  }, [currentView]);
+
+  // Intercept browser back/forward — keep navigation within the SPA
+  useEffect(() => {
+    const validViews = ['landing', 'graph', 'theory', 'universe', 'timeline', 'evidence-board', 'globe', 'dashboard', 'diagnostics', 'sources', 'admin', 'rabbit-hole'];
+
+    const handlePopState = (e: PopStateEvent) => {
+      const view = e.state?.view;
+      setCurrentView(validViews.includes(view) ? view : 'landing');
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [setCurrentView]);
+
   return (
     <div className="min-h-screen bg-[#000005] text-slate-200 overflow-hidden">
       {/* Global particle field for non-landing views */}
