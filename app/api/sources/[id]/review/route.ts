@@ -2,6 +2,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { applyTrustEvent } from '@/lib/trust-score';
+import { evaluateBadges, refreshUserRank } from '@/lib/rank-system';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -35,6 +37,27 @@ export async function POST(req: NextRequest, { params }: Params) {
       links:     { select: { nodeId: true } },
     },
   });
+
+  // Fire trust events and badge/rank refresh
+  if (source.submittedBy) {
+    const submitterId = source.submittedBy;
+    const reviewerId  = session.user.id;
+    if (action === 'approved') {
+      void Promise.allSettled([
+        applyTrustEvent(submitterId, 'approved_source', undefined, `Source ${id} approved`, reviewerId),
+        prisma.user.update({ where: { id: submitterId }, data: { approvedCount: { increment: 1 } } }),
+        evaluateBadges(submitterId),
+        refreshUserRank(submitterId),
+      ]);
+    } else if (action === 'rejected') {
+      void Promise.allSettled([
+        applyTrustEvent(submitterId, 'rejected_content', undefined, reviewNotes?.trim() || undefined, reviewerId),
+        prisma.user.update({ where: { id: submitterId }, data: { rejectedCount: { increment: 1 } } }),
+        evaluateBadges(submitterId),
+        refreshUserRank(submitterId),
+      ]);
+    }
+  }
 
   // When a source is approved its credibility becomes active — the node quality
   // scores for every linked node are now stale. We re-compute them inline since

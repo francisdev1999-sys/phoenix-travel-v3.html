@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { EVIDENCE_LEVELS, NODE_CATEGORIES, isValidScore } from '@/lib/validation/enums';
+import { checkTrustGate, checkSubmissionRate, validateNodeSubmission, checkDuplicate } from '@/lib/quality-gates';
+import { logActivity } from '@/lib/rank-system';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -31,6 +33,24 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  // ── Quality gates ─────────────────────────────────────────────────────────
+  const dbUser = await prisma.user.findUnique({
+    where:  { id: session.user.id },
+    select: { trustScore: true, isBanned: true, role: true },
+  });
+
+  const trustCheck = checkTrustGate(dbUser?.trustScore ?? 50, dbUser?.isBanned ?? false);
+  if (!trustCheck.allowed) {
+    return NextResponse.json({ error: trustCheck.reason }, { status: 403 });
+  }
+
+  const rateCheck = await checkSubmissionRate(session.user.id, dbUser?.role ?? 'user');
+  if (!rateCheck.allowed) {
+    return NextResponse.json({
+      error: `Daily submission limit reached (${rateCheck.count}/${rateCheck.limit}). Resets at midnight.`,
+    }, { status: 429 });
+  }
+
   const body = await req.json();
   const { label, category, description, evidenceLevel, confidence,
           claims, criticisms, openQuestions, mainstreamView,
@@ -39,6 +59,29 @@ export async function POST(req: NextRequest) {
   if (!label?.trim())       return NextResponse.json({ error: 'Label required' }, { status: 400 });
   if (!category?.trim())    return NextResponse.json({ error: 'Category required' }, { status: 400 });
   if (!description?.trim()) return NextResponse.json({ error: 'Description required' }, { status: 400 });
+
+  // Content quality validation
+  const validation = validateNodeSubmission({
+    title:         label?.trim() ?? '',
+    description:   description?.trim() ?? '',
+    evidenceLevel: evidenceLevel ?? 'speculative',
+    tags:          Array.isArray(tags)    ? tags    : [],
+    claims:        Array.isArray(claims)  ? claims  : [],
+  });
+  if (!validation.passed) {
+    return NextResponse.json({ errors: validation.errors, warnings: validation.warnings, risk: validation.risk }, { status: 400 });
+  }
+
+  // Duplicate detection
+  const dupCheck = await checkDuplicate(label?.trim() ?? '');
+  if (dupCheck.isDuplicate) {
+    return NextResponse.json({
+      error: 'A similar node may already exist in the archive.',
+      similarTitles: dupCheck.similarTitles,
+      warnings: validation.warnings,
+      risk: validation.risk,
+    }, { status: 409 });
+  }
 
   const resolvedEvidence = evidenceLevel ?? 'speculative';
   if (!(EVIDENCE_LEVELS as readonly string[]).includes(resolvedEvidence)) {
@@ -86,5 +129,11 @@ export async function POST(req: NextRequest) {
     include: { submitter: { select: { id: true, name: true, image: true } } },
   });
 
-  return NextResponse.json(node, { status: 201 });
+  // Update submission counter and activity score (fire-and-forget)
+  void Promise.allSettled([
+    prisma.user.update({ where: { id: session.user.id }, data: { submissionCount: { increment: 1 } } }),
+    logActivity(session.user.id, 'submit', { type: 'node', proposalId: node.id }),
+  ]);
+
+  return NextResponse.json({ ...node, warnings: validation.warnings, risk: validation.risk }, { status: 201 });
 }

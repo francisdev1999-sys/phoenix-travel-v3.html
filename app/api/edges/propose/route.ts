@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { EVIDENCE_LEVELS, RELATIONSHIP_TYPES, isValidScore } from '@/lib/validation/enums';
+import { checkTrustGate, checkSubmissionRate } from '@/lib/quality-gates';
+import { logActivity } from '@/lib/rank-system';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -30,6 +32,24 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  // ── Quality gates ─────────────────────────────────────────────────────────
+  const dbUser = await prisma.user.findUnique({
+    where:  { id: session.user.id },
+    select: { trustScore: true, isBanned: true, role: true },
+  });
+
+  const trustCheck = checkTrustGate(dbUser?.trustScore ?? 50, dbUser?.isBanned ?? false);
+  if (!trustCheck.allowed) {
+    return NextResponse.json({ error: trustCheck.reason }, { status: 403 });
+  }
+
+  const rateCheck = await checkSubmissionRate(session.user.id, dbUser?.role ?? 'user');
+  if (!rateCheck.allowed) {
+    return NextResponse.json({
+      error: `Daily submission limit reached (${rateCheck.count}/${rateCheck.limit}). Resets at midnight.`,
+    }, { status: 429 });
+  }
 
   const body = await req.json();
   const { fromNodeId, toNodeId, relationship, description, evidenceLevel,
@@ -91,6 +111,11 @@ export async function POST(req: NextRequest) {
     },
     include: { submitter: { select: { id: true, name: true, image: true } } },
   });
+
+  void Promise.allSettled([
+    prisma.user.update({ where: { id: session.user.id }, data: { submissionCount: { increment: 1 } } }),
+    logActivity(session.user.id, 'submit', { type: 'edge', proposalId: edge.id }),
+  ]);
 
   return NextResponse.json(edge, { status: 201 });
 }

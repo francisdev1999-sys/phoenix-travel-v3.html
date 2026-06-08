@@ -2,6 +2,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { applyTrustEvent } from '@/lib/trust-score';
+import { evaluateBadges, refreshUserRank } from '@/lib/rank-system';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -30,6 +32,26 @@ export async function POST(req: NextRequest, { params }: Params) {
     },
     include: { submitter: { select: { id: true, name: true, image: true } } },
   });
+
+  if (edge.submittedBy) {
+    const submitterId = edge.submittedBy;
+    const reviewerId  = session!.user!.id;
+    if (action === 'approved') {
+      void Promise.allSettled([
+        applyTrustEvent(submitterId, 'approved_relationship', undefined, `Edge ${id} approved`, reviewerId),
+        prisma.user.update({ where: { id: submitterId }, data: { approvedCount: { increment: 1 } } }),
+        evaluateBadges(submitterId),
+        refreshUserRank(submitterId),
+      ]);
+    } else if (action === 'rejected') {
+      void Promise.allSettled([
+        applyTrustEvent(submitterId, 'rejected_content', undefined, reviewNotes?.trim() || undefined, reviewerId),
+        prisma.user.update({ where: { id: submitterId }, data: { rejectedCount: { increment: 1 } } }),
+        evaluateBadges(submitterId),
+        refreshUserRank(submitterId),
+      ]);
+    }
+  }
 
   return NextResponse.json(updated);
 }
