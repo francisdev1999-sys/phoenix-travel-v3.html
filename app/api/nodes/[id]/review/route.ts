@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { writeAuditLog } from '@/lib/audit';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -31,6 +32,14 @@ export async function POST(req: NextRequest, { params }: Params) {
         reviewedBy: session!.user!.id,
       },
       include: { submitter: { select: { id: true, name: true, image: true } } },
+    });
+    await writeAuditLog({
+      userId:     session!.user!.id    ?? null,
+      userEmail:  session!.user!.email ?? null,
+      action:     action === 'rejected' ? 'reject' : 'needs_revision',
+      entityType: 'node',
+      entityId:   id,
+      detail:     { proposalId: id, reviewNotes: reviewNotes?.trim() || null },
     });
     return NextResponse.json(updated);
   }
@@ -170,6 +179,15 @@ export async function POST(req: NextRequest, { params }: Params) {
     });
 
     return [updated, node];
+  });
+
+  await writeAuditLog({
+    userId:     session!.user!.id    ?? null,
+    userEmail:  session!.user!.email ?? null,
+    action:     'approve',
+    entityType: 'node',
+    entityId:   newNode.id,
+    detail:     { proposalId: id, reviewNotes: reviewNotes?.trim() || null },
   });
 
   return NextResponse.json({

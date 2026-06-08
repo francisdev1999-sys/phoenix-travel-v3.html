@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { writeAuditLog } from '@/lib/audit';
 
 type Params = { params: Promise<{ batchId: string }> };
 
@@ -88,6 +89,19 @@ export async function POST(req: NextRequest, { params }: Params) {
         rolledBackBy: session!.user!.id ?? null,
       },
     });
+  });
+
+  await writeAuditLog({
+    userId:     session!.user!.id    ?? null,
+    userEmail:  session!.user!.email ?? null,
+    action:     'rollback',
+    entityType: 'batch',
+    entityId:   batchId,
+    detail: {
+      nodesDeleted: batchNodeIds.length,
+      edgesDeleted: batchEdgeIds.length,
+      force:        force === true,
+    },
   });
 
   return NextResponse.json({

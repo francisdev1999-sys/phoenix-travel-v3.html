@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useSession, signIn } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, Network, GitBranch, BookMarked, Activity, FileWarning, Plus, Loader2 } from 'lucide-react';
+import { ShieldCheck, Network, GitBranch, BookMarked, Activity, FileWarning, Plus, Loader2, Package, InboxIcon } from 'lucide-react';
 import AdminStats from '@/components/admin/AdminStats';
 import ProposedNodeCard from '@/components/admin/ProposedNodeCard';
 import ProposedEdgeCard from '@/components/admin/ProposedEdgeCard';
@@ -11,13 +11,17 @@ import ProposeEdgeForm from '@/components/admin/ProposeEdgeForm';
 import AdminReports from '@/components/admin/AdminReports';
 import SourceReviewQueue from '@/components/sources/SourceReviewQueue';
 import GraphDiagnostics from '@/components/sections/GraphDiagnostics';
+import ImportBatchList from '@/components/admin/ImportBatchList';
+import ImportBatchDetail from '@/components/admin/ImportBatchDetail';
+import DraftNodeQueue from '@/components/admin/DraftNodeQueue';
 
-type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports';
+type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports' | 'imports' | 'drafts';
 
 export default function AdminPanel() {
   const { data: session, status } = useSession();
   const isAdmin = session?.user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
   const [tab, setTab] = useState<Tab>('overview');
+  const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
   const [proposingNode, setProposingNode] = useState(false);
   const [proposingEdge, setProposingEdge] = useState(false);
   const [nodes, setNodes] = useState<unknown[]>([]);
@@ -84,12 +88,14 @@ export default function AdminPanel() {
   }
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: 'overview',     label: 'Overview',      icon: <ShieldCheck size={13} /> },
-    { id: 'nodes',        label: 'Nodes',          icon: <Network size={13} /> },
-    { id: 'edges',        label: 'Relationships',  icon: <GitBranch size={13} /> },
-    { id: 'sources',      label: 'Sources',        icon: <BookMarked size={13} /> },
-    { id: 'diagnostics',  label: 'Diagnostics',    icon: <Activity size={13} /> },
-    { id: 'reports',      label: 'Reports',        icon: <FileWarning size={13} /> },
+    { id: 'overview',    label: 'Overview',      icon: <ShieldCheck size={13} /> },
+    { id: 'drafts',      label: 'Draft Queue',   icon: <InboxIcon size={13} /> },
+    { id: 'imports',     label: 'Imports',       icon: <Package size={13} /> },
+    { id: 'nodes',       label: 'Nodes',         icon: <Network size={13} /> },
+    { id: 'edges',       label: 'Relationships', icon: <GitBranch size={13} /> },
+    { id: 'sources',     label: 'Sources',       icon: <BookMarked size={13} /> },
+    { id: 'diagnostics', label: 'Diagnostics',   icon: <Activity size={13} /> },
+    { id: 'reports',     label: 'Reports',       icon: <FileWarning size={13} /> },
   ];
 
   return (
@@ -222,6 +228,14 @@ export default function AdminPanel() {
                 </div>
               )}
             </div>
+          )}
+
+          {tab === 'drafts' && <DraftNodeQueue />}
+
+          {tab === 'imports' && (
+            selectedBatchId
+              ? <ImportBatchDetail batchId={selectedBatchId} onBack={() => setSelectedBatchId(null)} />
+              : <ImportBatchList onSelectBatch={id => setSelectedBatchId(id)} />
           )}
 
           {tab === 'sources' && <SourceReviewQueue />}

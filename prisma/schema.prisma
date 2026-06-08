@@ -187,6 +187,10 @@ model Node {
   importBatchId   String?
   importBatch     ImportBatch? @relation("BatchNodes", fields: [importBatchId], references: [id], onDelete: SetNull)
 
+  // Admin review
+  adminReviewStatus String?  // ready_to_review | review_required | needs_enrichment | soft_rejected
+  adminReviewNote   String?  @db.Text
+
   // Relations
   category        Category       @relation(fields: [categoryId], references: [id])
   tags            NodeTag[]
@@ -542,4 +546,24 @@ model ImportBatch {
 
   @@index([status])
   @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUDIT LOG  (immutable record of admin actions)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  userEmail  String?
+  action     String   // publish | unpublish | archive | restore | edit | approve | reject | needs_revision | import | rollback | bulk_approve | bulk_reject | bulk_publish
+  entityType String   // node | edge | batch
+  entityId   String
+  detail     Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([action])
 }

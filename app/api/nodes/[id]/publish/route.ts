@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { enqueue } from '@/lib/jobs/queue';
+import { writeAuditLog } from '@/lib/audit';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -90,6 +91,15 @@ export async function POST(_req: NextRequest, { params }: Params) {
         changeNote: 'Published',
       },
     });
+  });
+
+  await writeAuditLog({
+    userId:    session!.user!.id    ?? null,
+    userEmail: session!.user!.email ?? null,
+    action:    'publish',
+    entityType: 'node',
+    entityId:   id,
+    detail: { previousStatus: node.status },
   });
 
   // Enqueue background jobs (non-blocking — failures don't roll back the publish)
