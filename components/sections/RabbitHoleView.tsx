@@ -132,7 +132,9 @@ function NodeHeader({ node, score }: { node: GraphNode; score: number }) {
 // ── Main view ─────────────────────────────────────────────────────────────────
 export default function RabbitHoleView() {
   const { rabbitHoleNodeId, setRabbitHoleNodeId } = useUserStore();
-  const [currentId, setCurrentId] = useState<string>(rabbitHoleNodeId ?? '');
+  // Always start with empty state — don't auto-load a stale persisted nodeId on mount.
+  // The user explicitly picks a node via search, featured nodes, or by navigating from the graph.
+  const [currentId, setCurrentId] = useState<string>('');
   const [history,   setHistory]   = useState<string[]>([]);
   const [data,      setData]      = useState<ApiData | null>(null);
   const [loading,   setLoading]   = useState(false);

@@ -188,7 +188,16 @@ export const useUserStore = create<UserStore>()(
         return { name: next.name, xpNeeded: next.minXP - xp };
       },
     }),
-    { name: 'nexus-archive-progress' }
+    {
+      name: 'nexus-archive-progress',
+      // Don't persist view/UI state — always start fresh from landing
+      partialize: (state) => ({
+        progress:         state.progress,
+        audioEnabled:     state.audioEnabled,
+        rabbitHoleChain:  state.rabbitHoleChain,
+        rabbitHoleNodeId: state.rabbitHoleNodeId,
+      }),
+    }
   )
 );
 
