@@ -1,46 +1,47 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import type { GraphNode, GraphEdge } from '@/lib/graph/types';
+import { NextRequest, NextResponse } from 'next/server';
+import { getViewportNodes, getFocusedViewport } from '@/lib/retrieval/graph';
 
-// Returns approved proposed nodes + edges in GraphNode/GraphEdge shape
-// so KnowledgeGraph can merge them with the static dataset.
-export async function GET() {
-  const [proposedNodes, proposedEdges] = await Promise.all([
-    prisma.proposedNode.findMany({ where: { status: 'approved' } }),
-    prisma.proposedEdge.findMany({ where: { status: 'approved' } }),
-  ]);
+/**
+ * GET /api/graph
+ *
+ * Returns graph data for the 3D visualization.
+ *
+ * Without ?focus: returns top 150 nodes by degree + edges between them.
+ *   Suitable for the initial full-graph render.
+ *
+ * With ?focus=nodeId[&radius=2]: returns BFS subgraph around that node.
+ *   Suitable for focused exploration (KnowledgeGraph "zoom in" feature).
+ *
+ * Response is cache-friendly — set Cache-Control at the CDN layer:
+ *   s-maxage=3600, stale-while-revalidate=86400
+ *
+ * Falls back to static graph data when the database is unavailable.
+ */
+export async function GET(req: NextRequest) {
+  const { searchParams } = req.nextUrl;
+  const focus  = searchParams.get('focus') ?? undefined;
+  const radius = Math.min(parseInt(searchParams.get('radius') ?? '2', 10), 3);
 
-  const nodes: GraphNode[] = proposedNodes.map(n => ({
-    id: n.nodeId ?? n.id,
-    title: n.label,
-    category: n.category as GraphNode['category'],
-    description: n.description,
-    evidence_level: n.evidenceLevel as GraphNode['evidence_level'],
-    confidence_score: n.confidence,
-    claims: (n.claims as string[] | null) ?? [],
-    criticisms: (n.criticisms as string[] | null) ?? [],
-    open_questions: (n.openQuestions as string[] | null) ?? [],
-    mainstream_view: n.mainstreamView ?? '',
-    region: n.region ?? undefined,
-    country: n.country ?? undefined,
-    date_start: n.dateStart ?? undefined,
-    date_end: n.dateEnd ?? undefined,
-    tags: (n.tags as string[] | null) ?? [],
-    sources: [],
-  }));
+  try {
+    const data = focus
+      ? await getFocusedViewport(focus, radius)
+      : await getViewportNodes(150);
 
-  const edges: GraphEdge[] = proposedEdges.map(e => ({
-    id: e.id,
-    from: e.fromNodeId,
-    to: e.toNodeId,
-    relationship_type: e.relationship as GraphEdge['relationship_type'],
-    strength_score: e.strengthScore,
-    confidence_score: e.confidence,
-    explanation: e.explanation ?? '',
-    evidence_basis: e.historicalBasis ?? e.description,
-    source_type: 'academic' as GraphEdge['source_type'],
-    source_count: 0,
-  }));
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+      },
+    });
+  } catch (err) {
+    console.error('[graph] DB error, falling back to static data:', err);
 
-  return NextResponse.json({ nodes, edges });
+    // Graceful fallback to static TypeScript graph when DB is absent
+    try {
+      const { nodes, edges } = await import('@/lib/graph');
+      const published = nodes.filter(n => !('status' in n) || (n as { status?: string }).status !== 'archived');
+      return NextResponse.json({ nodes: published, edges });
+    } catch {
+      return NextResponse.json({ error: 'Graph unavailable' }, { status: 503 });
+    }
+  }
 }

@@ -1,10 +1,16 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [pg_trgm, unaccent, pgvector(map: "vector")]
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTH  (unchanged)
+// ─────────────────────────────────────────────────────────────────────────────
 
 model Account {
   id                String  @id @default(cuid())
@@ -33,25 +39,6 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  createdAt     DateTime  @default(now())
-
-  accounts         Account[]
-  sessions         Session[]
-  progress         UserProgress?
-  submitted        Source[]         @relation("SubmittedSources")
-  reviewed         Source[]         @relation("ReviewedSources")
-  submittedNodes   ProposedNode[]   @relation("SubmittedNodes")
-  reviewedNodes    ProposedNode[]   @relation("ReviewedNodes")
-  submittedEdges   ProposedEdge[]   @relation("SubmittedEdges")
-  reviewedEdges    ProposedEdge[]   @relation("ReviewedEdges")
-}
-
 model VerificationToken {
   identifier String
   token      String   @unique
@@ -60,11 +47,38 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+
+  accounts            Account[]
+  sessions            Session[]
+  progress            UserProgress?
+  submitted           Source[]             @relation("SubmittedSources")
+  reviewed            Source[]             @relation("ReviewedSources")
+  submittedNodes      ProposedNode[]       @relation("SubmittedNodes")
+  reviewedNodes       ProposedNode[]       @relation("ReviewedNodes")
+  submittedEdges      ProposedEdge[]       @relation("SubmittedEdges")
+  reviewedEdges       ProposedEdge[]       @relation("ReviewedEdges")
+  nodeExplorations    NodeExploration[]
+  connectionDiscoveries ConnectionDiscovery[]
+  achievements        UserAchievement[]
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// USER PROGRESS
+// ─────────────────────────────────────────────────────────────────────────────
+
 model UserProgress {
   id                    String   @id @default(cuid())
   userId                String   @unique
   xp                    Int      @default(0)
   level                 String   @default("Curious Visitor")
+  // Legacy array columns — kept for Zustand sync, superseded by junction tables
   theoriesExplored      String[] @default([])
   connectionsDiscovered String[] @default([])
   achievements          String[] @default([])
@@ -76,18 +90,280 @@ model UserProgress {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// ─────────────────────────────────────────────
+// Junction tables replacing the unbounded String[] columns above
+model NodeExploration {
+  userId     String
+  nodeId     String
+  exploredAt DateTime @default(now())
+  xpAwarded  Int      @default(30)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, nodeId])
+  @@index([userId])
+  @@index([nodeId])
+  @@index([exploredAt])
+}
+
+model ConnectionDiscovery {
+  userId       String
+  fromNodeId   String
+  toNodeId     String
+  discoveredAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, fromNodeId, toNodeId])
+  @@index([userId])
+  @@index([discoveredAt])
+}
+
+model UserAchievement {
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+  xpAwarded     Int      @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, achievementId])
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TAXONOMY
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Category {
+  id          String     @id @default(cuid())
+  slug        String     @unique // 'ancient-civilizations'
+  name        String              // 'Ancient Civilizations'
+  description String?    @db.Text
+  color       String?
+  parentId    String?
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryTree")
+  nodes       Node[]
+
+  @@index([parentId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KNOWLEDGE GRAPH  (graduated from static TypeScript files to DB)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Node {
+  id              String   @id // human-readable slug: 'gobekli-tepe'
+  title           String
+  categoryId      String
+  description     String   @db.Text
+  mainstreamView  String?  @db.Text
+  evidenceLevel   String   @default("speculative")
+  confidenceScore Float    @default(0.5)
+  color           String?
+  icon            String?
+
+  // Geography
+  lat             Float?
+  lon             Float?
+  region          String?
+  country         String?
+
+  // Temporal
+  year            Int?
+  dateStart       Int?
+  dateEnd         Int?
+  datePrecision   String?
+
+  // Lifecycle
+  status          String   @default("draft") // draft | published | archived
+  version         Int      @default(1)
+  publishedAt     DateTime?
+  createdBy       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  category        Category       @relation(fields: [categoryId], references: [id])
+  tags            NodeTag[]
+  claims          Claim[]
+  criticisms      Criticism[]
+  openQuestions   OpenQuestion[]
+  sourceLinks     SourceLink[]
+  edgesFrom       Edge[]         @relation("EdgeFrom")
+  edgesTo         Edge[]         @relation("EdgeTo")
+  versions        NodeVersion[]
+  embedding       NodeEmbedding?
+  adjacencyCache  AdjacencyCache?
+
+  @@index([categoryId])
+  @@index([status])
+  @@index([evidenceLevel])
+  @@index([confidenceScore])
+  @@index([lat, lon])
+  @@index([year])
+  @@index([dateStart, dateEnd])
+  @@index([createdAt])
+  // Raw SQL adds:
+  //   GIN index on search_vector (tsvector column added via migration)
+  //   GIN index on title using gin_trgm_ops
+}
+
+model NodeTag {
+  nodeId String
+  tag    String
+  node   Node   @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@id([nodeId, tag])
+  @@index([tag])
+}
+
+model Edge {
+  id               String   @id @default(cuid())
+  fromId           String
+  toId             String
+  relationshipType String   // 'historical' | 'geographical' | 'textual' | 'thematic' | 'influence' | 'contradictory'
+  strengthScore    Float    @default(0.5)
+  confidenceScore  Float    @default(0.5)
+  explanation      String   @db.Text
+  evidenceBasis    String   @db.Text
+  sourceType       String   // SourceType enum string
+  sourceCount      Int?
+  status           String   @default("draft") // draft | published
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  from        Node         @relation("EdgeFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  to          Node         @relation("EdgeTo",   fields: [toId],   references: [id], onDelete: Cascade)
+  sourceLinks SourceLink[]
+
+  @@unique([fromId, toId])
+  @@index([fromId])
+  @@index([toId])
+  @@index([relationshipType])
+  @@index([confidenceScore])
+  @@index([status])
+}
+
+// Claims as first-class rows — stable IDs allow reliable source linking
+model Claim {
+  id          String       @id @default(cuid())
+  nodeId      String
+  text        String       @db.Text
+  orderIndex  Int          @default(0)
+  node        Node         @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  sourceLinks SourceLink[]
+
+  @@index([nodeId])
+}
+
+model Criticism {
+  id          String       @id @default(cuid())
+  nodeId      String
+  text        String       @db.Text
+  orderIndex  Int          @default(0)
+  node        Node         @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  sourceLinks SourceLink[]
+
+  @@index([nodeId])
+}
+
+model OpenQuestion {
+  id         String @id @default(cuid())
+  nodeId     String
+  text       String @db.Text
+  orderIndex Int    @default(0)
+  node       Node   @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@index([nodeId])
+}
+
+// Full snapshot of node state at each version — enables rollback and diff
+model NodeVersion {
+  id         String   @id @default(cuid())
+  nodeId     String
+  version    Int
+  snapshot   Json     // complete node state at this version
+  changedBy  String?
+  changeNote String?
+  createdAt  DateTime @default(now())
+
+  node Node @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@unique([nodeId, version])
+  @@index([nodeId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VECTOR EMBEDDINGS  (stored separately; raw SQL accesses via pgvector)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model NodeEmbedding {
+  nodeId    String   @id
+  // Actual column type is vector(1536) — set via raw SQL migration.
+  // We declare as Float[] here so Prisma client can write values;
+  // reads requiring ANN search use $queryRaw with ::vector cast.
+  embedding Float[]
+  model     String   @default("text-embedding-3-small")
+  updatedAt DateTime @updatedAt
+
+  node Node @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+}
+
+model SourceEmbedding {
+  sourceId  String   @id
+  embedding Float[]
+  model     String   @default("text-embedding-3-small")
+  updatedAt DateTime @updatedAt
+
+  source Source @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ADJACENCY CACHE  (materialized 1- and 2-hop neighborhoods for hot nodes)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AdjacencyCache {
+  nodeId   String   @id
+  hop1     Json     // { nodeId, edgeId, score, direction }[]
+  hop2     Json     // { nodeId, viaNodeId, score }[]
+  cachedAt DateTime @default(now())
+
+  node Node @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INGESTION JOB QUEUE  (pg-boss replacement for simple workloads)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model IngestionJob {
+  id          String    @id @default(cuid())
+  type        String    // 'embed-node' | 'embed-source' | 'rebuild-adjacency'
+  targetId    String
+  priority    Int       @default(50) // 0–100; higher = runs first
+  status      String    @default("pending") // pending | processing | done | failed
+  attempts    Int       @default(0)
+  lastError   String?   @db.Text
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+
+  @@index([status, priority(sort: Desc)])
+  @@index([type, status])
+  @@index([targetId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // SOURCE INGESTION SYSTEM
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 
 model Source {
   id              String   @id @default(cuid())
   title           String
-  sourceType      String   // 'Academic Paper' | 'Historical Text' | 'Archaeological Report' | 'Government Document' | 'Book' | 'News Investigation' | 'Religious Text' | 'Museum Archive' | 'Folklore Collection'
+  sourceType      String
   author          String?
   publicationYear Int?
   publisher       String?
-  journal         String?  // for Academic Paper
+  journal         String?
   volume          String?
   issue           String?
   pages           String?
@@ -98,82 +374,100 @@ model Source {
   notes           String?  @db.Text
   language        String   @default("en")
 
-  // Credibility
-  credibilityScore   Float  @default(0.5)
-  credibilityFactors Json?  // { factor: number }
+  credibilityScore   Float @default(0.5)
+  credibilityFactors Json?
 
-  // Workflow status
-  status      String   @default("pending") // 'pending' | 'approved' | 'rejected' | 'needs_revision'
-  reviewNotes String?  @db.Text
+  status      String    @default("pending")
+  reviewNotes String?   @db.Text
   reviewedAt  DateTime?
 
-  // Relations
   submittedBy String?
   reviewedBy  String?
   submitter   User?   @relation("SubmittedSources", fields: [submittedBy], references: [id], onDelete: SetNull)
-  reviewer    User?   @relation("ReviewedSources", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  reviewer    User?   @relation("ReviewedSources",  fields: [reviewedBy],  references: [id], onDelete: SetNull)
 
-  links       SourceLink[]
+  links     SourceLink[]
+  embedding SourceEmbedding?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([status])
   @@index([sourceType])
   @@index([submittedBy])
   @@index([createdAt])
+  @@index([credibilityScore])
 }
 
+// Updated SourceLink: supports both legacy string-target pattern and new FK pattern.
+// New code uses nodeId / edgeId / claimId / criticismId FKs.
+// Legacy code (seed, old API) uses targetType / targetId / claimIndex.
 model SourceLink {
-  id         String  @id @default(cuid())
-  sourceId   String
-  targetType String  // 'node' | 'claim' | 'edge'
-  targetId   String  // graph node id or edge id
-  claimIndex Int?    // if targetType == 'claim': 0-based index into node.claims[]
-  linkType   String  @default("supports") // 'supports' | 'contradicts' | 'references'
-  notes      String?
+  id          String @id @default(cuid())
+  sourceId    String
 
-  source     Source  @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  // Legacy columns — kept for backward compat with seed script and old API routes
+  targetType  String? // 'node' | 'claim' | 'edge'
+  targetId    String?
+  claimIndex  Int?
 
-  createdAt  DateTime @default(now())
+  // New FK columns — use these in new code
+  nodeId      String?
+  edgeId      String?
+  claimId     String?
+  criticismId String?
 
-  @@unique([sourceId, targetType, targetId, claimIndex])
+  linkType    String  @default("supports") // supports | contradicts | references
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  source      Source     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  node        Node?      @relation(fields: [nodeId],      references: [id], onDelete: Cascade)
+  edge        Edge?      @relation(fields: [edgeId],      references: [id], onDelete: Cascade)
+  claim       Claim?     @relation(fields: [claimId],     references: [id], onDelete: Cascade)
+  criticism   Criticism? @relation(fields: [criticismId], references: [id], onDelete: Cascade)
+
   @@index([sourceId])
+  @@index([nodeId])
+  @@index([edgeId])
+  @@index([claimId])
   @@index([targetType, targetId])
+  // Legacy unique — still needed for seed script upserts
+  @@unique([sourceId, targetType, targetId, claimIndex], name: "legacy_source_link_unique")
 }
 
-// ─────────────────────────────────────────────
-// ADMIN RESEARCH DASHBOARD — PROPOSALS
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// COMMUNITY PROPOSALS  (unchanged — review workflow stays the same)
+// ─────────────────────────────────────────────────────────────────────────────
 
 model ProposedNode {
   id             String   @id @default(cuid())
-  nodeId         String?  // desired graph id (slug); auto-generated on approval if blank
+  nodeId         String?
   label          String
-  category       String   // NodeCategory
+  category       String
   description    String   @db.Text
   evidenceLevel  String   @default("speculative")
   confidence     Float    @default(0.5)
-  claims         Json?    // string[]
-  criticisms     Json?    // string[]
-  openQuestions  Json?    // string[]
+  claims         Json?
+  criticisms     Json?
+  openQuestions  Json?
   mainstreamView String?  @db.Text
   region         String?
   country        String?
   dateStart      Int?
   dateEnd        Int?
-  tags           Json?    // string[]
+  tags           Json?
 
-  status      String   @default("pending") // pending | approved | rejected | needs_revision
-  reviewNotes String?  @db.Text
+  status      String    @default("pending")
+  reviewNotes String?   @db.Text
   reviewedAt  DateTime?
   submittedBy String?
   reviewedBy  String?
-  submitter   User?    @relation("SubmittedNodes", fields: [submittedBy], references: [id], onDelete: SetNull)
-  reviewer    User?    @relation("ReviewedNodes", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  submitter   User?     @relation("SubmittedNodes", fields: [submittedBy], references: [id], onDelete: SetNull)
+  reviewer    User?     @relation("ReviewedNodes",  fields: [reviewedBy],  references: [id], onDelete: SetNull)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([status])
   @@index([submittedBy])
@@ -182,9 +476,9 @@ model ProposedNode {
 
 model ProposedEdge {
   id              String   @id @default(cuid())
-  fromNodeId      String   // id of source node (static or proposed)
-  toNodeId        String   // id of target node
-  relationship    String   // RelationshipType
+  fromNodeId      String
+  toNodeId        String
+  relationship    String
   description     String   @db.Text
   evidenceLevel   String   @default("speculative")
   confidence      Float    @default(0.5)
@@ -192,16 +486,16 @@ model ProposedEdge {
   explanation     String?  @db.Text
   historicalBasis String?  @db.Text
 
-  status      String   @default("pending")
-  reviewNotes String?  @db.Text
+  status      String    @default("pending")
+  reviewNotes String?   @db.Text
   reviewedAt  DateTime?
   submittedBy String?
   reviewedBy  String?
-  submitter   User?    @relation("SubmittedEdges", fields: [submittedBy], references: [id], onDelete: SetNull)
-  reviewer    User?    @relation("ReviewedEdges", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  submitter   User?     @relation("SubmittedEdges", fields: [submittedBy], references: [id], onDelete: SetNull)
+  reviewer    User?     @relation("ReviewedEdges",  fields: [reviewedBy],  references: [id], onDelete: SetNull)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([status])
   @@index([fromNodeId])

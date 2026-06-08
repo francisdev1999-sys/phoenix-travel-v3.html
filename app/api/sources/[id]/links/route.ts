@@ -34,7 +34,7 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const link = await prisma.sourceLink.upsert({
     where: {
-      sourceId_targetType_targetId_claimIndex: {
+      legacy_source_link_unique: {
         sourceId: id,
         targetType,
         targetId,
