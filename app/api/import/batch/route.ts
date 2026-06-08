@@ -25,7 +25,7 @@
 
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { validateNode, validateEdge } from '@/lib/validation/schema';
 import { computeIQS, type IQSTier } from '@/lib/validation/iqs';
@@ -63,7 +63,7 @@ interface PerEdgeRecord {
 
 export async function GET(_req: NextRequest) {
   const session = await auth();
-  if (session?.user?.email !== process.env.ADMIN_EMAIL) {
+  if (!isAdminSession(session)) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   }
 
@@ -90,7 +90,7 @@ export async function GET(_req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const session = await auth();
-  if (session?.user?.email !== process.env.ADMIN_EMAIL) {
+  if (!isAdminSession(session)) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   }
 

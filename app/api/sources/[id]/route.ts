@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { computeCredibility } from '@/lib/source-credibility';
 
@@ -9,7 +9,7 @@ type Params = { params: Promise<{ id: string }> };
 export async function GET(_req: NextRequest, { params }: Params) {
   const { id } = await params;
   const session = await auth();
-  const isAdmin = session?.user?.email === process.env.ADMIN_EMAIL;
+  const isAdmin = isAdminSession(session);
 
   const source = await prisma.source.findUnique({
     where: { id },
@@ -39,7 +39,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const source = await prisma.source.findUnique({ where: { id } });
   if (!source) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const isAdmin = session.user.email === process.env.ADMIN_EMAIL;
+  const isAdmin = isAdminSession(session);
   const isOwner = source.submittedBy === session.user.id;
 
   if (!isAdmin && !isOwner) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -107,7 +107,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   const source = await prisma.source.findUnique({ where: { id } });
   if (!source) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const isAdmin = session.user.email === process.env.ADMIN_EMAIL;
+  const isAdmin = isAdminSession(session);
   const isOwner = source.submittedBy === session.user.id;
 
   if (!isAdmin && !isOwner) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

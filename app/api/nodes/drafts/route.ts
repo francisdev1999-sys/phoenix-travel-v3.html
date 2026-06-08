@@ -14,13 +14,13 @@
  */
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { computeIQS } from '@/lib/validation/iqs';
 
 export async function GET(req: NextRequest) {
   const session = await auth();
-  if (session?.user?.email !== process.env.ADMIN_EMAIL) {
+  if (!isAdminSession(session)) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   }
 

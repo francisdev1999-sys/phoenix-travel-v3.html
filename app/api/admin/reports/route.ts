@@ -1,12 +1,12 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { nodes, edges } from '@/lib/graph';
 
 export async function GET() {
   const session = await auth();
-  if (session?.user?.email !== process.env.ADMIN_EMAIL) {
+  if (!isAdminSession(session)) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   }
 

@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { EVIDENCE_LEVELS, NODE_CATEGORIES, isValidScore } from '@/lib/validation/enums';
 
@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const status = searchParams.get('status') ?? undefined;
   const session = await auth();
-  const isAdmin = session?.user?.email === process.env.ADMIN_EMAIL;
+  const isAdmin = isAdminSession(session);
 
   const where: Record<string, unknown> = {};
   if (status) where.status = status;

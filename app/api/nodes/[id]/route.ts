@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { getNodeFromDB, getNeighboursFromDB, computeResearchScoreFromDB } from '@/lib/retrieval/graph';
 import { prisma } from '@/lib/db';
-import { auth } from '@/lib/auth';
+import { auth, isAdminSession } from '@/lib/auth';
 import { EVIDENCE_LEVELS, isValidScore } from '@/lib/validation/enums';
 import { writeAuditLog } from '@/lib/audit';
 
@@ -94,7 +94,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { id } = await params;
   const session = await auth();
-  if (session?.user?.email !== process.env.ADMIN_EMAIL) {
+  if (!isAdminSession(session)) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   }
 

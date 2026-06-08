@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { computeCredibility } from '@/lib/source-credibility';
 import { SOURCE_TYPES } from '@/lib/validation/enums';
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   if (mine && session?.user?.id) where.submittedBy = session.user.id;
 
   // Non-admins can only see approved sources (plus their own)
-  const isAdmin = session?.user?.email === process.env.ADMIN_EMAIL;
+  const isAdmin = isAdminSession(session);
   if (!isAdmin) {
     where.OR = [
       { status: 'approved' },
