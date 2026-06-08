@@ -7,6 +7,8 @@
     "build": "prisma generate && next build",
     "start": "node scripts/resolve-failed-migration.js && node -e \"if(process.env.DATABASE_URL){require('child_process').execSync('npx prisma migrate deploy',{stdio:'inherit'})}\" && next start",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -38,11 +40,13 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^2.1.9",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
     "tailwindcss": "^4",
     "tsx": "^4.0.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.1.9"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

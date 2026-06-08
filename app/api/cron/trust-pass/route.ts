@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
  */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { applyTrustEvent } from '@/lib/trust-score';
+import { applyTrustEvent, recomputeTrustScore } from '@/lib/trust-score';
 
 export async function POST() {
   const now = new Date();
@@ -56,5 +56,15 @@ export async function POST() {
     processed += Math.min(CHUNK, bonusOps.length - i);
   }
 
-  return NextResponse.json({ processed, total: users.length, ranAt: now });
+  // Apply time-decay recompute for all non-banned users so old negative
+  // events gradually fade and scores reflect sustained recent behaviour.
+  const allUserIds = users.map(u => u.id);
+  const RECOMPUTE_CHUNK = 20;
+  let recomputed = 0;
+  for (let i = 0; i < allUserIds.length; i += RECOMPUTE_CHUNK) {
+    await Promise.all(allUserIds.slice(i, i + RECOMPUTE_CHUNK).map(id => recomputeTrustScore(id)));
+    recomputed += Math.min(RECOMPUTE_CHUNK, allUserIds.length - i);
+  }
+
+  return NextResponse.json({ processed, recomputed, total: users.length, ranAt: now });
 }

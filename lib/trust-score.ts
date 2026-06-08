@@ -7,10 +7,55 @@
  * Trust events are appended (never deleted) for full auditability.
  * The User.trustScore column is the current aggregate, updated in-place.
  *
- * Ranks are recalculated on every trust change.
+ * Time-decay model:
+ *   Positive events: half-life 180 days (good history persists)
+ *   Negative events: half-life 60 days  (allows redemption over time)
  */
 
 import { prisma } from '@/lib/db';
+
+// ── Time-decay constants ──────────────────────────────────────────────────────
+
+export const POSITIVE_HALF_LIFE_DAYS = 180;
+export const NEGATIVE_HALF_LIFE_DAYS = 60;
+export const BASE_TRUST = 50; // starting score for all new users
+
+/**
+ * Compute a time-weighted trust score from event history.
+ *
+ * Pure function — safe for tests and client-side display logic.
+ * Older events contribute less; negative events decay faster than positive
+ * ones, giving users a recovery path after a bad period.
+ */
+export function computeTimeWeightedScore(
+  events: ReadonlyArray<{ delta: number; createdAt: Date | string }>,
+  now: Date = new Date(),
+): number {
+  let score = BASE_TRUST;
+  for (const ev of events) {
+    const ageDays  = (now.getTime() - new Date(ev.createdAt).getTime()) / 86_400_000;
+    const halfLife = ev.delta >= 0 ? POSITIVE_HALF_LIFE_DAYS : NEGATIVE_HALF_LIFE_DAYS;
+    const weight   = Math.exp((-Math.LN2 * ageDays) / halfLife);
+    score += ev.delta * weight;
+  }
+  return Math.min(100, Math.max(0, Math.round(score)));
+}
+
+/**
+ * Recalculate a user's trust score from their full event history with
+ * time-weighting applied, then persist the result.
+ * Called by the monthly trust-pass cron after awarding bonuses.
+ */
+export async function recomputeTrustScore(userId: string): Promise<number> {
+  const events = await prisma.userTrustEvent.findMany({
+    where:   { userId },
+    select:  { delta: true, createdAt: true },
+    orderBy: { createdAt: 'asc' },
+  });
+  const score = computeTimeWeightedScore(events);
+  await prisma.user.update({ where: { id: userId }, data: { trustScore: score } });
+  return score;
+}
 
 // ── Trust event reasons ───────────────────────────────────────────────────────
 
