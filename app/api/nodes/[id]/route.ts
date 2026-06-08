@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { getNodeFromDB, getNeighboursFromDB, computeResearchScoreFromDB } from '@/lib/retrieval/graph';
 import { prisma } from '@/lib/db';

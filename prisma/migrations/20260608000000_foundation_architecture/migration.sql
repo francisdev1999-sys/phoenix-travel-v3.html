@@ -40,7 +40,7 @@ CREATE INDEX IF NOT EXISTS "Category_parentId_idx" ON "Category"("parentId");
 DO $$ BEGIN
   ALTER TABLE "Category" ADD CONSTRAINT "Category_parentId_fkey"
     FOREIGN KEY ("parentId") REFERENCES "Category"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -105,7 +105,7 @@ CREATE TRIGGER "Node_search_vector_trigger"
 DO $$ BEGIN
   ALTER TABLE "Node" ADD CONSTRAINT "Node_categoryId_fkey"
     FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -124,7 +124,7 @@ CREATE INDEX IF NOT EXISTS "NodeTag_tag_trgm_idx" ON "NodeTag" USING GIN("tag" g
 DO $$ BEGIN
   ALTER TABLE "NodeTag" ADD CONSTRAINT "NodeTag_nodeId_fkey"
     FOREIGN KEY ("nodeId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -158,12 +158,12 @@ CREATE INDEX IF NOT EXISTS "Edge_status_idx"               ON "Edge"("status");
 DO $$ BEGIN
   ALTER TABLE "Edge" ADD CONSTRAINT "Edge_fromId_fkey"
     FOREIGN KEY ("fromId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 DO $$ BEGIN
   ALTER TABLE "Edge" ADD CONSTRAINT "Edge_toId_fkey"
     FOREIGN KEY ("toId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -181,7 +181,7 @@ CREATE INDEX IF NOT EXISTS "Claim_nodeId_idx" ON "Claim"("nodeId");
 DO $$ BEGIN
   ALTER TABLE "Claim" ADD CONSTRAINT "Claim_nodeId_fkey"
     FOREIGN KEY ("nodeId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
 CREATE TABLE IF NOT EXISTS "Criticism" (
@@ -195,7 +195,7 @@ CREATE INDEX IF NOT EXISTS "Criticism_nodeId_idx" ON "Criticism"("nodeId");
 DO $$ BEGIN
   ALTER TABLE "Criticism" ADD CONSTRAINT "Criticism_nodeId_fkey"
     FOREIGN KEY ("nodeId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
 CREATE TABLE IF NOT EXISTS "OpenQuestion" (
@@ -209,7 +209,112 @@ CREATE INDEX IF NOT EXISTS "OpenQuestion_nodeId_idx" ON "OpenQuestion"("nodeId")
 DO $$ BEGIN
   ALTER TABLE "OpenQuestion" ADD CONSTRAINT "OpenQuestion_nodeId_fkey"
     FOREIGN KEY ("nodeId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SOURCE INGESTION SYSTEM
+-- Must be created before SourceEmbedding and SourceLink which reference it.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS "Source" (
+    "id"                 TEXT NOT NULL,
+    "title"              TEXT NOT NULL,
+    "sourceType"         TEXT NOT NULL,
+    "author"             TEXT,
+    "publicationYear"    INTEGER,
+    "publisher"          TEXT,
+    "journal"            TEXT,
+    "volume"             TEXT,
+    "issue"              TEXT,
+    "pages"              TEXT,
+    "url"                TEXT,
+    "doi"                TEXT,
+    "isbn"               TEXT,
+    "abstract"           TEXT,
+    "notes"              TEXT,
+    "language"           TEXT NOT NULL DEFAULT 'en',
+    "credibilityScore"   DOUBLE PRECISION NOT NULL DEFAULT 0.5,
+    "credibilityFactors" JSONB,
+    "status"             TEXT NOT NULL DEFAULT 'pending',
+    "reviewNotes"        TEXT,
+    "reviewedAt"         TIMESTAMP(3),
+    "submittedBy"        TEXT,
+    "reviewedBy"         TEXT,
+    "createdAt"          TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt"          TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Source_pkey" PRIMARY KEY ("id")
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS "Source_doi_key"            ON "Source"("doi");
+CREATE INDEX IF NOT EXISTS "Source_status_idx"                ON "Source"("status");
+CREATE INDEX IF NOT EXISTS "Source_sourceType_idx"            ON "Source"("sourceType");
+CREATE INDEX IF NOT EXISTS "Source_submittedBy_idx"           ON "Source"("submittedBy");
+CREATE INDEX IF NOT EXISTS "Source_createdAt_idx"             ON "Source"("createdAt");
+CREATE INDEX IF NOT EXISTS "Source_credibilityScore_idx"      ON "Source"("credibilityScore");
+
+DO $$ BEGIN
+  ALTER TABLE "Source" ADD CONSTRAINT "Source_submittedBy_fkey"
+    FOREIGN KEY ("submittedBy") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER TABLE "Source" ADD CONSTRAINT "Source_reviewedBy_fkey"
+    FOREIGN KEY ("reviewedBy") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+-- SourceLink: created with all columns (legacy + new FK columns) so that
+-- the ALTER TABLE ADD COLUMN IF NOT EXISTS statements below are no-ops.
+CREATE TABLE IF NOT EXISTS "SourceLink" (
+    "id"          TEXT NOT NULL,
+    "sourceId"    TEXT NOT NULL,
+    "targetType"  TEXT,
+    "targetId"    TEXT,
+    "claimIndex"  INTEGER,
+    "nodeId"      TEXT,
+    "edgeId"      TEXT,
+    "claimId"     TEXT,
+    "criticismId" TEXT,
+    "linkType"    TEXT NOT NULL DEFAULT 'supports',
+    "notes"       TEXT,
+    "createdAt"   TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "SourceLink_pkey" PRIMARY KEY ("id")
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS "legacy_source_link_unique"
+    ON "SourceLink"("sourceId", "targetType", "targetId", "claimIndex");
+CREATE INDEX IF NOT EXISTS "SourceLink_sourceId_idx"            ON "SourceLink"("sourceId");
+CREATE INDEX IF NOT EXISTS "SourceLink_nodeId_idx"              ON "SourceLink"("nodeId");
+CREATE INDEX IF NOT EXISTS "SourceLink_edgeId_idx"              ON "SourceLink"("edgeId");
+CREATE INDEX IF NOT EXISTS "SourceLink_claimId_idx"             ON "SourceLink"("claimId");
+CREATE INDEX IF NOT EXISTS "SourceLink_criticismId_idx"         ON "SourceLink"("criticismId");
+CREATE INDEX IF NOT EXISTS "SourceLink_targetType_targetId_idx" ON "SourceLink"("targetType", "targetId");
+
+DO $$ BEGIN
+  ALTER TABLE "SourceLink" ADD CONSTRAINT "SourceLink_sourceId_fkey"
+    FOREIGN KEY ("sourceId") REFERENCES "Source"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER TABLE "SourceLink" ADD CONSTRAINT "SourceLink_nodeId_fkey"
+    FOREIGN KEY ("nodeId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER TABLE "SourceLink" ADD CONSTRAINT "SourceLink_edgeId_fkey"
+    FOREIGN KEY ("edgeId") REFERENCES "Edge"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER TABLE "SourceLink" ADD CONSTRAINT "SourceLink_claimId_fkey"
+    FOREIGN KEY ("claimId") REFERENCES "Claim"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER TABLE "SourceLink" ADD CONSTRAINT "SourceLink_criticismId_fkey"
+    FOREIGN KEY ("criticismId") REFERENCES "Criticism"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -231,7 +336,7 @@ CREATE INDEX IF NOT EXISTS "NodeVersion_nodeId_idx" ON "NodeVersion"("nodeId");
 DO $$ BEGIN
   ALTER TABLE "NodeVersion" ADD CONSTRAINT "NodeVersion_nodeId_fkey"
     FOREIGN KEY ("nodeId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -250,7 +355,7 @@ CREATE TABLE IF NOT EXISTS "NodeEmbedding" (
 DO $$ BEGIN
   ALTER TABLE "NodeEmbedding" ADD CONSTRAINT "NodeEmbedding_nodeId_fkey"
     FOREIGN KEY ("nodeId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
 -- Upgrade embedding column to native vector type and create HNSW index
@@ -278,7 +383,7 @@ CREATE TABLE IF NOT EXISTS "SourceEmbedding" (
 DO $$ BEGIN
   ALTER TABLE "SourceEmbedding" ADD CONSTRAINT "SourceEmbedding_sourceId_fkey"
     FOREIGN KEY ("sourceId") REFERENCES "Source"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
 DO $$
@@ -308,7 +413,7 @@ CREATE TABLE IF NOT EXISTS "AdjacencyCache" (
 DO $$ BEGIN
   ALTER TABLE "AdjacencyCache" ADD CONSTRAINT "AdjacencyCache_nodeId_fkey"
     FOREIGN KEY ("nodeId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -348,7 +453,7 @@ CREATE INDEX IF NOT EXISTS "NodeExploration_exploredAt_idx" ON "NodeExploration"
 DO $$ BEGIN
   ALTER TABLE "NodeExploration" ADD CONSTRAINT "NodeExploration_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
 CREATE TABLE IF NOT EXISTS "ConnectionDiscovery" (
@@ -363,7 +468,7 @@ CREATE INDEX IF NOT EXISTS "ConnectionDiscovery_discoveredAt_idx" ON "Connection
 DO $$ BEGIN
   ALTER TABLE "ConnectionDiscovery" ADD CONSTRAINT "ConnectionDiscovery_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
 CREATE TABLE IF NOT EXISTS "UserAchievement" (
@@ -377,11 +482,90 @@ CREATE INDEX IF NOT EXISTS "UserAchievement_userId_idx" ON "UserAchievement"("us
 DO $$ BEGIN
   ALTER TABLE "UserAchievement" ADD CONSTRAINT "UserAchievement_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- SOURCE LINK — add FK columns alongside legacy string-target columns
+-- COMMUNITY PROPOSALS
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS "ProposedNode" (
+    "id"             TEXT NOT NULL,
+    "nodeId"         TEXT,
+    "label"          TEXT NOT NULL,
+    "category"       TEXT NOT NULL,
+    "description"    TEXT NOT NULL,
+    "evidenceLevel"  TEXT NOT NULL DEFAULT 'speculative',
+    "confidence"     DOUBLE PRECISION NOT NULL DEFAULT 0.5,
+    "claims"         JSONB,
+    "criticisms"     JSONB,
+    "openQuestions"  JSONB,
+    "mainstreamView" TEXT,
+    "region"         TEXT,
+    "country"        TEXT,
+    "dateStart"      INTEGER,
+    "dateEnd"        INTEGER,
+    "tags"           JSONB,
+    "status"         TEXT NOT NULL DEFAULT 'pending',
+    "reviewNotes"    TEXT,
+    "reviewedAt"     TIMESTAMP(3),
+    "submittedBy"    TEXT,
+    "reviewedBy"     TEXT,
+    "createdAt"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "ProposedNode_pkey" PRIMARY KEY ("id")
+);
+CREATE INDEX IF NOT EXISTS "ProposedNode_status_idx"      ON "ProposedNode"("status");
+CREATE INDEX IF NOT EXISTS "ProposedNode_submittedBy_idx" ON "ProposedNode"("submittedBy");
+CREATE INDEX IF NOT EXISTS "ProposedNode_category_idx"   ON "ProposedNode"("category");
+DO $$ BEGIN
+  ALTER TABLE "ProposedNode" ADD CONSTRAINT "ProposedNode_submittedBy_fkey"
+    FOREIGN KEY ("submittedBy") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER TABLE "ProposedNode" ADD CONSTRAINT "ProposedNode_reviewedBy_fkey"
+    FOREIGN KEY ("reviewedBy") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+CREATE TABLE IF NOT EXISTS "ProposedEdge" (
+    "id"              TEXT NOT NULL,
+    "fromNodeId"      TEXT NOT NULL,
+    "toNodeId"        TEXT NOT NULL,
+    "relationship"    TEXT NOT NULL,
+    "description"     TEXT NOT NULL,
+    "evidenceLevel"   TEXT NOT NULL DEFAULT 'speculative',
+    "confidence"      DOUBLE PRECISION NOT NULL DEFAULT 0.5,
+    "strengthScore"   DOUBLE PRECISION NOT NULL DEFAULT 0.5,
+    "explanation"     TEXT,
+    "historicalBasis" TEXT,
+    "status"          TEXT NOT NULL DEFAULT 'pending',
+    "reviewNotes"     TEXT,
+    "reviewedAt"      TIMESTAMP(3),
+    "submittedBy"     TEXT,
+    "reviewedBy"      TEXT,
+    "createdAt"       TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt"       TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "ProposedEdge_pkey" PRIMARY KEY ("id")
+);
+CREATE INDEX IF NOT EXISTS "ProposedEdge_status_idx"      ON "ProposedEdge"("status");
+CREATE INDEX IF NOT EXISTS "ProposedEdge_fromNodeId_idx"  ON "ProposedEdge"("fromNodeId");
+CREATE INDEX IF NOT EXISTS "ProposedEdge_toNodeId_idx"    ON "ProposedEdge"("toNodeId");
+CREATE INDEX IF NOT EXISTS "ProposedEdge_submittedBy_idx" ON "ProposedEdge"("submittedBy");
+DO $$ BEGIN
+  ALTER TABLE "ProposedEdge" ADD CONSTRAINT "ProposedEdge_submittedBy_fkey"
+    FOREIGN KEY ("submittedBy") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER TABLE "ProposedEdge" ADD CONSTRAINT "ProposedEdge_reviewedBy_fkey"
+    FOREIGN KEY ("reviewedBy") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SOURCE LINK — idempotent column additions (no-ops when table freshly created)
 -- ─────────────────────────────────────────────────────────────────────────────
 
 ALTER TABLE "SourceLink" ADD COLUMN IF NOT EXISTS "nodeId"      TEXT;
@@ -397,34 +581,6 @@ DO $$ BEGIN
   ALTER TABLE "SourceLink" ALTER COLUMN "targetId" DROP NOT NULL;
 EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
-
-CREATE INDEX IF NOT EXISTS "SourceLink_nodeId_idx"      ON "SourceLink"("nodeId");
-CREATE INDEX IF NOT EXISTS "SourceLink_edgeId_idx"      ON "SourceLink"("edgeId");
-CREATE INDEX IF NOT EXISTS "SourceLink_claimId_idx"     ON "SourceLink"("claimId");
-CREATE INDEX IF NOT EXISTS "SourceLink_criticismId_idx" ON "SourceLink"("criticismId");
-
-DO $$ BEGIN
-  ALTER TABLE "SourceLink" ADD CONSTRAINT "SourceLink_nodeId_fkey"
-    FOREIGN KEY ("nodeId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-DO $$ BEGIN
-  ALTER TABLE "SourceLink" ADD CONSTRAINT "SourceLink_edgeId_fkey"
-    FOREIGN KEY ("edgeId") REFERENCES "Edge"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-DO $$ BEGIN
-  ALTER TABLE "SourceLink" ADD CONSTRAINT "SourceLink_claimId_fkey"
-    FOREIGN KEY ("claimId") REFERENCES "Claim"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-DO $$ BEGIN
-  ALTER TABLE "SourceLink" ADD CONSTRAINT "SourceLink_criticismId_fkey"
-    FOREIGN KEY ("criticismId") REFERENCES "Criticism"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-
-CREATE INDEX IF NOT EXISTS "Source_credibilityScore_idx" ON "Source"("credibilityScore");
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- BFS TRAVERSAL FUNCTION

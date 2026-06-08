@@ -21,11 +21,18 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createClient(connectionString: string | undefined): PrismaClient {
-  // Always pass the adapter — PrismaPg with an empty/missing URL won't
-  // open a connection until the first query, so the build succeeds even
-  // when DATABASE_URL is unset. Queries will fail at runtime and must be
-  // caught by callers (all DB routes degrade gracefully via try/catch).
-  const adapter = new PrismaPg({ connectionString: connectionString ?? '' });
+  if (!connectionString) {
+    // Defer construction: the Proxy throws only on first property access,
+    // so module evaluation succeeds during build without DATABASE_URL.
+    // All DB routes have try/catch and degrade gracefully at runtime.
+    return new Proxy({} as PrismaClient, {
+      get(_t, prop) {
+        if (prop === 'then') return undefined; // not a Promise
+        throw new Error('[nexus] DATABASE_URL is not set — DB unavailable');
+      },
+    });
+  }
+  const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({ adapter });
 }
 
