@@ -81,6 +81,8 @@ export async function GET(req: NextRequest) {
     return {
       id:               node.id,
       title:            node.title,
+      description:      node.description,
+      mainstreamView:   node.mainstreamView,
       status:           node.status,
       evidenceLevel:    node.evidenceLevel,
       confidenceScore:  node.confidenceScore,

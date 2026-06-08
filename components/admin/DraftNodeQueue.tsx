@@ -12,6 +12,8 @@ interface IQSResult {
 interface DraftNode {
   id:                string;
   title:             string;
+  description:       string;
+  mainstreamView:    string | null;
   status:            string;
   evidenceLevel:     string;
   confidenceScore:   number;
