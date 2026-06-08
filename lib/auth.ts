@@ -10,6 +10,7 @@ declare module 'next-auth' {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: process.env.AUTH_SECRET ?? 'nexus-dev-secret-set-AUTH_SECRET-in-production',
   adapter: PrismaAdapter(prisma),
   providers: [
     GitHub({
