@@ -69,6 +69,7 @@ model User {
   nodeExplorations    NodeExploration[]
   connectionDiscoveries ConnectionDiscovery[]
   achievements        UserAchievement[]
+  aiReviews           AiResearchReview[]     @relation("AiReviewCreator")
 
   @@index([role])
 }
@@ -209,6 +210,7 @@ model Node {
   adjacencyCache    AdjacencyCache?
   suggestionsFrom   RelationshipSuggestion[] @relation("SuggestionFrom")
   suggestionsTo     RelationshipSuggestion[] @relation("SuggestionTo")
+  aiReviews         AiResearchReview[]       @relation("NodeAiReviews")
 
   @@index([categoryId])
   @@index([status])
@@ -626,4 +628,24 @@ model AuditLog {
   @@index([userId])
   @@index([createdAt])
   @@index([action])
+}
+
+model AiResearchReview {
+  id            String   @id @default(cuid())
+  nodeId        String
+  model         String
+  promptVersion String
+  reviewJson    Json
+  inputTokens   Int      @default(0)
+  outputTokens  Int      @default(0)
+  estimatedCost Float    @default(0)
+  createdAt     DateTime @default(now())
+  createdBy     String?
+
+  node    Node  @relation("NodeAiReviews",  fields: [nodeId],    references: [id], onDelete: Cascade)
+  creator User? @relation("AiReviewCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@index([nodeId])
+  @@index([createdAt])
+  @@index([createdBy])
 }

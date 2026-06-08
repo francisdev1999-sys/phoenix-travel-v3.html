@@ -11,7 +11,8 @@ import { prisma } from '@/lib/db';
 
 export type UserRole = 'owner' | 'admin' | 'reviewer' | 'contributor' | 'user';
 
-const ADMIN_ROLES: UserRole[] = ['owner', 'admin'];
+const ADMIN_ROLES:    UserRole[] = ['owner', 'admin'];
+const REVIEWER_ROLES: UserRole[] = ['owner', 'admin', 'reviewer'];
 
 /** True if the session belongs to an admin-or-higher user. */
 export function isAdminSession(
@@ -19,6 +20,15 @@ export function isAdminSession(
 ): boolean {
   if (!session?.user) return false;
   if (session.user.role && ADMIN_ROLES.includes(session.user.role as UserRole)) return true;
+  return session.user.email === process.env.ADMIN_EMAIL;
+}
+
+/** True if the session belongs to a reviewer-or-higher user (owner/admin/reviewer). */
+export function isReviewerOrAboveSession(
+  session: { user?: { role?: string; email?: string | null } } | null,
+): boolean {
+  if (!session?.user) return false;
+  if (session.user.role && REVIEWER_ROLES.includes(session.user.role as UserRole)) return true;
   return session.user.email === process.env.ADMIN_EMAIL;
 }
 
