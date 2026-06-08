@@ -148,10 +148,9 @@ export default function RabbitHoleView() {
     abortRef.current = ctrl;
     setLoading(true);
     setError('');
-    setData(null);
     try {
       const res = await fetch(`/api/rabbit-hole/${id}`, { signal: ctrl.signal });
-      if (!res.ok) { setError('Node not found'); setLoading(false); return; }
+      if (!res.ok) { setData(null); setError('Node not found'); setLoading(false); return; }
       const json: ApiData = await res.json();
       setData(json);
     } catch (e) {
@@ -257,7 +256,12 @@ export default function RabbitHoleView() {
       </div>
 
       {/* Content */}
+      {/* Thin loading bar — no blink, stays behind existing content */}
       {loading && (
+        <div className="h-0.5 bg-purple-600 animate-pulse flex-shrink-0" />
+      )}
+
+      {loading && !data && (
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <Loader2 size={28} className="animate-spin text-purple-400" />
@@ -266,14 +270,14 @@ export default function RabbitHoleView() {
         </div>
       )}
 
-      {error && (
+      {error && !data && (
         <div className="flex-1 flex items-center justify-center">
           <p className="text-sm text-red-400">{error}</p>
         </div>
       )}
 
-      {!loading && !error && data && (
-        <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
+      {data && (
+        <div className={`flex-1 overflow-hidden flex flex-col lg:flex-row transition-opacity duration-200 ${loading ? 'opacity-60 pointer-events-none' : 'opacity-100'}`}>
           {/* LEFT — node + connections list */}
           <div className="lg:w-[380px] flex-shrink-0 border-r border-purple-900/20 overflow-y-auto p-4 flex flex-col gap-3">
             <NodeHeader node={data.node} score={data.connections[0]?.score ?? data.node.confidence_score} />

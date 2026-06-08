@@ -417,11 +417,11 @@ export default function KnowledgeGraph() {
   const resetView = () => { transformRef.current = { x: 0, y: 0, scale: 1 }; };
 
   return (
-    <div className="relative w-full h-full flex">
+    <div className="relative w-full h-full">
       <canvas
         ref={canvasRef}
-        className="flex-1 cursor-crosshair"
-        style={{ background: 'transparent', touchAction: 'none' }}
+        className="absolute inset-0 w-full h-full cursor-crosshair"
+        style={{ touchAction: 'none' }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
