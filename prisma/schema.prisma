@@ -53,6 +53,8 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  // Role hierarchy: owner > admin > reviewer > contributor > user
+  role          String    @default("user")
   createdAt     DateTime  @default(now())
 
   accounts            Account[]
@@ -67,6 +69,8 @@ model User {
   nodeExplorations    NodeExploration[]
   connectionDiscoveries ConnectionDiscovery[]
   achievements        UserAchievement[]
+
+  @@index([role])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

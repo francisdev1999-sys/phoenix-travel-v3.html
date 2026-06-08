@@ -14,7 +14,8 @@ type Tab = 'browse' | 'submit' | 'mine' | 'review';
 
 export default function SourceIngestion() {
   const { data: session, status } = useSession();
-  const isAdmin = session?.user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+  const role    = (session?.user as { role?: string })?.role ?? 'user';
+  const isAdmin = role === 'owner' || role === 'admin';
   const isAuthed = status === 'authenticated';
 
   const [tab, setTab] = useState<Tab>('browse');
@@ -54,7 +55,7 @@ export default function SourceIngestion() {
             <button
               key={t.id}
               onClick={() => {
-                if (t.authRequired && !isAuthed) { signIn('github'); return; }
+                if (t.authRequired && !isAuthed) { signIn('google'); return; }
                 setTab(t.id);
                 setSelected(null);
               }}
@@ -166,7 +167,7 @@ function NotSignedIn() {
       <p className="text-sm font-bold text-white">Sign in to continue</p>
       <p className="text-xs text-slate-400 text-center">You need to be signed in to submit or view your sources.</p>
       <button
-        onClick={() => signIn('github')}
+        onClick={() => signIn('google')}
         className="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-purple-700 hover:bg-purple-600"
       >
         Sign in with GitHub

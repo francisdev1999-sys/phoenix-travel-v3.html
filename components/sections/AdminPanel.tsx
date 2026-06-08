@@ -19,7 +19,8 @@ type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports
 
 export default function AdminPanel() {
   const { data: session, status } = useSession();
-  const isAdmin = session?.user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+  const role    = (session?.user as { role?: string })?.role ?? 'user';
+  const isAdmin = role === 'owner' || role === 'admin';
   const [tab, setTab] = useState<Tab>('overview');
   const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
   const [proposingNode, setProposingNode] = useState(false);
@@ -70,7 +71,7 @@ export default function AdminPanel() {
       <div className="flex flex-col items-center justify-center gap-4 h-full">
         <ShieldCheck size={36} className="text-purple-400" />
         <p className="text-sm font-bold text-white">Admin access required</p>
-        <button onClick={() => signIn('github')} className="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-purple-700 hover:bg-purple-600">
+        <button onClick={() => signIn('google')} className="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-purple-700 hover:bg-purple-600">
           Sign in
         </button>
       </div>

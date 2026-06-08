@@ -76,7 +76,9 @@ export default function NavBar() {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef     = useRef<HTMLInputElement>(null);
 
-  const isAdmin = session?.user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+  // Role is set server-side by lib/auth.ts; no client env var needed
+  const role    = (session?.user as { role?: string })?.role ?? 'user';
+  const isAdmin = role === 'owner' || role === 'admin';
   const navItems = isAdmin ? [...NAV_BASE, NAV_ADMIN] : NAV_BASE;
 
   const handleNav = (id: string) => {
@@ -315,6 +317,11 @@ export default function NavBar() {
                         <div className="px-3 py-2 border-b border-purple-900/30 mb-1">
                           <p className="text-xs text-slate-300 font-medium truncate">{session.user.name}</p>
                           <p className="text-xs text-slate-500 truncate">{session.user.email}</p>
+                          {role !== 'user' && (
+                            <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-purple-900/50 text-purple-300">
+                              {role}
+                            </span>
+                          )}
                         </div>
                         <button
                           onClick={() => { setUserMenuOpen(false); signOut(); }}
@@ -329,7 +336,7 @@ export default function NavBar() {
                 </>
               ) : (
                 <button
-                  onClick={() => signIn('github')}
+                  onClick={() => signIn('google')}
                   disabled={status === 'loading'}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-700/50 hover:bg-purple-600/60 text-purple-200 border border-purple-500/30 transition-all disabled:opacity-50"
                 >
