@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { dequeue, completeJob, failJob, getQueueStats } from '@/lib/jobs/queue';
 import { prisma } from '@/lib/db';

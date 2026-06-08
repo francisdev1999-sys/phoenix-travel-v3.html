@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { computeRabbitHoleFromDB } from '@/lib/retrieval/rabbit-hole';
 import { nodes as staticNodes, edges as staticEdges } from '@/lib/graph';
