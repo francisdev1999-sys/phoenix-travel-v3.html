@@ -397,7 +397,7 @@ export async function runAiReview(
 
     if (latest && node && latest.createdAt >= node.updatedAt) {
       return {
-        review:        latest.reviewJson as AiReviewJson,
+        review:        latest.reviewJson as unknown as AiReviewJson,
         inputTokens:   latest.inputTokens,
         outputTokens:  latest.outputTokens,
         estimatedCost: latest.estimatedCost,
