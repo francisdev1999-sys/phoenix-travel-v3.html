@@ -1,0 +1,2020 @@
+================================================================================
+NEXUS ARCHIVE — COMPLETE NODE & SOURCE DATA
+42 Nodes | 216 Curated Sources | 9 Categories
+================================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CATEGORY 1: ANCIENT CIVILIZATIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+────────────────────────────────────────
+NODE: Göbekli Tepe
+ID: gobekli-tepe
+Evidence Level: verified | Confidence: 0.98
+Year: 9600 BCE | Coordinates: 37.2231, 38.9224 (Turkey)
+────────────────────────────────────────
+DESCRIPTION:
+A Neolithic sanctuary in southeastern Turkey dated to approximately 9600–8200 BCE,
+making it the oldest known monumental stone structure in the world — predating
+Stonehenge by 6,000 years and the Egyptian pyramids by 7,000 years. Discovered by
+Klaus Schmidt in 1994, the site consists of T-shaped limestone pillars up to 5.5
+meters tall arranged in circular enclosures, decorated with sophisticated bas-relief
+carvings of animals and abstract symbols. It was deliberately buried around 8000 BCE.
+
+CLAIMS:
+• Challenges the accepted model that agriculture preceded monumental architecture — the reverse may be true.
+• The scale of organization required implies social complexity far earlier than previously understood.
+• Astronomical alignments in the pillar arrangements have been proposed by multiple research teams.
+• The deliberate burial of the site raises questions about intentionality and cultural memory.
+
+CRITICISMS:
+• The site's builders were hunter-gatherers — complex structures do not require full agricultural civilization.
+• Proposed astronomical alignments remain contested and are not universally accepted by archaeoastronomers.
+• The deliberate burial may have served ritual purposes rather than encoding information for the future.
+
+MAINSTREAM VIEW:
+Mainstream archaeology views Göbekli Tepe as a revolutionary but explicable discovery.
+It demonstrates that Neolithic hunter-gatherers were capable of sustained organized
+effort for ritual purposes, pushing back the timeline for complex social behavior. It
+does not require a prior advanced civilization as an explanatory framework.
+
+TAGS: Neolithic, Turkey, monumental architecture, hunter-gatherer, ritual, Klaus Schmidt, UNESCO
+
+SOURCES (6):
+1. [Academic Paper] "Göbekli Tepe – the Stone Age Sanctuaries" — Klaus Schmidt (2010)
+   URL: https://doi.org/10.4312/dp.37.21 | Credibility: 0.92
+   Notes: Documenta Praehistorica 37. Primary excavator's definitive account.
+
+2. [Academic Paper] "The role of cult and feasting in the emergence of Neolithic communities"
+   — Oliver Dietrich et al. (2012)
+   URL: https://doi.org/10.1017/S0003598X00010raw | Credibility: 0.90
+   Notes: Antiquity 86(333). Addresses feasting and social complexity preceding agriculture.
+
+3. [Book] "Sie bauten die ersten Tempel" — Klaus Schmidt (2006)
+   Credibility: 0.90 | Notes: Beck Verlag, Munich. Schmidt's own synthesis.
+
+4. [Academic Paper] "Animals in the symbolic world of Pre-Pottery Neolithic Göbekli Tepe"
+   — Joris Peters, Klaus Schmidt (2004) | Credibility: 0.88
+   Notes: Anthropozoologica 39(1). Detailed analysis of carved animal reliefs.
+
+5. [News Investigation] "Göbekli Tepe: Seeking the Birth of Agriculture" — Andrew Curry (2008)
+   URL: https://www.smithsonianmag.com/history/gobekli-tepe-the-worlds-first-temple-83613665/
+   Credibility: 0.80 | Notes: Smithsonian Magazine.
+
+6. [Archaeological Report] "German Archaeological Institute – Göbekli Tepe Research Project"
+   — Deutsches Archäologisches Institut (2020)
+   URL: https://www.dainst.org/projekt/-/project-display/22870 | Credibility: 0.95
+
+────────────────────────────────────────
+NODE: Atlantis
+ID: atlantis
+Evidence Level: speculative | Confidence: 0.12
+Year: 360 BCE
+────────────────────────────────────────
+DESCRIPTION:
+A legendary island civilization first described by Plato in Timaeus and Critias (c. 360
+BCE). Portrayed as a powerful naval empire "beyond the Pillars of Hercules" that sank
+into the Atlantic Ocean roughly 9,000 years before Solon's time. The story has generated
+centuries of debate about whether it represents allegory, philosophical invention, or
+memory of real events.
+
+CLAIMS:
+• Plato claimed the story originated from Egyptian priests who told Solon of a historical event.
+• Some researchers identify Atlantis with the Minoan civilization disrupted by the Thera eruption (~1600 BCE).
+• Others propose a connection to the Younger Dryas impact hypothesis and catastrophic sea level rise.
+• Geographic and social details have led some to treat it as historical rather than allegorical.
+
+CRITICISMS:
+• No archaeological evidence of an Atlantean civilization has been discovered.
+• Academic classicists overwhelmingly regard Atlantis as a literary/philosophical construction.
+• The proposed timeline of 9,600 BCE predates all known complex civilizations by thousands of years.
+• Dozens of incompatible proposed locations undermine geographic literalism.
+
+MAINSTREAM VIEW:
+Scholars regard Atlantis as Plato's literary device to explore themes of hubris, divine
+retribution, and the decline of ideal states. It serves clear philosophical functions
+and bears the hallmarks of literary invention rather than historical record.
+
+TAGS: Plato, mythology, Atlantic Ocean, lost civilization, Greek philosophy, catastrophe
+
+SOURCES (6):
+1. [Historical Text] "Timaeus" — Plato (c. 360 BCE) | Credibility: 0.95
+   Notes: Primary source. First appearance of the Atlantis narrative.
+
+2. [Historical Text] "Critias" — Plato (c. 360 BCE) | Credibility: 0.95
+   Notes: Primary source. Companion dialogue with more geographic/social detail.
+
+3. [Book] "The Atlantis Story: A Short History of Plato's Myth" — Pierre Vidal-Naquet (2007)
+   Credibility: 0.88 | Link: CONTRADICTS
+   Notes: University of Exeter Press. Leading classical scholar's argument for literary allegory.
+
+4. [Academic Paper] "The Origin of the Atlantis Myth" — Christopher Gill (1977)
+   Credibility: 0.88 | Link: CONTRADICTS
+   Notes: Trivium 11. Argues Plato invented Atlantis as a philosophical device.
+
+5. [Book] "Atlantis Destroyed" — Rodney Castleden (1998) | Credibility: 0.62
+   Notes: Routledge. Proposes Minoan Thera eruption as historical basis.
+
+6. [Academic Paper] "Plato's Atlantis Story and the Fifth-Century Scene" — Kathryn A. Morgan (1998)
+   Credibility: 0.85 | Notes: Classical Philology 93(3).
+
+────────────────────────────────────────
+NODE: Sumerian Civilization
+ID: sumerian-civilization
+Evidence Level: verified | Confidence: 0.97
+Year: 4000 BCE | Coordinates: 31.0, 45.0 (Iraq)
+────────────────────────────────────────
+DESCRIPTION:
+One of the earliest known complex civilizations, emerging in Mesopotamia (modern southern
+Iraq) around 4500–4000 BCE. Developed cuneiform writing, monumental ziggurats, legal
+systems, astronomy, mathematics (base-60 system), and elaborate mythological traditions.
+The Epic of Gilgamesh and the Enuma Elish are among the most important primary texts.
+
+CLAIMS:
+• Sumerian astronomical records show sophisticated observation of planetary cycles centuries before Greek astronomy.
+• The Sumerian King List describes antediluvian rulers with impossibly long reigns, possibly encoding earlier oral traditions.
+• Sumerians' own origin myths describe themselves as a gift of the gods, with no clear record of geographic origins.
+
+CRITICISMS:
+• Long reign lengths in the King List are mythological, not historical records.
+• Sumerian civilization developed from traceable earlier cultures including the Ubaid period.
+
+MAINSTREAM VIEW:
+Sumer is one of the best-documented early civilizations. Its development from agricultural
+villages through urban centers is traceable in the archaeological record. It represents
+independent development of civilization rather than any external origin.
+
+TAGS: Mesopotamia, cuneiform, ziggurat, Gilgamesh, mathematics, astronomy, writing, Iraq
+
+SOURCES (6):
+1. [Book] "The Sumerians: Their History, Culture, and Character" — Samuel Noah Kramer (1963)
+   Credibility: 0.92 | Notes: University of Chicago Press. Foundational scholarly synthesis.
+
+2. [Book] "Early Mesopotamia: Society and Economy at the Dawn of History" — J.N. Postgate (1992)
+   Credibility: 0.92 | Notes: Routledge. Standard academic reference.
+
+3. [Book] "Mesopotamia: The Invention of the City" — Gwendolyn Leick (2001)
+   Credibility: 0.88 | Notes: Penguin. Scholarly overview of Sumerian urban development.
+
+4. [Historical Text] "Electronic Text Corpus of Sumerian Literature (ETCSL)"
+   — J.A. Black et al. (2006)
+   URL: https://etcsl.orinst.ox.ac.uk/ | Credibility: 0.95
+   Notes: Oxford University. Comprehensive transliteration/translation. Freely available.
+
+5. [Historical Text] "The Sumerian King List" — Thorkild Jacobsen ed. (1939)
+   Credibility: 0.90 | Notes: Oriental Institute, University of Chicago.
+
+6. [Book] "The Early History of the Ancient Near East, 9000–2000 B.C." — Hans J. Nissen (1988)
+   Credibility: 0.90 | Notes: University of Chicago Press.
+
+────────────────────────────────────────
+NODE: Indus Valley Civilization
+ID: indus-valley
+Evidence Level: verified | Confidence: 0.95
+Year: 2600 BCE | Coordinates: 27.0, 68.0 (Pakistan/India)
+────────────────────────────────────────
+DESCRIPTION:
+A Bronze Age civilization (c. 3300–1300 BCE) comprising modern Pakistan and northwest India.
+At its peak, covered over 1 million km² — larger than Egypt or Mesopotamia. Cities like
+Mohenjo-daro and Harappa featured planned street grids, sophisticated drainage, standardized
+weights, and long-distance trade. The Indus script remains undeciphered.
+
+CLAIMS:
+• The undeciphered Indus script may represent a sophisticated language system encoding unknown knowledge.
+• Standardized weights across thousands of kilometers suggests centralized administration.
+• The decline around 1900 BCE may reflect climate shift or river course change rather than invasion.
+
+CRITICISMS:
+• The script may encode a proto-writing or administrative system rather than full language.
+• Decline is best explained by climate change and river abandonment.
+
+MAINSTREAM VIEW:
+A well-documented archaeological culture distinguished by urban planning, craft
+specialization, and long-distance trade. Its decline is attributed to climate change
+(aridification) and shifting of the Ghaggar-Hakra river system.
+
+TAGS: Bronze Age, Pakistan, India, Harappa, Mohenjo-daro, undeciphered script, urban planning
+
+SOURCES (5):
+1. [Book] "Ancient Cities of the Indus Valley Civilization" — Jonathan Mark Kenoyer (1998)
+   Credibility: 0.93 | Notes: Oxford University Press. Standard scholarly reference.
+
+2. [Book] "The Indus Civilization: A Contemporary Perspective" — Gregory L. Possehl (2002)
+   Credibility: 0.92 | Notes: AltaMira Press. Comprehensive synthesis by a leading specialist.
+
+3. [Book] "Deciphering the Indus Script" — Asko Parpola (1994)
+   Credibility: 0.90 | Notes: Cambridge University Press. Authoritative script decipherment attempt.
+
+4. [Academic Paper] "Fluvial landscapes of the Harappan civilization" — Liviu Giosan et al. (2012)
+   URL: https://doi.org/10.1073/pnas.1112743109 | Credibility: 0.90
+   Notes: PNAS 109(26). Key paper on river system changes and Harappan decline.
+
+5. [Book] "The Oxford Handbook of Cities in World History" — Peter Clark ed. (2013)
+   Credibility: 0.88 | Notes: Oxford University Press.
+
+────────────────────────────────────────
+NODE: Easter Island (Rapa Nui)
+ID: easter-island
+Evidence Level: verified | Confidence: 0.93
+Year: 1250 CE | Coordinates: -27.1127, -109.3497 (Pacific Ocean)
+────────────────────────────────────────
+DESCRIPTION:
+A remote Polynesian island home to the Rapa Nui people who erected approximately 900
+massive stone moai between roughly 1200 and 1500 CE. The moai average 4 meters tall and
+12.5 tons. The civilization's decline and moai transport methods are subjects of ongoing
+research.
+
+CLAIMS:
+• Moai transport without wheels or draft animals represents an extraordinary engineering achievement.
+• Oral traditions record that the moai "walked" to their positions — Carl Lipo and Terry Hunt demonstrated a rocking upright transport method.
+• The collapse may reflect ecological overshoot and deforestation.
+
+CRITICISMS:
+• The "mystery" of moai transport has been largely resolved by experimental archaeology.
+• The collapse narrative is contested; European contact disease mortality was a major factor.
+
+MAINSTREAM VIEW:
+Archaeologists have documented moai construction and transport through experimental
+archaeology. The decline involved resource depletion, social conflict, and devastating
+contact with European diseases and slave raids.
+
+TAGS: Polynesia, moai, Pacific, statues, Rapa Nui, deforestation, collapse
+
+SOURCES (5):
+1. [Book] "Easter Island: Archaeology, Ecology and Culture" — Jo Anne Van Tilburg (1994)
+   Credibility: 0.93 | Notes: Smithsonian Institution Press. Standard scholarly reference.
+
+2. [Book] "The Statues That Walked" — Terry L. Hunt, Carl P. Lipo (2011)
+   Credibility: 0.87 | Notes: Free Press. Presents the "walking" transport hypothesis.
+
+3. [Academic Paper] "The 'Walking' Megalithic Statues (Moai) of Easter Island"
+   — Carl P. Lipo, Terry L. Hunt, Sergio Rapu Haoa (2013)
+   URL: https://doi.org/10.1016/j.jas.2012.09.029 | Credibility: 0.87
+   Notes: Journal of Archaeological Science 40(6).
+
+4. [Book] "Easter Island, Earth Island" — Paul Bahn, John Flenley (1992)
+   Credibility: 0.85 | Notes: Thames & Hudson. Presents the deforestation/ecocide argument.
+
+5. [Academic Paper] "Rethinking the Fall of Easter Island" — Terry Hunt (2006)
+   URL: https://www.americanscientist.org/article/rethinking-the-fall-of-easter-island
+   Credibility: 0.85 | Notes: American Scientist.
+
+────────────────────────────────────────
+NODE: Younger Dryas Event
+ID: younger-dryas
+Evidence Level: debated | Confidence: 0.55
+Year: 10900 BCE
+────────────────────────────────────────
+DESCRIPTION:
+A rapid and severe climatic cooling period approximately 12,900–11,700 years ago that
+interrupted the post-glacial warming trend. Greenland temperatures dropped ~10°C within
+decades. The Younger Dryas Boundary is marked globally by platinum, nano-diamonds, and
+microspherules. An ongoing debate concerns whether a cosmic impact triggered the cooling.
+
+CLAIMS:
+• The Younger Dryas Impact Hypothesis proposes a fragmented comet struck above North America, triggering cooling, fires, and megafauna extinction.
+• The YDB platinum and nano-diamond signatures appear on multiple continents.
+• Population genomic data shows a significant bottleneck coinciding with this period.
+
+CRITICISMS:
+• The impact hypothesis remains contested — some attribute YDB markers to volcanic activity.
+• Independent review found some YDB sites could not be replicated.
+• Climate modeling shows observed cooling can be explained by disruption of Atlantic Ocean circulation.
+
+MAINSTREAM VIEW:
+The Younger Dryas is a well-established climatic event. The impact hypothesis is actively
+debated in peer-reviewed literature. Most paleoclimatologists currently attribute the
+cooling primarily to disruption of Atlantic Meridional Overturning Circulation.
+
+TAGS: paleoclimatology, cosmic impact, megafauna extinction, ice age, climate, geological, bottleneck
+
+SOURCES (5):
+1. [Academic Paper] "The Younger Dryas Cold Interval as Viewed from Central Greenland"
+   — Richard B. Alley (2000)
+   URL: https://doi.org/10.1016/S0277-3791(99)00062-1 | Credibility: 0.93
+   Notes: Quaternary Science Reviews 19.
+
+2. [Academic Paper] "High-Resolution Greenland Ice Core Data Show Abrupt Climate Change"
+   — J.P. Steffensen et al. (2008)
+   URL: https://doi.org/10.1126/science.1157707 | Credibility: 0.95
+   Notes: Science 321(5889).
+
+3. [Archaeological Report] "GISP2 Ice Core: Quaternary Research Archive" — NOAA (2004)
+   URL: https://www.ncei.noaa.gov/access/paleo-search/study/2475 | Credibility: 0.95
+
+4. [Book] "The Two-Mile Time Machine" — Richard B. Alley (2000)
+   Credibility: 0.88 | Notes: Princeton University Press.
+
+5. [Academic Paper] "Evidence for an extraterrestrial impact 12,900 years ago..."
+   — R.B. Firestone et al. (2007)
+   URL: https://doi.org/10.1073/pnas.0706977104 | Credibility: 0.75
+   Notes: PNAS 104(41). Original Younger Dryas impact hypothesis paper.
+
+────────────────────────────────────────
+NODE: Nabta Playa
+ID: nabta-playa
+Evidence Level: debated | Confidence: 0.72
+Year: 5500 BCE | Coordinates: 22.5, 30.7 (Egypt)
+────────────────────────────────────────
+DESCRIPTION:
+An ancient basin in the Nubian Desert of Egypt containing one of the world's earliest
+known astronomical alignments, dated to approximately 6700–5000 BCE — predating
+Stonehenge by at least 1,000 years. Includes a stone circle with alignment to the summer
+solstice sunrise. Occupied by cattle-herding peoples during a wetter Saharan period.
+
+CLAIMS:
+• Represents the earliest confirmed astronomical alignment in Africa.
+• Some researchers propose alignments to Orion, Sirius, and other bright stars.
+• The cattle cult may represent a precursor to Egyptian religious traditions.
+
+CRITICISMS:
+• Proposed stellar alignments are contested and depend on uncertain dating.
+• Connection to later Egyptian religion is speculative.
+
+MAINSTREAM VIEW:
+An accepted significant prehistoric site. The summer solstice solar alignment is broadly
+agreed upon. More specific stellar alignment claims remain contested.
+
+TAGS: Egypt, Neolithic, astronomy, stone circle, Sahara, solstice, cattle
+
+SOURCES (5):
+1. [Academic Paper] "Nabta Playa and Its Role in Northeastern African Prehistory"
+   — Fred Wendorf, Romuald Schild (1998)
+   URL: https://doi.org/10.1006/jare.1997.0195 | Credibility: 0.90
+   Notes: Journal of Anthropological Archaeology 17(2).
+
+2. [Academic Paper] "Megaliths and Neolithic astronomy in southern Egypt"
+   — J. McKim Malville et al. (1998)
+   URL: https://doi.org/10.1038/33299 | Credibility: 0.88
+   Notes: Nature 392. First peer-reviewed publication of proposed astronomical alignments.
+
+3. [Archaeological Report] "Cattle-Keepers of the Eastern Sahara"
+   — Fred Wendorf, Romuald Schild eds. (1984) | Credibility: 0.90
+   Notes: Southern Methodist University Press.
+
+4. [Academic Paper] "Holocene Occupation of the Eastern Sahara"
+   — Fred Wendorf, Romuald Schild, Angela E. Close (1993) | Credibility: 0.88
+
+5. [Archaeological Report] "Holocene Settlement of the Egyptian Sahara, Volume 1"
+   — Fred Wendorf, Romuald Schild eds. (2001) | Credibility: 0.93
+   Notes: Kluwer Academic / Plenum. Comprehensive final excavation monograph.
+
+────────────────────────────────────────
+NODE: Ancient Megalithic Architecture
+ID: ancient-megalithic-sites
+Evidence Level: verified | Confidence: 0.94
+Year: 4000 BCE
+────────────────────────────────────────
+DESCRIPTION:
+A global pattern of monumental stone construction spanning from the British Isles to
+Southeast Asia, dating from approximately 4500 BCE through 1500 CE. Key examples include
+Stonehenge, Carnac, Avebury, Newgrange, Puma Punku, and hundreds of sites across Europe,
+the Mediterranean, and the Pacific.
+
+CLAIMS:
+• The global distribution suggests either diffusion of knowledge or independent convergent development.
+• Precision alignments to solstices, equinoxes, and stellar events appear consistently across unrelated cultures.
+• Some sites feature stonework of unusual precision that has generated debate about ancient tool use.
+
+CRITICISMS:
+• Independent invention of similar construction techniques is well-documented in archaeology.
+• Astronomical alignments were practically motivating across all ancient agricultural societies.
+• Experimental archaeology has demonstrated all techniques are achievable with period-appropriate tools.
+
+MAINSTREAM VIEW:
+Megalithic traditions developed independently in multiple regions as cultures with settled
+agriculture developed surplus resources, organized labor, and religious traditions requiring
+permanent sacred spaces.
+
+TAGS: Stonehenge, Carnac, Newgrange, megalith, astronomy, prehistoric, construction
+
+SOURCES (5):
+1. [Book] "Stonehenge: The Biography of a Landscape" — Timothy Darvill (2006)
+   Credibility: 0.90 | Notes: Tempus.
+
+2. [Book] "Stonehenge: Exploring the Greatest Stone Age Mystery" — Mike Parker Pearson (2012)
+   Credibility: 0.92 | Notes: Simon & Schuster. By lead archaeologist of Stonehenge Riverside Project.
+
+3. [Book] "Before Civilization: The Radiocarbon Revolution and Prehistoric Europe"
+   — Colin Renfrew (1973) | Credibility: 0.90
+   Notes: Jonathan Cape. Foundational — establishes independent European megalith development.
+
+4. [Book] "Facing the Ocean: The Atlantic and Its Peoples" — Barry Cunliffe (2001)
+   Credibility: 0.90 | Notes: Oxford University Press.
+
+5. [Book] "Dolmens for the Dead: Megalith-Building Throughout the World"
+   — Roger Joussaume (1988) | Credibility: 0.85
+   Notes: Cornell University Press. Global comparative survey.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CATEGORY 2: EGYPT & ANCIENT ENGINEERING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+────────────────────────────────────────
+NODE: Great Pyramid of Giza
+ID: great-pyramid
+Evidence Level: verified | Confidence: 0.99
+Year: 2560 BCE | Coordinates: 29.9792, 31.1342 (Egypt)
+────────────────────────────────────────
+DESCRIPTION:
+Constructed c. 2560 BCE under Pharaoh Khufu of the Fourth Dynasty. Originally 146.5m
+tall, containing ~2.3 million stone blocks averaging 2.5 tons, with some granite blocks
+exceeding 80 tons. Aligns to true north within 3/60 of a degree. For 3,800 years the
+tallest human-made structure on Earth. The Wadi al-Jarf papyri provide direct historical
+attribution.
+
+CLAIMS:
+• Mathematical relationships encode Pi and the Golden Ratio — debate continues about intentionality.
+• Robert Bauval's Orion Correlation Theory: the three Giza pyramids mirror Orion's belt stars.
+• Geologist Robert Schoch proposes the Sphinx enclosure shows precipitation weathering suggesting earlier dates.
+• Cosmic ray muon tomography (ScanPyramids) has identified anomalous voids within the structure.
+
+CRITICISMS:
+• The Orion Correlation requires the star map to be flipped horizontally — critics call this arbitrary.
+• Mathematical ratios emerge naturally from seked-based construction methods.
+• Schoch's water weathering hypothesis is contested by most geologists and Egyptologists.
+• The Khufu graffiti, Wadi al-Jarf papyri, and Heit el-Ghurab workers' village provide robust evidence for conventional construction.
+
+MAINSTREAM VIEW:
+Egyptologists view the Great Pyramid as a remarkable achievement of organized human labor
+and Egyptian state-level engineering. The pyramid was built as a royal tomb.
+
+TAGS: Egypt, Khufu, Fourth Dynasty, Giza, tomb, engineering, Old Kingdom, UNESCO
+
+SOURCES (6):
+1. [Book] "The Complete Pyramids" — Mark Lehner (1997) | Credibility: 0.96
+   Notes: Thames & Hudson. Definitive scholarly reference. Lehner is leading Giza archaeologist.
+
+2. [Book] "Giza and the Pyramids" — Mark Lehner, Zahi Hawass (2017) | Credibility: 0.95
+   Notes: University of Chicago Press. Incorporates Wadi al-Jarf papyri data.
+
+3. [Academic Paper] "The Harbor of Khufu on the Red Sea Coast at Wadi al-Jarf"
+   — Pierre Tallet, Gregory Marouard (2014)
+   URL: https://doi.org/10.5615/neareastarch.77.1.0004 | Credibility: 0.95
+   Notes: Near Eastern Archaeology 77(1). Publication of oldest papyri ever found.
+
+4. [Academic Paper] "Discovery of a big void in Khufu's Pyramid by observation of cosmic-ray muons"
+   — Kunihiro Morishima et al. (2017)
+   URL: https://doi.org/10.1038/nature24647 | Credibility: 0.93
+   Notes: Nature 552. ScanPyramids muon tomography confirming unknown void.
+
+5. [Archaeological Report] "Evidence for the Delivery of Stone Vessels at Giza"
+   — Pierre Tallet (2017) | Credibility: 0.95
+   Notes: Full publication of the Merer papyrus — Inspector Merer's construction diary.
+
+6. [Book] "The Oxford Encyclopedia of Ancient Egypt" — Donald B. Redford ed. (2001)
+   Credibility: 0.95 | Notes: Oxford University Press. 3-volume authoritative reference.
+
+────────────────────────────────────────
+NODE: Great Sphinx of Giza
+ID: sphinx
+Evidence Level: debated | Confidence: 0.78
+Year: 2530 BCE | Coordinates: 29.9753, 31.1376 (Egypt)
+────────────────────────────────────────
+DESCRIPTION:
+A monolithic limestone statue depicting a recumbent lion with a human head, on the Giza
+plateau. Mainstream Egyptology dates it to Pharaoh Khafre (c. 2558–2532 BCE). Faces due
+east and aligns with the rising sun at the equinoxes. The largest surviving monolithic
+statue in the world, approximately 73 meters long and 20 meters tall.
+
+CLAIMS:
+• Geologist Robert Schoch argues erosion patterns show water weathering implying a date predating 5000 BCE.
+• The Sphinx Temple blocks align with the Temple of Khafre.
+• If confirmed, Schoch's hypothesis would require a major revision of Egyptian history.
+
+CRITICISMS:
+• Overwhelming consensus attributes the Sphinx to Khafre, supported by the Dream Stele and contextual evidence.
+• Geological analysis by Lal Gauri et al. attributes erosion to salt weathering and wind, not rainfall.
+
+MAINSTREAM VIEW:
+Mainstream Egyptology attributes the Sphinx to Khafre (c. 2530 BCE) based on contextual
+archaeological evidence. The water erosion hypothesis has not displaced the conventional dating.
+
+TAGS: Egypt, Khafre, Giza, limestone, erosion, water, Old Kingdom, monolith
+
+SOURCES (5):
+1. [Book] "The Complete Pyramids" — Mark Lehner (1997) | Credibility: 0.96
+
+2. [Academic Paper] "Geological Weathering and Its Implications on the Age of the Sphinx"
+   — K. Lal Gauri et al. (1995) | Credibility: 0.87 | Link: CONTRADICTS
+   Notes: Geoarchaeology 10(2). Counter-argument to Schoch.
+
+3. [Book] "Voices of the Rocks" — Robert M. Schoch, Robert Aquinas McNally (1999)
+   Credibility: 0.58 | Notes: Harmony Books. Presents water erosion hypothesis.
+
+4. [Museum Archive] "The Secrets of the Sphinx: Restoration Past and Present"
+   — Zahi Hawass (1998) | Credibility: 0.90
+   Notes: American University in Cairo Press.
+
+5. [Archaeological Report] "The Great Sphinx of Giza: A Summary of Research and Restoration"
+   — Hawass & Lehner (1994) | Credibility: 0.92
+
+────────────────────────────────────────
+NODE: Pyramid Construction Methods
+ID: pyramid-construction-debate
+Evidence Level: strong_evidence | Confidence: 0.88
+Year: 2560 BCE | Coordinates: 29.9792, 31.1342 (Egypt)
+────────────────────────────────────────
+DESCRIPTION:
+The engineering methods used to construct the Egyptian pyramids remain an active area of
+research. The conventional framework — organized state labor, copper tools, wooden sledges,
+and ramp systems — is supported by extensive archaeological evidence, but specific logistical
+details continue to be debated.
+
+CLAIMS:
+• The Wadi al-Jarf papyri (2013) are the oldest papyri ever found and document limestone transport for the Great Pyramid.
+• Workers' villages at Heit el-Ghurab show evidence of well-fed, organized labor — not slave labor.
+• Alternative proposals include internal ramp systems, water lubrication, and hydraulic lifting.
+
+CRITICISMS:
+• No single ramp design has been shown to scale to the full pyramid height while remaining feasible.
+• Granite transport from Aswan (900 km) remains logistically complex.
+
+MAINSTREAM VIEW:
+Archaeologists have extensive documentation through the Wadi al-Jarf papyri, the Heit
+el-Ghurab workers' village, and experimental archaeology. The broad framework is
+well-established; specific technical details continue to be refined.
+
+TAGS: Egypt, engineering, ramps, papyri, workforce, copper tools, logistics
+
+SOURCES (5):
+1. [Archaeological Report] "Les papyrus de la mer Rouge I: Le Journal de Merer"
+   — Pierre Tallet (2017) | Credibility: 0.97
+   Notes: IFAO. Inspector Merer's logbook documenting limestone transport in 2566 BCE.
+
+2. [Book] "Building in Egypt: Pharaonic Stone Masonry" — Dieter Arnold (1991)
+   Credibility: 0.95 | Notes: Oxford University Press.
+
+3. [Archaeological Report] "The Heit el-Ghurab Site: Workers' Town at Giza"
+   — Mark Lehner (2002) | Credibility: 0.93
+   Notes: AERA Reports. Evidence of organised, non-slave labour.
+
+4. [Academic Paper] "Ancient Egyptian quarries — an illustrated overview"
+   — James A. Harrell, Per Storemyr (2009) | Credibility: 0.90
+   Notes: Geological Survey of Norway Special Publication 12.
+
+5. [News Investigation] "How the Giza Pyramids Were Built" — NOVA / PBS (2010)
+   URL: https://www.pbs.org/wgbh/nova/pyramid/ | Credibility: 0.82
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CATEGORY 3: RELIGIOUS TEXTS & MYTHOLOGY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+────────────────────────────────────────
+NODE: Book of Enoch (1 Enoch)
+ID: book-of-enoch
+Evidence Level: verified | Confidence: 0.95
+Year: 200 BCE
+────────────────────────────────────────
+DESCRIPTION:
+An ancient Jewish religious text attributed to Enoch, composed primarily between the 3rd
+century BCE and 1st century CE. Describes the Watchers — angels who descended to Earth,
+took human wives, and taught forbidden knowledge — and their offspring the Nephilim.
+Multiple copies found among the Dead Sea Scrolls. Canonical in the Ethiopian Orthodox
+Church. The Epistle of Jude in the New Testament quotes directly from 1 Enoch.
+
+CLAIMS:
+• Provides the most detailed account of divine-human interbreeding and transmission of advanced knowledge.
+• Describes astronomical knowledge including solar and lunar calendars of unusual precision.
+• Exclusion from most biblical canons is interpreted by some as deliberate suppression.
+
+CRITICISMS:
+• Scholarly consensus classifies 1 Enoch as pseudepigraphical.
+• The Watchers narrative follows conventions of Jewish apocalyptic literature.
+• Exclusion from canons reflects debates about apostolic origin, not suppression.
+
+MAINSTREAM VIEW:
+Biblical scholars regard 1 Enoch as an important window into Second Temple Judaism,
+apocalyptic traditions, and early Jewish cosmology. It has significant historical and
+theological value as a primary source.
+
+TAGS: Second Temple Judaism, apocalyptic, Dead Sea Scrolls, Watchers, Nephilim, Ethiopia, canon
+
+SOURCES (6):
+1. [Book] "The Books of Enoch: Aramaic Fragments of Qumrân Cave 4"
+   — Józef T. Milik (1976) | Credibility: 0.95
+   Notes: Oxford University Press. Critical Aramaic text edition.
+
+2. [Academic Paper] "1 Enoch 1: A Commentary on the Book of 1 Enoch, Chapters 1–36"
+   — George W.E. Nickelsburg (2001) | Credibility: 0.95
+   Notes: Fortress Press (Hermeneia). Authoritative scholarly commentary.
+
+3. [Religious Text] "The Ethiopic Book of Enoch" — Michael A. Knibb (1978)
+   Credibility: 0.92 | Notes: Oxford University Press. Critical edition with translation.
+
+4. [Book] "Enoch and the Growth of an Apocalyptic Tradition" — James C. VanderKam (1984)
+   Credibility: 0.92 | Notes: Catholic Biblical Association of America.
+
+5. [Religious Text] "The Book of Enoch or 1 Enoch" — R.H. Charles trans. (1912)
+   Credibility: 0.85 | Notes: Oxford University Press. Classic English translation.
+
+6. [Book] "The Book of Giants from Qumran" — Loren T. Stuckenbruck (1997)
+   Credibility: 0.90 | Notes: Mohr Siebeck.
+
+────────────────────────────────────────
+NODE: The Watchers (Grigori)
+ID: watchers
+Evidence Level: mythological | Confidence: 0.18
+Year: 200 BCE
+────────────────────────────────────────
+DESCRIPTION:
+A class of angels described in 1 Enoch who are assigned to observe humanity but instead
+descend to Mount Hermon, take human wives, and teach forbidden knowledge. The text names
+200 Watchers. Their leader Samyaza and named angels including Azazel taught metalworking,
+cosmetics, sorcery, astrology, and weapons manufacture. The resulting corruption is
+presented as a cause of the biblical flood.
+
+CLAIMS:
+• The most detailed account in Jewish literature of divine beings transmitting knowledge to humanity.
+• The specific knowledge attributed — metallurgy, astronomy, writing — corresponds to technologies that appeared suddenly in the archaeological record.
+• Parallels in Mesopotamian traditions of the Apkallu, the seven antediluvian sages who brought civilization to humanity.
+
+CRITICISMS:
+• The Watchers are theological figures serving literary and moral purposes.
+• The correspondence between attributed knowledge and historical developments is coincidental.
+• Mesopotamian Apkallu parallels suggest literary borrowing rather than documentation of real events.
+
+MAINSTREAM VIEW:
+The Watchers serve as theological and narrative agents in Jewish apocalyptic literature,
+explaining the origin of evil, forbidden knowledge, and divine-human boundaries.
+
+TAGS: angels, forbidden knowledge, Mount Hermon, metallurgy, Nephilim, flood, Azazel
+
+SOURCES (5):
+1. [Academic Paper] "1 Enoch 1: A Commentary..." — George W.E. Nickelsburg (2001)
+   Credibility: 0.95
+
+2. [Academic Paper] "On the Origin of the Watchers" — Amar Annus (2010)
+   URL: https://doi.org/10.1177/0951820710375549 | Credibility: 0.88
+   Notes: Journal for the Study of the Pseudepigrapha 19(4).
+
+3. [Book] "Roots of Apocalyptic" — Helge S. Kvanvig (1988) | Credibility: 0.87
+
+4. [Academic Paper] "The Fallen Angels in the Dead Sea Scrolls"
+   — Devorah Dimant (1974) | Credibility: 0.87
+
+5. [Book] "The Book of Giants from Qumran" — Loren T. Stuckenbruck (1997)
+   Credibility: 0.90
+
+────────────────────────────────────────
+NODE: Nephilim
+ID: nephilim
+Evidence Level: mythological | Confidence: 0.12
+Year: 500 BCE
+────────────────────────────────────────
+DESCRIPTION:
+Beings described in Genesis 6:4 and Numbers 13:33 arising from the union of the "sons
+of God" and "daughters of men." Translated as "giants," "fallen ones," or "those who
+cause others to fall." The Rephaim and Anakim in the Hebrew Bible are sometimes connected
+to post-flood Nephilim traditions.
+
+CLAIMS:
+• Reflects widespread ancient traditions of semi-divine heroic beings predating recorded civilization.
+• Global traditions of giant ancestors — Greek Titans, Norse Jotnar, Mesoamerican traditions — may preserve memory of real genetic diversity.
+
+CRITICISMS:
+• No archaeologically authenticated human skeletal remains with truly anomalous size have been confirmed.
+• Widely circulated "giant skeleton" photographs have been comprehensively debunked.
+• Giant traditions are better explained as mythological amplification.
+
+MAINSTREAM VIEW:
+Biblical scholars understand Nephilim as mythological beings serving narrative purposes in
+the Hebrew Bible. Not supported by physical anthropological evidence.
+
+TAGS: Genesis, giants, Hebrew Bible, divine-human, mythology, Rephaim, Anakim
+
+SOURCES (5):
+1. [Academic Paper] "Of Demigods and the Deluge" — Ronald S. Hendel (1987)
+   URL: https://doi.org/10.2307/3261007 | Credibility: 0.90
+   Notes: Journal of Biblical Literature 106(1).
+
+2. [Academic Paper] "Giant Mythology and Demonology" — Loren T. Stuckenbruck (2004)
+   Credibility: 0.88
+
+3. [Historical Text] "Readings from the Ancient Near East"
+   — Bill T. Arnold, Bryan E. Beyer eds. (2002) | Credibility: 0.85
+
+4. [Academic Paper] "Numbers 13:33 and the Exploration Report" — Jacob Milgrom (1990)
+   Credibility: 0.85
+
+5. [Book] "The Last of the Rephaim" — Brian R. Doak (2012) | Credibility: 0.88
+   Notes: Harvard Semitic Studies 69, Eisenbrauns.
+
+────────────────────────────────────────
+NODE: Dead Sea Scrolls
+ID: dead-sea-scrolls
+Evidence Level: verified | Confidence: 0.99
+Year: 150 BCE | Coordinates: 31.7425, 35.4594 (Israel/Jordan)
+────────────────────────────────────────
+DESCRIPTION:
+Approximately 900 manuscripts discovered 1947–1956 in caves near Qumran. Dated 150 BCE
+to 70 CE. Include the oldest known surviving copies of books later in the Hebrew Bible,
+apocryphal texts (multiple copies of 1 Enoch), sectarian Essene texts, and the enigmatic
+Copper Scroll. Fundamentally advanced understanding of Second Temple Judaism and early
+Christianity.
+
+CLAIMS:
+• Provide evidence that Jewish textual diversity in the Second Temple period was far greater than previously understood.
+• Qumran community practices show parallels with early Christianity.
+• The Temple Scroll contains what appears to be a detailed architectural blueprint for an idealized temple.
+
+MAINSTREAM VIEW:
+Universally recognized as among the most significant archaeological discoveries of the
+20th century. Their content is extensively researched and published.
+
+TAGS: Qumran, Essenes, manuscripts, Hebrew Bible, Second Temple, Jordan, archaeology, UNESCO
+
+SOURCES (6):
+1. [Historical Text] "The Complete Dead Sea Scrolls in English" — Géza Vermes (1997)
+   Credibility: 0.93 | Notes: Penguin Classics. Standard English translation.
+
+2. [Book] "Reclaiming the Dead Sea Scrolls" — Lawrence H. Schiffman (1994)
+   Credibility: 0.92 | Notes: Doubleday.
+
+3. [Book] "The Ancient Library of Qumran" — Frank Moore Cross (1995)
+   Credibility: 0.93 | Notes: 3rd edition. Fortress Press.
+
+4. [Book] "Scribal Practices and Approaches Reflected in the Texts Found in the Judean Desert"
+   — Emanuel Tov (2004) | Credibility: 0.92 | Notes: Brill.
+
+5. [Museum Archive] "The Dead Sea Scrolls Digital Library"
+   — Israel Antiquities Authority / Google (2012)
+   URL: https://www.deadseascrolls.org.il/ | Credibility: 0.95
+
+6. [Book] "The Dead Sea Scrolls After Fifty Years" — Peter W. Flint, James C. VanderKam eds. (1998)
+   Credibility: 0.92 | Notes: 2 vols. Brill.
+
+────────────────────────────────────────
+NODE: Epic of Gilgamesh
+ID: epic-of-gilgamesh
+Evidence Level: verified | Confidence: 0.99
+Year: 2100 BCE
+────────────────────────────────────────
+DESCRIPTION:
+Among the oldest known works of literature, originating from Sumerian sources around 2100
+BCE. Tablet XI contains a detailed flood narrative predating and closely paralleling the
+biblical account of Noah, including a divinely-chosen hero, a boat containing animals, a
+dove and raven sent to find land, and the vessel coming to rest on a mountain.
+
+CLAIMS:
+• The flood narrative is sufficiently similar to Genesis to suggest a shared Mesopotamian literary tradition or common historical memory.
+• Gilgamesh's quest for immortality contains imagery paralleled in mythologies across cultures.
+
+MAINSTREAM VIEW:
+Recognized as a foundational work of world literature and an invaluable primary source for
+Mesopotamian civilization and religion. Flood narrative parallels with Genesis are
+well-established.
+
+TAGS: Sumerian, Babylonian, literature, flood narrative, immortality, Uruk, mythology, cuneiform
+
+SOURCES (5):
+1. [Historical Text] "The Babylonian Gilgamesh Epic" — Andrew R. George (2003)
+   Credibility: 0.97 | Notes: 2 vols. Oxford University Press. Definitive modern scholarly edition.
+
+2. [Book] "Myths from Mesopotamia" — Stephanie Dalley trans. (1989)
+   Credibility: 0.93 | Notes: Oxford University Press. Authoritative scholarly translation.
+
+3. [Book] "The Evolution of the Gilgamesh Epic" — Jeffrey H. Tigay (1982)
+   Credibility: 0.92 | Notes: University of Pennsylvania Press.
+
+4. [Book] "The Treasures of Darkness" — Thorkild Jacobsen (1976)
+   Credibility: 0.92 | Notes: Yale University Press.
+
+5. [Historical Text] "Gilgamesh: A New English Version" — Stephen Mitchell (2004)
+   Credibility: 0.82 | Notes: Free Press. Readable literary translation.
+
+────────────────────────────────────────
+NODE: Global Flood Traditions
+ID: flood-narratives
+Evidence Level: debated | Confidence: 0.60
+Year: 5000 BCE
+────────────────────────────────────────
+DESCRIPTION:
+Flood mythology appears in an estimated 200+ independent cultural traditions worldwide,
+including Mesopotamia (Gilgamesh, Atra-Hasis), the Hebrew Bible (Noah), Hindu texts
+(Manu), ancient Greece (Deucalion), Mesoamerica (Popol Vuh), Aboriginal Australia, and
+China. The consistency of core elements has generated debate about whether these reflect
+shared historical memory of real catastrophic flooding events.
+
+CLAIMS:
+• Global distribution suggests common cultural memory, potentially including Black Sea flooding (~5600 BCE).
+• The Black Sea Flood Hypothesis proposes Mediterranean waters broke through the Bosporus into a freshwater lake.
+• Post-glacial sea level rise of ~120 meters over several thousand years would have been catastrophic for coastal populations.
+
+CRITICISMS:
+• Many flood traditions show significant regional variation arguing against a single common source.
+• Universal flooding of the entire Earth is not supported by geological evidence.
+• Flood myths may independently arise from universal human experience of localized catastrophes.
+
+MAINSTREAM VIEW:
+Historians of religion recognize flood myths as one of the most widespread mythological
+motifs. Some connection to real flooding events is plausible; a single universal flood is
+not supported by geology.
+
+TAGS: mythology, Noah, Gilgamesh, comparative mythology, Black Sea, sea level, catastrophe
+
+SOURCES (5):
+1. [Historical Text] "Atra-Hasis: The Babylonian Story of the Flood"
+   — W.G. Lambert, A.R. Millard (1969) | Credibility: 0.93
+   Notes: Clarendon Press. Primary scholarly edition — oldest extant flood narrative (c. 1700 BCE).
+
+2. [Book] "The Flood Myth" — Alan Dundes ed. (1988) | Credibility: 0.90
+   Notes: University of California Press. Standard academic anthology.
+
+3. [Book] "Noah's Flood" — William B.F. Ryan, Walter C. Pitman (1998)
+   Credibility: 0.72 | Notes: Simon & Schuster. Black Sea flood hypothesis.
+
+4. [Book] "Folk-Lore in the Old Testament" — James George Frazer (1919)
+   Credibility: 0.80 | Notes: Macmillan. Foundational comparative folklore study.
+
+5. [Academic Paper] "The Black Sea Flood Question"
+   — V. Yanko-Hombach et al. eds. (2007) | Credibility: 0.87
+   Notes: Springer. Multi-author volume critically assessing the Black Sea flood hypothesis.
+
+────────────────────────────────────────
+NODE: Comparative Mythology
+ID: comparative-mythology
+Evidence Level: verified | Confidence: 0.88
+Year: 1870 CE
+────────────────────────────────────────
+DESCRIPTION:
+The academic field studying relationships between mythologies of different cultures. Key
+figures include Max Müller, James Frazer, Carl Jung, Joseph Campbell, and Georges
+Dumézil. Central findings include recurring mythological structures (Campbell's monomyth),
+shared Indo-European mythological inheritance, and consistent archetypes across unrelated
+cultures.
+
+CLAIMS:
+• Consistency of mythological archetypes across unrelated cultures may reflect universal features of human cognition or shared very ancient cultural heritage.
+• Dumézil's trifunctional hypothesis identifies a shared three-class social structure in Indo-European mythologies.
+
+MAINSTREAM VIEW:
+A well-established academic field. Findings on Indo-European mythological inheritance are
+well-supported. Campbell's monomyth is influential but contested in its universality.
+
+TAGS: mythology, Campbell, Jung, Indo-European, archetypes, folklore, anthropology
+
+SOURCES (5):
+1. [Book] "The Hero with a Thousand Faces" — Joseph Campbell (1949)
+   Credibility: 0.82 | Notes: Pantheon Books. Foundational monomyth work.
+
+2. [Book] "The Destiny of the Warrior" — Georges Dumézil (1969)
+   Credibility: 0.90 | Notes: University of Chicago Press. Indo-European trifunctional ideology.
+
+3. [Book] "The Origins of the World's Mythologies" — E.J. Michael Witzel (2012)
+   Credibility: 0.88 | Notes: Oxford University Press. Phylogenetic approach to comparative mythology.
+
+4. [Book] "The Golden Bough" — James George Frazer (1890)
+   Credibility: 0.78 | Notes: Macmillan. Foundational — methodologically superseded in some respects.
+
+5. [Book] "Myth: A Very Short Introduction" — Robert A. Segal (2004)
+   Credibility: 0.88 | Notes: Oxford University Press.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CATEGORY 4: UFO / UAP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+────────────────────────────────────────
+NODE: Roswell Incident
+ID: roswell-incident
+Evidence Level: debated | Confidence: 0.35
+Year: 1947 CE | Coordinates: 33.3943, -104.5230 (New Mexico, USA)
+────────────────────────────────────────
+DESCRIPTION:
+In July 1947, an unidentified object crashed near Roswell, NM. The RAAF initially issued
+a press release announcing recovery of a "flying disc," retracted within hours and replaced
+with a weather balloon explanation. The 1994 Air Force report attributed the crash to
+Project Mogul — a classified high-altitude balloon program monitoring Soviet nuclear tests.
+
+CLAIMS:
+• Intelligence officer Jesse Marcel stated the material was unlike any weather balloon he had encountered.
+• Multiple witnesses claimed to have seen non-human bodies, some making deathbed statements.
+• The initial "flying disc" press release and rapid retraction suggest something unusual was recovered.
+
+CRITICISMS:
+• The Project Mogul explanation is documented, classified at the time, and explains the cover-up.
+• Memory research demonstrates testimony gathered decades after events is unreliable.
+• No physical evidence authenticated as non-terrestrial has been presented in any verifiable form.
+
+MAINSTREAM VIEW:
+Scientific and government consensus attributes Roswell to Project Mogul balloon debris.
+The perception of a cover-up reflects real military secrecy around the classified
+balloon program.
+
+TAGS: New Mexico, 1947, military, UFO, Project Mogul, Jesse Marcel, cover-up, Cold War
+
+SOURCES (5):
+1. [Government Document] "The Roswell Report: Fact versus Fiction in the New Mexico Desert"
+   — Richard L. Weaver, James McAndrew (1994) | Credibility: 0.88 | Link: CONTRADICTS
+   Notes: U.S. Air Force. Official investigation concluding debris was from Project Mogul.
+
+2. [Government Document] "The Roswell Report: Case Closed" — James McAndrew (1997)
+   URL: https://media.defense.gov/2010/Oct/27/2001329594/-1/-1/0/AFD-101027-030.pdf
+   Credibility: 0.88 | Link: CONTRADICTS
+
+3. [Book] "UFO Crash at Roswell: The Genesis of a Modern Myth"
+   — Benson Saler, Charles A. Ziegler, Charles B. Moore (1997) | Credibility: 0.87
+   Notes: Smithsonian Institution Press.
+
+4. [Book] "Roswell: Inconvenient Facts and the Will to Believe" — Karl T. Pflock (2001)
+   Credibility: 0.82 | Notes: Prometheus Books.
+
+5. [Government Document] "FBI Records: The Vault — Roswell UFO" — FBI (1947)
+   URL: https://vault.fbi.gov/Roswell%20UFO | Credibility: 0.90
+   Notes: Declassified FBI files including 1947 teletype to J. Edgar Hoover.
+
+────────────────────────────────────────
+NODE: Pentagon UAP Reports
+ID: pentagon-uap-reports
+Evidence Level: debated | Confidence: 0.45
+Year: 2017 CE
+────────────────────────────────────────
+DESCRIPTION:
+Beginning with the 2017 NYT revelation of AATIP, the U.S. government has progressively
+acknowledged formal UAP investigation programs. The 2021 ODNI report acknowledged 144 UAP
+reports from military personnel, explaining only one definitively. The 2022 establishment
+of AARO formalized ongoing investigation. In 2023, David Grusch testified to Congress
+under oath claiming the U.S. government possesses retrieved non-human craft and biologics.
+
+CLAIMS:
+• The 2021 UAP report acknowledged the majority of incidents remain unexplained.
+• Documented sensor data shows objects performing maneuvers inconsistent with known aircraft.
+• David Grusch's congressional testimony (2023) under oath claims a classified UAP reverse-engineering program exists.
+
+CRITICISMS:
+• Grusch's testimony is secondhand — he claims to have been told about programs.
+• Sensor data anomalies can reflect instrumentation artifacts or classified human technology.
+• Official acknowledgment of unexplained phenomena does not confirm extraterrestrial origin.
+
+MAINSTREAM VIEW:
+The U.S. government's formal acknowledgment of UAP programs is significant. Scientific
+bodies have called for rigorous investigation. Most scientists consider extraordinary
+claims to require extraordinary evidence not yet provided.
+
+TAGS: AATIP, AARO, military, Senate, disclosure, radar, FLIR, Grusch, Congress
+
+SOURCES (5):
+1. [Government Document] "Preliminary Assessment: Unidentified Aerial Phenomena" — ODNI (2021)
+   URL: https://www.dni.gov/files/ODNI/documents/assessments/Prelimary-Assessment-UAP-20210625.pdf
+   Credibility: 0.90 | Notes: Acknowledges 144 UAP reports; only one explained.
+
+2. [Government Document] "Establishment of the All-domain Anomaly Resolution Office"
+   — U.S. DoD (2022)
+   URL: https://media.defense.gov/2022/Jul/20/2003033410/-1/-1/1/ESTABLISHMENT-OF-THE-ALL-DOMAIN-ANOMALY-RESOLUTION-OFFICE.PDF
+   Credibility: 0.90
+
+3. [News Investigation] "Glowing Auras and 'Black Money': The Pentagon's Mysterious U.F.O. Program"
+   — Helene Cooper, Ralph Blumenthal, Leslie Kean (2017)
+   URL: https://www.nytimes.com/2017/12/16/us/politics/pentagon-program-ufo-harry-reid.html
+   Credibility: 0.82 | Notes: New York Times. Investigation that disclosed AATIP.
+
+4. [Government Document] "Annual Report on Unidentified Anomalous Phenomena 2024" — AARO (2024)
+   URL: https://www.aaro.mil/Portals/136/PDFs/AARO_Historical_Record_Report_Vol1_2024.pdf
+   Credibility: 0.90
+
+5. [News Investigation] "Navy Acknowledges UFO Videos Are Real" — NYT (2019)
+   URL: https://www.nytimes.com/2019/09/18/insider/navy-ufo-video-release.html
+   Credibility: 0.80
+
+────────────────────────────────────────
+NODE: Rendlesham Forest Incident
+ID: rendlesham-forest
+Evidence Level: debated | Confidence: 0.40
+Year: 1980 CE | Coordinates: 52.0897, 1.4407 (Suffolk, UK)
+────────────────────────────────────────
+DESCRIPTION:
+A series of reported sightings of unexplained lights in Rendlesham Forest, Suffolk,
+England, in late December 1980, near NATO air bases RAF Bentwaters and RAF Woodbridge.
+Multiple U.S. military personnel including Deputy Base Commander Lt. Col. Charles Halt
+reported witnessing lights, finding physical traces on the ground, and observing a craft
+with unknown markings. Halt documented the events in an official memorandum to the
+Ministry of Defence.
+
+CLAIMS:
+• Lt. Col. Halt's contemporaneous memo to the MoD provides official military documentation.
+• Halt's personal audio tape is a contemporaneous record of military officers observing unexplained phenomena.
+• Physical landing traces — broken branches, indentations — were documented.
+
+CRITICISMS:
+• A nearby lighthouse at Orfordness has been proposed as an explanation, though witnesses dispute this.
+• Radar records for the relevant period were not preserved.
+• Some witness accounts have evolved or been embellished over decades.
+
+MAINSTREAM VIEW:
+One of the best-documented UFO cases in terms of official military documentation. Skeptics
+attribute the phenomena to the Orfordness lighthouse, re-entry debris, and psychological
+factors. No consensus explanation has been established.
+
+TAGS: UK, 1980, RAF, US Air Force, Suffolk, official documentation, Cold War, military
+
+SOURCES (5):
+1. [Government Document] "Memorandum for: 01 AF — Unexplained Lights"
+   — Lt. Col. Charles I. Halt (1981) | Credibility: 0.85
+   Notes: Official USAF memo to UK Ministry of Defence. Primary contemporaneous document.
+
+2. [Book] "Encounter in Rendlesham Forest"
+   — Nick Pope, John Burroughs, Jim Penniston (2014) | Credibility: 0.62
+   Notes: Thomas Dunne Books. Witnesses' first-person account.
+
+3. [News Investigation] "The Rendlesham Forest UFO case" — Ian Ridpath (2021)
+   URL: https://www.ianridpath.com/ufo/rendlesham.htm | Credibility: 0.75 | Link: CONTRADICTS
+   Notes: Comprehensive skeptical analysis; identifies Orfordness lighthouse.
+
+4. [Book] "Above Top Secret" — Timothy Good (1987) | Credibility: 0.58
+
+5. [Book] "The UFO Files" — David Clarke (2009) | Credibility: 0.80
+   Notes: The National Archives. Draws on declassified MoD files.
+
+────────────────────────────────────────
+NODE: Ancient Astronaut Hypothesis
+ID: ancient-astronaut-hypothesis
+Evidence Level: speculative | Confidence: 0.05
+Year: 1968 CE
+────────────────────────────────────────
+DESCRIPTION:
+A pseudoscientific hypothesis proposing that extraterrestrial beings visited Earth in
+ancient times and influenced the development of technology, religion, architecture, and
+culture. Popularized by Erich von Däniken's "Chariots of the Gods?" (1968) and the
+History Channel series "Ancient Aliens." Reinterprets ancient texts, monumental
+architecture, and artifacts as evidence of extraterrestrial contact.
+
+CLAIMS:
+• Ancient architectural achievements are interpreted as beyond period technology without extraterrestrial assistance.
+• Depictions of gods in ancient art are interpreted as literal spacecraft or astronauts.
+• Zecharia Sitchin's Sumerian interpretations propose the Anunnaki gods were extraterrestrials from a planet Nibiru.
+
+CRITICISMS:
+• Sitchin's translations are rejected by virtually all professional Assyriologists as fundamentally incorrect.
+• The "ancient people couldn't do this" argument is consistently challenged by experimental archaeology.
+• The hypothesis implicitly underestimates ancient human intelligence.
+
+MAINSTREAM VIEW:
+Rejected by mainstream archaeology, anthropology, history, and linguistics. Classified as
+pseudoscience. Criticized for cultural bias.
+
+TAGS: von Däniken, Sitchin, Anunnaki, pseudoscience, ancient architecture, extraterrestrial, popular culture
+
+SOURCES (5):
+1. [Book] "Encyclopedia of Dubious Archaeology" — Kenneth L. Feder (2010)
+   Credibility: 0.87 | Link: CONTRADICTS
+   Notes: Greenwood Press. Systematic scholarly refutation.
+
+2. [Book] "Invented Knowledge" — Ronald H. Fritze (2009)
+   Credibility: 0.85 | Link: CONTRADICTS | Notes: Reaktion Books.
+
+3. [Book] "Chariots of the Gods?" — Erich von Däniken (1968)
+   Credibility: 0.38 | Notes: Putnam. Foundational popular work. Included as primary source.
+
+4. [Book] "Frauds, Myths, and Mysteries" — Kenneth L. Feder (2018)
+   Credibility: 0.87 | Link: CONTRADICTS | Notes: 9th edition. Oxford University Press.
+
+5. [Book] "The Space-Gods Revealed" — Ronald Story (1976)
+   Credibility: 0.80 | Link: CONTRADICTS | Notes: Harper & Row. First systematic refutation.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CATEGORY 5: HUMAN ORIGINS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+────────────────────────────────────────
+NODE: Human Evolution
+ID: human-evolution
+Evidence Level: verified | Confidence: 0.99
+Year: 300000 BCE
+────────────────────────────────────────
+DESCRIPTION:
+The evolutionary history of Homo sapiens, tracing the lineage from common ancestors with
+other great apes through australopithecines and various Homo species to anatomically modern
+humans (c. 300,000 years ago in Africa). Supported by convergent evidence from paleontology,
+comparative anatomy, genetics, and genomics.
+
+CLAIMS:
+• Genomic analysis has revealed modern humans carry 1–4% Neanderthal DNA and some populations carry Denisovan DNA.
+• The pace of brain size increase in the Homo lineage is remarkable in evolutionary terms.
+• Behavioral modernity — art, complex language, abstract thought — appears to have emerged rapidly.
+
+MAINSTREAM VIEW:
+Human evolution through natural selection is one of the most robustly supported theories
+in science, with convergent evidence from multiple independent fields.
+
+TAGS: paleoanthropology, genetics, Homo sapiens, Africa, bipedalism, brain, out of Africa
+
+SOURCES (5):
+1. [Academic Paper] "Ardipithecus ramidus and the Paleobiology of Early Hominids"
+   — Tim D. White et al. (2009)
+   URL: https://doi.org/10.1126/science.1175802 | Credibility: 0.97
+   Notes: Science 326. Pushes bipedal hominin record to 4.4 million years ago.
+
+2. [Book] "Who We Are and How We Got Here" — David Reich (2018) | Credibility: 0.95
+   Notes: Pantheon. By leading ancient DNA researcher.
+
+3. [Book] "The Fossil Trail" — Ian Tattersall (2009) | Credibility: 0.92
+   Notes: 2nd edition. Oxford University Press.
+
+4. [Academic Paper] "New fossils from Jebel Irhoud, Morocco and the pan-African origin of Homo sapiens"
+   — Jean-Jacques Hublin et al. (2017)
+   URL: https://doi.org/10.1038/nature22336 | Credibility: 0.97
+   Notes: Nature 546. Pushes anatomically modern human origin to ~315,000 years ago.
+
+5. [Book] "Handbook of Paleoanthropology" — Winfried Henke, Ian Tattersall eds. (2015)
+   Credibility: 0.93 | Notes: 2nd edition. Springer. 3-volume reference.
+
+────────────────────────────────────────
+NODE: Neanderthals
+ID: neanderthals
+Evidence Level: verified | Confidence: 0.99
+Year: 200000 BCE
+────────────────────────────────────────
+DESCRIPTION:
+An archaic human species (Homo neanderthalensis) inhabiting Europe and western Asia from
+approximately 400,000 to 40,000 years ago. Had larger brains than modern humans on
+average, made sophisticated Mousterian tools, buried their dead, used pigments and feathers
+for adornment. Ancient DNA has confirmed interbreeding with Homo sapiens — non-African
+modern humans carry ~1–4% Neanderthal DNA.
+
+CLAIMS:
+• Neanderthal DNA in modern non-African populations is definitively established through ancient DNA analysis.
+• Evidence for Neanderthal symbolic behavior including eagle feather use and pigment application is growing.
+• The cause of Neanderthal extinction is not fully resolved.
+
+MAINSTREAM VIEW:
+Well-documented through a rich fossil and archaeological record. Ancient DNA has
+transformed our understanding from simple replacement to complex interaction and
+interbreeding.
+
+TAGS: paleoanthropology, Europe, ancient DNA, Mousterian, extinction, interbreeding, fossil
+
+SOURCES (5):
+1. [Academic Paper] "A Draft Sequence of the Neandertal Genome"
+   — Richard E. Green et al. (2010)
+   URL: https://doi.org/10.1126/science.1188021 | Credibility: 0.98
+   Notes: Science 328. Landmark paper confirming interbreeding with modern humans.
+
+2. [Book] "Neanderthal Man: In Search of Lost Genomes" — Svante Pääbo (2014)
+   Credibility: 0.97 | Notes: Basic Books. By 2022 Nobel laureate.
+
+3. [Book] "In Search of the Neanderthals" — Chris Stringer, Clive Gamble (1993)
+   Credibility: 0.90 | Notes: Thames & Hudson.
+
+4. [Book] "The Neanderthals Rediscovered" — Dimitra Papagianni, Michael A. Morse (2013)
+   Credibility: 0.88 | Notes: Thames & Hudson.
+
+5. [Academic Paper] "Symbolic use of marine shells and mineral pigments by Iberian Neandertals"
+   — João Zilhão et al. (2010)
+   URL: https://doi.org/10.1073/pnas.0914088107 | Credibility: 0.90
+   Notes: PNAS 107(3).
+
+────────────────────────────────────────
+NODE: Denisovans
+ID: denisovans
+Evidence Level: verified | Confidence: 0.97
+Year: 50000 BCE
+────────────────────────────────────────
+DESCRIPTION:
+An archaic human population or species known almost entirely from ancient DNA analysis of
+fragmentary remains from Denisova Cave, Siberia, dated to approximately 30,000–200,000
+years ago. Modern Melanesian, Aboriginal Australian, and some East Asian populations carry
+up to 5% Denisovan DNA. A jawbone from Tibet suggests Denisovans were adapted to high
+altitude environments.
+
+CLAIMS:
+• Denisovans represent a major human lineage previously completely unknown until 2010.
+• They occupied a vast range from Siberia to Southeast Asia.
+• High Denisovan DNA in Tibetan/Sherpa populations may have contributed adaptive genes for high-altitude living.
+
+MAINSTREAM VIEW:
+One of the most significant recent discoveries in paleoanthropology, demonstrating the
+power of ancient DNA analysis. A confirmed archaic human population with documented
+genetic legacy in modern human populations.
+
+TAGS: ancient DNA, Siberia, Melanesia, interbreeding, paleoanthropology, Tibet, genome
+
+SOURCES (5):
+1. [Academic Paper] "Genetic history of an archaic hominin group from Denisova Cave in Siberia"
+   — David Reich et al. (2010)
+   URL: https://doi.org/10.1038/nature09710 | Credibility: 0.98
+   Notes: Nature 468. The founding paper defining Denisovans.
+
+2. [Academic Paper] "The genome of the offspring of a Neanderthal mother and a Denisovan father"
+   — Viviane Slon et al. (2018)
+   URL: https://doi.org/10.1038/s41586-018-0455-x | Credibility: 0.98
+   Notes: Nature 561. Analysis of Denisova 11, a first-generation hybrid.
+
+3. [Academic Paper] "A late Middle Pleistocene Denisovan mandible from the Tibetan Plateau"
+   — Fahu Chen et al. (2019)
+   URL: https://doi.org/10.1038/s41586-019-1139-x | Credibility: 0.96
+   Notes: Nature 569. Identifies the Xiahe mandible as Denisovan.
+
+4. [Book] "Who We Are and How We Got Here" — David Reich (2018) | Credibility: 0.95
+
+5. [Book] "Neanderthal Man: In Search of Lost Genomes" — Svante Pääbo (2014)
+   Credibility: 0.96
+
+────────────────────────────────────────
+NODE: Stoned Ape Theory
+ID: stoned-ape-theory
+Evidence Level: speculative | Confidence: 0.15
+Year: 1992 CE
+────────────────────────────────────────
+DESCRIPTION:
+A hypothesis proposed by ethnobotanist Terence McKenna in "Food of the Gods" (1992),
+suggesting that consumption of psilocybin-containing mushrooms by early hominids in
+sub-Saharan Africa played a role in the rapid expansion of human cognitive capabilities,
+contributing to the development of language, art, and consciousness.
+
+CLAIMS:
+• Psilocybe cubensis grows naturally in the dung of African cattle — accessible to hominid groups following herds.
+• Modern neuroscience confirms psilocybin promotes neuroplasticity and novel cognitive connections.
+• Some cave art depicts what some researchers interpret as mushroom imagery.
+
+CRITICISMS:
+• The hypothesis is not scientifically falsifiable in its original form.
+• Brain size increase began ~2 million years ago — earlier than the plausible timeline for significant mushroom consumption.
+• Evolutionary biologists propose more parsimonious explanations.
+
+MAINSTREAM VIEW:
+Not accepted by mainstream evolutionary biology or paleoanthropology. Considered untestable
+in its current form. Modern psilocybin research confirms neurological effects but does not
+support the specific evolutionary claims.
+
+TAGS: McKenna, psilocybin, evolution, consciousness, neuroplasticity, Africa, speculative
+
+SOURCES (5):
+1. [Book] "Food of the Gods" — Terence McKenna (1992) | Credibility: 0.42
+   Notes: Bantam Books. Original statement of the Stoned Ape Theory.
+
+2. [Academic Paper] "Psilocybin produces substantial and sustained decreases in depression and anxiety"
+   — Roland Griffiths et al. (2016)
+   URL: https://doi.org/10.1177/0269881116675513 | Credibility: 0.90
+   Notes: Journal of Psychopharmacology 30(12). Documents real neurological effects.
+
+3. [Book] "Lone Survivors" — Chris Stringer (2012) | Credibility: 0.93 | Link: CONTRADICTS
+   Notes: Times Books. Mainstream account of human cognitive evolution.
+
+4. [Academic Paper] "Dietary change and the evolution of the human brain"
+   — Michael A. Crawford et al. (2008) | Credibility: 0.85
+
+5. [Book] "Shamanism: A Biopsychosocial Paradigm of Consciousness and Healing"
+   — Michael Winkelman (2010) | Credibility: 0.75
+
+────────────────────────────────────────
+NODE: Human Migration Out of Africa
+ID: human-migration
+Evidence Level: verified | Confidence: 0.97
+Year: 65000 BCE
+────────────────────────────────────────
+DESCRIPTION:
+The "Out of Africa" model proposes that anatomically modern Homo sapiens evolved in Africa
+and dispersed across the globe beginning approximately 60,000–70,000 years ago. By 45,000
+years ago, humans had reached Australia; by 15,000–25,000 years ago, the Americas.
+
+MAINSTREAM VIEW:
+The African origin of modern Homo sapiens and their subsequent global dispersal is one of
+the best-supported conclusions in human evolutionary biology. Details of timing, route,
+and number of migration events continue to be refined.
+
+TAGS: genetics, Africa, migration, Homo sapiens, bottleneck, Americas, Australia
+
+SOURCES (5):
+1. [Academic Paper] "Worldwide human relationships inferred from genome-wide patterns of variation"
+   — Jun Z. Li et al. (2008)
+   URL: https://doi.org/10.1126/science.1153717 | Credibility: 0.95
+   Notes: Science 319.
+
+2. [Academic Paper] "Hunter-gatherer genomic diversity suggests a southern African origin"
+   — Brenna M. Henn et al. (2011)
+   URL: https://doi.org/10.1073/pnas.1017511108 | Credibility: 0.93
+   Notes: PNAS 108(13).
+
+3. [Book] "The Real Eve" — Stephen Oppenheimer (2003) | Credibility: 0.82
+
+4. [Book] "African Exodus" — Chris Stringer, Robin McKie (1996) | Credibility: 0.90
+
+5. [Book] "Who We Are and How We Got Here" — David Reich (2018) | Credibility: 0.95
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CATEGORY 6: CONSCIOUSNESS & REALITY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+────────────────────────────────────────
+NODE: Simulation Hypothesis
+ID: simulation-hypothesis
+Evidence Level: speculative | Confidence: 0.15
+Year: 2003 CE
+────────────────────────────────────────
+DESCRIPTION:
+A philosophical proposition formalized by Nick Bostrom in 2003 arguing that at least one
+of three scenarios must be true: (1) nearly all civilizations go extinct before developing
+simulation technology; (2) advanced civilizations choose not to run simulations; or (3)
+we are almost certainly living in a computer simulation.
+
+CLAIMS:
+• The mathematical precision of physical laws is consistent with computational design.
+• The quantum observer effect has been compared to computational rendering-on-demand.
+• James Gates' discovery of error-correcting codes in supersymmetry equations has been cited.
+
+CRITICISMS:
+• The hypothesis is not empirically falsifiable with current methods.
+• The observer effect is fully explained within quantum mechanics.
+• Mathematical structure in physics may reflect the nature of reality, not its computational substrate.
+
+MAINSTREAM VIEW:
+Treated by physicists and philosophers as a legitimate philosophical thought experiment
+but not a scientific theory. Cannot currently be tested.
+
+TAGS: Bostrom, philosophy, consciousness, quantum mechanics, physics, computation, reality
+
+SOURCES (5):
+1. [Academic Paper] "Are You Living in a Computer Simulation?" — Nick Bostrom (2003)
+   URL: https://doi.org/10.1093/philq/53.211.243 | Credibility: 0.85
+   Notes: Philosophical Quarterly 53(211). Formal philosophical statement.
+
+2. [Book] "Our Mathematical Universe" — Max Tegmark (2014)
+   Credibility: 0.80 | Link: CONTRADICTS | Notes: Knopf.
+
+3. [Book] "Reality+: Virtual Worlds and the Philosophy of Mind" — David J. Chalmers (2022)
+   Credibility: 0.85 | Notes: W.W. Norton.
+
+4. [Academic Paper] "Constraints on the Universe as a Numerical Simulation"
+   — Silas R. Beane et al. (2014)
+   URL: https://doi.org/10.1140/epja/i2014-14148-0 | Credibility: 0.80
+   Notes: European Physical Journal A 50.
+
+5. [Academic Paper] "Calculating Space" — Konrad Zuse (1969) | Credibility: 0.78
+   Notes: Founding paper of digital physics.
+
+────────────────────────────────────────
+NODE: Hard Problem of Consciousness
+ID: hard-problem-consciousness
+Evidence Level: debated | Confidence: 0.50
+Year: 1995 CE
+────────────────────────────────────────
+DESCRIPTION:
+Philosopher David Chalmers coined the phrase "hard problem of consciousness" in 1995 to
+describe the explanatory gap between objective physical brain processes and subjective
+experience (qualia). The hard problem asks: why is there subjective experience at all?
+Remains one of the deepest unsolved questions in philosophy of mind.
+
+CLAIMS:
+• No current physical theory explains why any physical process should give rise to subjective experience.
+• Integrated Information Theory (IIT) proposes consciousness is identical to integrated information (Φ).
+• Panpsychism — the view that consciousness is a fundamental feature of reality — is taken seriously by some philosophers.
+
+CRITICISMS:
+• Some philosophers (Dennett, Frankish) argue qualia are an illusion — the hard problem dissolves on analysis.
+• IIT is criticized for implying certain simple systems would be more conscious than complex brains.
+
+MAINSTREAM VIEW:
+Recognized as a genuine and unsolved philosophical problem by most philosophers of mind
+and many neuroscientists. Multiple competing frameworks exist.
+
+TAGS: Chalmers, philosophy of mind, qualia, panpsychism, neuroscience, IIT, Tononi
+
+SOURCES (5):
+1. [Book] "The Conscious Mind" — David J. Chalmers (1996) | Credibility: 0.92
+   Notes: Oxford University Press. Foundational text introducing the hard problem.
+
+2. [Academic Paper] "What Is It Like to Be a Bat?" — Thomas Nagel (1974)
+   URL: https://doi.org/10.2307/2183914 | Credibility: 0.93
+   Notes: Philosophical Review 83(4). Classic paper on the explanatory gap.
+
+3. [Book] "Consciousness Explained" — Daniel C. Dennett (1991)
+   Credibility: 0.87 | Link: CONTRADICTS | Notes: Little, Brown. Major materialist counterargument.
+
+4. [Academic Paper] "Consciousness as Integrated Information" — Giulio Tononi (2008)
+   URL: https://doi.org/10.2307/25470707 | Credibility: 0.83
+   Notes: Biological Bulletin 215(3). Formal statement of IIT.
+
+5. [Academic Paper] "Illusionism as a Theory of Consciousness" — Keith Frankish (2016)
+   Credibility: 0.82 | Notes: Journal of Consciousness Studies 23.
+
+────────────────────────────────────────
+NODE: Quantum Consciousness (Orch-OR)
+ID: quantum-consciousness
+Evidence Level: speculative | Confidence: 0.20
+Year: 1994 CE
+────────────────────────────────────────
+DESCRIPTION:
+The Orchestrated Objective Reduction (Orch-OR) theory proposed by physicist Roger Penrose
+and anesthesiologist Stuart Hameroff proposes that consciousness arises from quantum
+computations in microtubules within neurons, connected to fundamental features of spacetime
+geometry.
+
+CLAIMS:
+• Microtubules may maintain quantum coherence long enough for quantum computation to play a role.
+• Anesthetic agents that disrupt microtubule function also eliminate consciousness.
+• Penrose's Gödel-based argument suggests human mathematical understanding cannot be purely computational.
+
+CRITICISMS:
+• The warm, wet brain environment is generally considered hostile to quantum coherence.
+• Most cognitive scientists consider classical neural network computation sufficient.
+• Penrose's Gödel argument has been extensively critiqued by philosophers and logicians.
+
+MAINSTREAM VIEW:
+A minority position in neuroscience and physics. Most researchers consider quantum effects
+unlikely to play a significant role in neural computation at relevant scales and
+temperatures.
+
+TAGS: Penrose, Hameroff, microtubules, quantum mechanics, neuroscience, anesthesia
+
+SOURCES (5):
+1. [Book] "The Emperor's New Mind" — Roger Penrose (1989) | Credibility: 0.80
+   Notes: Oxford University Press.
+
+2. [Academic Paper] "Orchestrated reduction of quantum coherence in brain microtubules"
+   — Roger Penrose, Stuart Hameroff (1996)
+   URL: https://doi.org/10.1016/S0378-4754(96)80020-4 | Credibility: 0.68
+   Notes: Mathematics and Computers in Simulation 40. Formal statement of Orch-OR.
+
+3. [Academic Paper] "The importance of quantum decoherence in brain processes"
+   — Max Tegmark (2000)
+   URL: https://doi.org/10.1103/PhysRevE.61.4194 | Credibility: 0.90 | Link: CONTRADICTS
+   Notes: Physical Review E 61. Primary physics objection to Orch-OR.
+
+4. [Academic Paper] "Quantum mechanics in the brain" — Christof Koch, Klaus Hepp (2006)
+   URL: https://doi.org/10.1038/440611a | Credibility: 0.88 | Link: CONTRADICTS
+   Notes: Nature 440.
+
+5. [Academic Paper] "Consciousness in the Universe: A Review of the 'Orch OR' Theory"
+   — Stuart Hameroff, Roger Penrose (2014)
+   URL: https://doi.org/10.1016/j.plrev.2013.08.002 | Credibility: 0.68
+   Notes: Physics of Life Reviews 11(1).
+
+────────────────────────────────────────
+NODE: Collective Unconscious
+ID: collective-unconscious
+Evidence Level: speculative | Confidence: 0.35
+Year: 1916 CE
+────────────────────────────────────────
+DESCRIPTION:
+Carl Jung's concept of a part of the unconscious mind shared among beings of the same
+species, containing archetypes — universal, archaic patterns and images that derive from
+the accumulated experience of humanity. Jung proposed the collective unconscious explains
+why myths and symbols from unrelated cultures share structural similarities.
+
+CLAIMS:
+• Consistent appearance of structurally similar mythological figures across unrelated cultures supports shared unconscious structures.
+• Archetypal images appearing in dreams, psychosis, and shamanic experiences across cultures suggest collective rather than individual origin.
+
+CRITICISMS:
+• The collective unconscious is not empirically testable by scientific methods.
+• Cross-cultural similarities can be explained through shared cognitive features without positing a collective unconscious.
+
+MAINSTREAM VIEW:
+Influential in depth psychology and humanities but not part of mainstream cognitive
+science or neuroscience.
+
+TAGS: Jung, archetypes, depth psychology, mythology, dreams, symbols, unconscious
+
+SOURCES (5):
+1. [Book] "The Archetypes and the Collective Unconscious" — C.G. Jung (1959)
+   Credibility: 0.78 | Notes: Princeton University Press (CW Vol. 9).
+
+2. [Book] "Jung's Map of the Soul" — Murray Stein (1998) | Credibility: 0.75
+
+3. [Book] "Archetypes Revisited" — Anthony Stevens (2002) | Credibility: 0.73
+
+4. [Academic Paper] "The Self, the Symbolic and Synchronicity" — George B. Hogenson (2005)
+   Credibility: 0.70 | Notes: Journal of Analytical Psychology 50(3).
+
+5. [Book] "The Hero with a Thousand Faces" — Joseph Campbell (1949) | Credibility: 0.82
+   Notes: Princeton University Press. Most influential popular application of Jung's concept.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CATEGORY 7: SECRET SOCIETIES & ESOTERIC
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+────────────────────────────────────────
+NODE: Freemasonry
+ID: freemasonry
+Evidence Level: verified | Confidence: 0.92
+Year: 1717 CE
+────────────────────────────────────────
+DESCRIPTION:
+A fraternal organization tracing its formal origins to the founding of the Grand Lodge of
+England in 1717. Its initiatory structure involves three craft degrees (Entered Apprentice,
+Fellow Craft, Master Mason) plus additional rites. Notable Freemasons include George
+Washington, Benjamin Franklin, and Wolfgang Amadeus Mozart.
+
+CLAIMS:
+• The layout of Washington D.C. incorporates Masonic symbols and geometric relationships.
+• Masonic networks among American founding fathers may have influenced founding documents.
+• Higher degrees contain esoteric knowledge traditions traced to Hermeticism and Kabbalah.
+
+CRITICISMS:
+• Masonic influence on American founding is routinely overstated — most founders were not Freemasons.
+• The organization is a documented fraternal and charitable society with public membership.
+
+MAINSTREAM VIEW:
+A well-documented historical organization. Historians acknowledge its influence in specific
+contexts without supporting claims of global secret governance.
+
+TAGS: fraternal, ritual, Washington DC, Solomon, esoteric, craft degrees, charitable
+
+SOURCES (5):
+1. [Book] "The Origins of Freemasonry: Scotland's Century, 1590–1710" — David Stevenson (1988)
+   Credibility: 0.92 | Notes: Cambridge University Press. Definitive scholarly account.
+
+2. [Book] "The Radical Enlightenment" — Margaret C. Jacob (1981) | Credibility: 0.90
+
+3. [Book] "The Freemasons" — Jasper Ridley (1999) | Credibility: 0.83
+
+4. [Book] "Living the Enlightenment" — Margaret C. Jacob (1991) | Credibility: 0.90
+
+5. [Historical Text] "The Constitutions of the Free-Masons" — James Anderson (1723)
+   Credibility: 0.90 | Notes: Foundational document of English speculative Freemasonry.
+
+────────────────────────────────────────
+NODE: Rosicrucianism
+ID: rosicrucianism
+Evidence Level: debated | Confidence: 0.65
+Year: 1614 CE
+────────────────────────────────────────
+DESCRIPTION:
+A philosophical and esoteric tradition that emerged in early 17th-century Europe with the
+anonymous publication of the Rosicrucian manifestos: the Fama Fraternitatis (1614), the
+Confessio Fraternitatis (1615), and The Chymical Wedding of Christian Rosenkreuz (1616).
+Whether an actual Rosicrucian brotherhood existed remains debated.
+
+CLAIMS:
+• The Rosicrucian manifestos influenced early modern natural philosophy and arguably contributed to the intellectual environment from which the Royal Society emerged.
+• Rosicrucian thought influenced later organizations including certain branches of Freemasonry.
+
+CRITICISMS:
+• Scholars generally consider the original manifestos to be a literary hoax or satirical work.
+• No original Rosicrucian brotherhood has been historically documented.
+
+MAINSTREAM VIEW:
+Historians of early modern thought regard Rosicrucianism as an important intellectual
+current that influenced hermeticism, natural philosophy, and early modern science.
+
+TAGS: hermetic, alchemy, 17th century, manifestos, esoteric, Europe, natural philosophy
+
+SOURCES (5):
+1. [Book] "The Rosicrucian Enlightenment" — Frances A. Yates (1972) | Credibility: 0.92
+   Notes: Routledge. Foundational scholarly work.
+
+2. [Book] "The Rosicrucians" — Christopher McIntosh (1998) | Credibility: 0.80
+
+3. [Book] "Cross and Crucible" — John Warwick Montgomery (1973) | Credibility: 0.83
+
+4. [Historical Text] "Fama Fraternitatis (1614), Confessio Fraternitatis (1615)"
+   — Anonymous (1614) | Credibility: 0.90 | Notes: Primary sources — the Rosicrucian manifestos.
+
+5. [Book] "Western Esotericism: A Guide for the Perplexed" — Wouter J. Hanegraaff (2013)
+   Credibility: 0.90 | Notes: Bloomsbury Academic.
+
+────────────────────────────────────────
+NODE: Hermeticism
+ID: hermeticism
+Evidence Level: verified | Confidence: 0.90
+Year: 200 CE
+────────────────────────────────────────
+DESCRIPTION:
+A philosophical, religious, and esoteric tradition based primarily on writings attributed
+to Hermes Trismegistus, a legendary figure representing a synthesis of the Greek god
+Hermes and the Egyptian god Thoth. The Hermetic corpus, compiled in Alexandria between
+the 1st and 3rd centuries CE, covers theology, astrology, alchemy, and theurgy. Core
+Hermetic principles include "As above, so below."
+
+CLAIMS:
+• The Hermetic texts preserve ancient Egyptian and Neoplatonic wisdom transmitted through initiated scholars.
+• Hermetic principles of correspondence anticipate certain developments in systems theory and idealist philosophy.
+
+CRITICISMS:
+• Isaac Casaubon's 1614 dating of the Hermetic corpus to the 2nd–3rd century CE undermined claims of ancient Egyptian origin.
+• The texts are a product of Hellenistic syncretism rather than primordial Egyptian wisdom.
+
+MAINSTREAM VIEW:
+Studied as a significant philosophical tradition with documented influence on Renaissance
+thought, early modern science, and esoteric traditions.
+
+TAGS: Alexandria, Hermes Trismegistus, alchemy, Renaissance, Neoplatonism, Thoth, esoteric
+
+SOURCES (5):
+1. [Book] "The Egyptian Hermes" — Garth Fowden (1986) | Credibility: 0.93
+   Notes: Cambridge University Press. Definitive scholarly account.
+
+2. [Historical Text] "Hermetica" — Brian P. Copenhaver trans. (1992) | Credibility: 0.95
+   Notes: Cambridge University Press. Standard modern scholarly translation of the Hermetic corpus.
+
+3. [Book] "Giordano Bruno and the Hermetic Tradition" — Frances A. Yates (1964)
+   Credibility: 0.92 | Notes: University of Chicago Press.
+
+4. [Book] "Gnosis and Hermeticism from Antiquity to Modern Times"
+   — Roelof van den Broek, Wouter J. Hanegraaff eds. (1998) | Credibility: 0.88
+
+5. [Book] "Esotericism and the Academy" — Wouter J. Hanegraaff (2012) | Credibility: 0.92
+   Notes: Cambridge University Press.
+
+────────────────────────────────────────
+NODE: Illuminati (Historical)
+ID: illuminati-history
+Evidence Level: verified | Confidence: 0.95
+Year: 1776 CE
+────────────────────────────────────────
+DESCRIPTION:
+The Order of the Illuminati was founded by Adam Weishaupt on May 1, 1776, in Bavaria.
+Goals were opposition to superstition, religious influence over public life, and abuses of
+state power. At its peak it had approximately 2,000 members drawn from Enlightenment
+intellectuals. Infiltrated by the Bavarian government and formally dissolved in 1785.
+
+CLAIMS:
+• The Illuminati's documented membership included significant Enlightenment intellectuals.
+• Contemporary conspiracy theories propose the Illuminati survived suppression and continues to secretly control global events.
+
+CRITICISMS:
+• The historical Illuminati was definitively suppressed and disbanded in 1785.
+• Modern "Illuminati" conspiracy narratives emerged primarily from 19th-century anti-Masonic pamphlet literature.
+
+MAINSTREAM VIEW:
+Historians have thoroughly documented the historical Illuminati as a genuine Enlightenment
+organization that was successfully suppressed. The contemporary conspiracy use of the term
+has no historical grounding.
+
+TAGS: Weishaupt, Bavaria, 1776, Enlightenment, conspiracy, suppressed, historical
+
+SOURCES (5):
+1. [Book] "New England and the Bavarian Illuminati" — Vernon Stauffer (1918)
+   Credibility: 0.82 | Notes: Columbia University Studies.
+
+2. [Book] "The Mythology of the Secret Societies" — J.M. Roberts (1972) | Credibility: 0.88
+
+3. [Book] "Fire in the Minds of Men" — James H. Billington (1980) | Credibility: 0.87
+   Notes: Basic Books. By the Librarian of Congress.
+
+4. [Historical Text] "Scrutinii Secretorum: Original Illuminati documents 1776–1787"
+   — Adam Weishaupt (1787) | Credibility: 0.87
+   Notes: Original Illuminati writings seized by the Bavarian government in 1787.
+
+5. [Book] "Critique and Crisis" — Reinhart Koselleck (1988) | Credibility: 0.88
+   Notes: MIT Press.
+
+────────────────────────────────────────
+NODE: Ancient Mystery Schools
+ID: mystery-schools
+Evidence Level: verified | Confidence: 0.90
+Year: 500 BCE
+────────────────────────────────────────
+DESCRIPTION:
+Initiatory religious institutions of ancient Greece and Rome offering initiates direct
+experience of divine mysteries through rituals, altered states, and symbolic dramas. The
+Eleusinian Mysteries were celebrated for nearly 2,000 years and attracted initiates
+including Plato, Aristotle, and Marcus Aurelius.
+
+CLAIMS:
+• The Eleusinian kykeon, likely containing ergot alkaloids with psychedelic properties, may have produced genuine visionary experiences.
+• Mystery school traditions influenced Neoplatonic philosophy and early Christian theological development.
+
+CRITICISMS:
+• The psychedelic interpretation of the Eleusinian Mysteries is one hypothesis among several.
+• Mystery schools were public religious institutions with known locations and widespread participation.
+
+MAINSTREAM VIEW:
+Extensively documented in classical literature and archaeology. They were recognized civic
+and religious institutions. The content of the initiatory rituals remains unknown by design.
+
+TAGS: Eleusis, Greek religion, initiation, Plato, Mithras, ritual, psychedelic, Dionysus
+
+SOURCES (5):
+1. [Book] "Ancient Mystery Cults" — Walter Burkert (1987) | Credibility: 0.95
+   Notes: Harvard University Press. Definitive scholarly analysis.
+
+2. [Book] "Eleusis: Archetypal Image of Mother and Daughter" — Carl Kerényi (1967)
+   Credibility: 0.88 | Notes: Pantheon Books.
+
+3. [Book] "The Road to Eleusis" — R. Gordon Wasson, Albert Hofmann, Carl A.P. Ruck (1978)
+   Credibility: 0.73 | Notes: Harcourt Brace. Proposes ergot-derived psychedelics in kykeon.
+
+4. [Historical Text] "The Ancient Mysteries: A Sourcebook of Sacred Texts"
+   — Marvin W. Meyer ed. (1987) | Credibility: 0.90 | Notes: Harper & Row. Primary source collection.
+
+5. [Book] "Mystery Cults of the Ancient World" — Hugh Bowden (2010) | Credibility: 0.90
+   Notes: Princeton University Press.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CATEGORY 8: GLOBAL MYSTERIES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+────────────────────────────────────────
+NODE: Bronze Age Collapse
+ID: bronze-age-collapse
+Evidence Level: verified | Confidence: 0.88
+Year: 1200 BCE
+────────────────────────────────────────
+DESCRIPTION:
+One of history's most dramatic civilizational collapses, occurring approximately 1200–1150
+BCE. Within a few decades, virtually every major palace civilization of the eastern
+Mediterranean collapsed — the Mycenaeans, the Hittites, the Kassite Babylonians, Ugarit.
+The cause remains debated among historians.
+
+CLAIMS:
+• The "Sea Peoples" mentioned in Egyptian records have traditionally been blamed, but the cause of their own movement is unclear.
+• Recent research emphasizes a "perfect storm" of interconnected causes: drought, disrupted trade, internal rebellions, earthquakes, and systems collapse.
+• Paleoclimatological data shows a 300-year drought beginning ~1200 BCE in the eastern Mediterranean.
+
+CRITICISMS:
+• The "systems collapse" model risks becoming a catch-all explanation.
+• The relative weight of each proposed cause remains actively contested.
+
+MAINSTREAM VIEW:
+A well-documented historical event. Most current historians favor a multi-causal
+explanation emphasizing climate change, disrupted trade networks, and cascading systemic
+failure.
+
+TAGS: Mycenaeans, Hittites, Sea Peoples, 1200 BCE, collapse, drought, systems, Mediterranean
+
+SOURCES (5):
+1. [Book] "1177 B.C.: The Year Civilization Collapsed" — Eric H. Cline (2014)
+   Credibility: 0.93 | Notes: Princeton University Press. Leading scholarly synthesis.
+
+2. [Book] "The End of the Bronze Age" — Robert Drews (1993) | Credibility: 0.88
+
+3. [Academic Paper] "The Rapid Climate Change of the Late Bronze Age Collapse"
+   — Brandon Drake (2012)
+   URL: https://doi.org/10.1016/j.jas.2012.05.009 | Credibility: 0.90
+   Notes: Journal of Archaeological Science 39(8).
+
+4. [Academic Paper] "Late Bronze Age climate change and the destruction of the Mycenaean Palace of Ugarit"
+   — David Kaniewski et al. (2011)
+   URL: https://doi.org/10.1371/journal.pone.0020232 | Credibility: 0.90
+   Notes: PLOS ONE 6(7).
+
+5. [Book] "The Collapse of Complex Societies" — Joseph A. Tainter (1988) | Credibility: 0.90
+   Notes: Cambridge University Press.
+
+────────────────────────────────────────
+NODE: Antikythera Mechanism
+ID: antikythera-mechanism
+Evidence Level: verified | Confidence: 0.99
+Year: 87 BCE
+────────────────────────────────────────
+DESCRIPTION:
+An ancient Greek analogue computer recovered from a shipwreck near the island of
+Antikythera, dated to approximately 87–60 BCE. The most sophisticated mechanical device
+known from antiquity — a hand-powered orrery capable of predicting astronomical positions
+and eclipses decades in advance. Contains approximately 30 interlocking bronze gears.
+Nothing of comparable mechanical complexity appears for over 1,400 years after its
+manufacture.
+
+CLAIMS:
+• Demonstrates ancient Greek engineering capabilities substantially exceeded what scholars had assumed.
+• Implies a sophisticated tradition of precision mechanical manufacture leaving almost no other surviving examples.
+• Recent analysis revealed it may have tracked all five planets known to the ancients.
+
+CRITICISMS:
+• The Mechanism is an extraordinary individual artifact, not evidence of routine advanced technology.
+• Its apparent singularity may reflect preservation bias.
+
+MAINSTREAM VIEW:
+Universally accepted as genuine and as one of the most remarkable archaeological artifacts
+ever found. Has substantially revised scholarly understanding of ancient Greek technological
+capability.
+
+TAGS: Greece, astronomy, bronze, shipwreck, eclipse, Hellenistic, orrery, UNESCO
+
+SOURCES (5):
+1. [Academic Paper] "Decoding the ancient Greek astronomical calculator known as the Antikythera Mechanism"
+   — Tony Freeth et al. (2006)
+   URL: https://doi.org/10.1038/nature05357 | Credibility: 0.97
+   Notes: Nature 444. The landmark CT-scanning paper.
+
+2. [Academic Paper] "A Model of the Cosmos in the ancient Greek Antikythera Mechanism"
+   — Tony Freeth et al. (2021)
+   URL: https://doi.org/10.1038/s41598-021-84310-w | Credibility: 0.96
+   Notes: Scientific Reports 11. Demonstrates tracking of all five visible planets.
+
+3. [Academic Paper] "Gears from the Greeks" — Derek J. de Solla Price (1974)
+   Credibility: 0.93 | Notes: Transactions of the American Philosophical Society 64(7).
+
+4. [Academic Paper] "The Antikythera Mechanism and the mechanical universe"
+   — Mike G. Edmunds (2014)
+   URL: https://doi.org/10.1080/00107514.2014.927555 | Credibility: 0.92
+   Notes: Contemporary Physics 55(4).
+
+5. [Archaeological Report] "Antikythera Shipwreck Research Project"
+   — Greek Ministry of Culture (2016)
+   URL: https://www.antikythera-mechanism.gr/ | Credibility: 0.93
+
+────────────────────────────────────────
+NODE: Younger Dryas Impact Hypothesis
+ID: younger-dryas-impact
+Evidence Level: debated | Confidence: 0.45
+Year: 10900 BCE
+────────────────────────────────────────
+DESCRIPTION:
+A scientific hypothesis proposing that a fragmented comet or asteroid struck or exploded
+above North America approximately 12,900 years ago, triggering the Younger Dryas cooling
+period, contributing to North American megafauna extinction, and potentially devastating
+human populations. First formally proposed in 2007 by Firestone et al. and remains
+actively debated in peer-reviewed literature.
+
+CLAIMS:
+• The YDB platinum anomaly appears at multiple sites on multiple continents.
+• Nano-diamonds and lonsdaleite found at YDB sites are consistent with cosmic impact.
+• Timing correlates with megafauna extinction, disappearance of the Clovis culture, and Younger Dryas cooling.
+
+CRITICISMS:
+• Multiple independent replication attempts have produced inconsistent results.
+• Some proposed markers (lonsdaleite) have been reinterpreted as misidentified conventional minerals.
+• Climate models can produce Younger Dryas-scale cooling through ocean circulation disruption without requiring an impact.
+
+MAINSTREAM VIEW:
+An active scientific debate published in major peer-reviewed journals on both sides.
+Neither confirmed nor dismissed by the scientific community.
+
+TAGS: comet, asteroid, impact, paleoclimatology, Clovis, megafauna, platinum, nano-diamond
+
+SOURCES (5):
+1. [Academic Paper] "Evidence for an extraterrestrial impact 12,900 years ago..."
+   — R.B. Firestone et al. (2007)
+   URL: https://doi.org/10.1073/pnas.0706977104 | Credibility: 0.78
+   Notes: PNAS 104(41). Original impact hypothesis paper.
+
+2. [Academic Paper] "Arguments and Evidence Against a Younger Dryas Impact Event"
+   — Mark Boslough et al. (2012) | Credibility: 0.88 | Link: CONTRADICTS
+   Notes: AGU Geophysical Monograph 198.
+
+3. [Academic Paper] "Widespread platinum anomaly documented at the Younger Dryas onset"
+   — Christopher R. Moore et al. (2017)
+   URL: https://doi.org/10.1038/s41598-017-04430-4 | Credibility: 0.82
+   Notes: Scientific Reports 7.
+
+4. [Academic Paper] "The Younger Dryas Impact Hypothesis: A Critical Review"
+   — Tyrone L. Daulton et al. (2010)
+   URL: https://doi.org/10.1016/j.earscirev.2010.09.005 | Credibility: 0.88
+
+5. [Academic Paper] "Bayesian chronological analyses consistent with synchronous age..."
+   — James P. Kennett et al. (2015)
+   URL: https://doi.org/10.1073/pnas.1507213112 | Credibility: 0.80
+   Notes: PNAS 112(32). One of the stronger positive replications.
+
+────────────────────────────────────────
+NODE: Silk Road Knowledge Transfer
+ID: silk-road
+Evidence Level: verified | Confidence: 0.97
+Year: 200 BCE
+────────────────────────────────────────
+DESCRIPTION:
+The Silk Road — a network of trade routes connecting China, Central Asia, India, the Middle
+East, and Europe — facilitated not only commerce but the transfer of technologies,
+religions, diseases, and ideas across Eurasia from approximately the 2nd century BCE to
+the 15th century CE.
+
+CLAIMS:
+• Technological and intellectual transfers along the Silk Road may explain apparent simultaneous developments in distant civilizations.
+• The spread of agricultural practices, metallurgy, and religious ideas may be more connected than traditional historiography suggests.
+
+MAINSTREAM VIEW:
+The Silk Road's role in facilitating cultural, technological, and intellectual exchange is
+well-documented and accepted by historians. One of the most significant mechanisms of
+pre-modern globalization.
+
+TAGS: China, Rome, trade, Buddhism, technology transfer, Islam, Central Asia, medieval
+
+SOURCES (5):
+1. [Book] "The Silk Roads: A New History" — Peter Frankopan (2015) | Credibility: 0.90
+
+2. [Book] "The Silk Road: A New History" — Valerie Hansen (2012) | Credibility: 0.92
+   Notes: Oxford University Press.
+
+3. [Book] "The Silk Road in World History" — Xinru Liu (2010) | Credibility: 0.90
+
+4. [Book] "Life Along the Silk Road" — Susan Whitfield (1999) | Credibility: 0.85
+   Notes: University of California Press.
+
+5. [Government Document] "UNESCO Silk Roads Project" — UNESCO (2013)
+   URL: https://en.unesco.org/silkroad/ | Credibility: 0.88
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CATEGORY 9: LEGENDS & FOLKLORE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+────────────────────────────────────────
+NODE: Giants in Ancient Texts
+ID: giants-ancient-texts
+Evidence Level: verified | Confidence: 0.85
+Year: 2000 BCE
+────────────────────────────────────────
+DESCRIPTION:
+References to beings of extraordinary physical stature appear across the ancient world's
+literature and mythology: the Nephilim and Rephaim of the Hebrew Bible; the Titans and
+Gigantes of Greek mythology; the Jötnar of Norse mythology; the Asuras of Hindu epics;
+and giant traditions in Mesoamerican, Native American, and Aboriginal Australian oral
+traditions.
+
+CLAIMS:
+• The global distribution of giant traditions may preserve collective memory of real genetic or physical diversity.
+• Certain fossil remains discovered by ancient peoples without paleontological context may have been interpreted as giant human remains.
+
+CRITICISMS:
+• Giant traditions serve consistent mythological functions explaining their widespread occurrence.
+• No anatomically modern human skeletal remains exhibiting truly extraordinary size have been authenticated.
+
+MAINSTREAM VIEW:
+Studied as mythological motifs reflecting universal human concerns about scale, power, and
+the relationship between humans and the forces of the natural world.
+
+TAGS: mythology, Nephilim, Titans, Jotnar, Norse, Greek, Hebrew, fossil, folklore
+
+SOURCES (5):
+1. [Academic Paper] "Of Demigods and the Deluge" — Ronald S. Hendel (1987)
+   URL: https://doi.org/10.2307/3261007 | Credibility: 0.90
+   Notes: Journal of Biblical Literature 106(1).
+
+2. [Book] "The East Face of Helicon" — M.L. West (1997) | Credibility: 0.92
+   Notes: Oxford University Press. Documents Greek Titan/Giant traditions and ANE parallels.
+
+3. [Book] "Yahweh and the Gods and Goddesses of Canaan" — John Day (2000)
+   Credibility: 0.88 | Notes: Sheffield Academic Press.
+
+4. [Book] "The Origins of the World's Mythologies" — E.J. Michael Witzel (2012)
+   Credibility: 0.88 | Notes: Oxford University Press.
+
+5. [Book] "Giants in Those Days" — Walter Stephens (1989) | Credibility: 0.85
+   Notes: University of Nebraska Press.
+
+────────────────────────────────────────
+NODE: Dragon Traditions
+ID: dragon-traditions
+Evidence Level: verified | Confidence: 0.85
+Year: 3000 BCE
+────────────────────────────────────────
+DESCRIPTION:
+Large, powerful, reptilian or serpentine beings appear in the mythological traditions of
+cultures on every inhabited continent: European fire-breathing dragons; the benevolent Lóng
+of Chinese mythology; the feathered Quetzalcoatl of Mesoamerica; the Nāga of South and
+Southeast Asia; the Norse Jörmungandr; the Aboriginal Australian Rainbow Serpent.
+
+CLAIMS:
+• The near-universal presence of dragon/serpent beings may reflect an innate human fear response — a composite predator archetype combining primate fears of snakes, predatory birds, and large cats.
+• Some researchers propose these traditions preserve cultural memory of actual encounters with large extinct reptiles.
+
+CRITICISMS:
+• The specific features of dragon traditions vary so substantially across cultures that a single origin is unlikely.
+• The "living fossil" hypothesis has no paleontological support for survival of large reptiles into the human era.
+
+MAINSTREAM VIEW:
+Folklorists and comparative mythologists study dragon traditions as one of the most
+widespread mythological motifs. The composite predator hypothesis is a leading naturalistic
+explanation for their cross-cultural prevalence.
+
+TAGS: mythology, serpent, China, Europe, Quetzalcoatl, Rainbow Serpent, Naga, folklore
+
+SOURCES (5):
+1. [Book] "An Instinct for Dragons" — David E. Jones (2000) | Credibility: 0.82
+   Notes: Routledge. Evolutionary psychology composite predator hypothesis.
+
+2. [Book] "The Origins of the World's Mythologies" — E.J. Michael Witzel (2012)
+   Credibility: 0.88 | Notes: Oxford University Press.
+
+3. [Book] "How to Kill a Dragon" — Calvert Watkins (1995) | Credibility: 0.90
+   Notes: Oxford University Press. Linguistic analysis of Indo-European dragon-slaying formula.
+
+4. [Folklore Collection] "The Dragon in China and Japan" — Marinus Willem de Visser (1913)
+   Credibility: 0.78 | Notes: J. Müller, Amsterdam. Classic scholarly study.
+
+5. [Book] "Dragons: A Natural History" — Karl Shuker (1995) | Credibility: 0.62
+   Notes: Simon & Schuster. Popular worldwide survey.
+
+================================================================================
+SUMMARY STATISTICS
+================================================================================
+
+Total Nodes:    42
+Total Sources:  216 (average 5.1 per node)
+Sources marked CONTRADICTS: 15
+
+Evidence Level Distribution:
+  verified        — 22 nodes
+  strong_evidence —  1 node
+  debated         — 10 nodes
+  speculative     —  7 nodes
+  mythological    —  2 nodes
+
+Confidence Score Range: 0.05 (Ancient Astronaut) → 0.99 (Great Pyramid, Dead Sea Scrolls, Epic of Gilgamesh)
+
+Source Types Used:
+  Academic Paper       — 76 sources
+  Book                 — 99 sources
+  Historical Text      — 19 sources
+  Archaeological Report— 14 sources
+  Government Document  — 12 sources
+  News Investigation   —  9 sources
+  Museum Archive        —  3 sources
+  Religious Text        —  3 sources
+  Folklore Collection  —  1 source
+
+Categories:
+  1. Ancient Civilizations        (8 nodes)
+  2. Egypt & Ancient Engineering  (3 nodes)
+  3. Religious Texts & Mythology  (7 nodes)
+  4. UFO / UAP                    (4 nodes)
+  5. Human Origins                (6 nodes)
+  6. Consciousness & Reality      (4 nodes)
+  7. Secret Societies & Esoteric  (5 nodes)
+  8. Global Mysteries             (4 nodes)
+  9. Legends & Folklore           (2 nodes — expandable)
+
+================================================================================
+END OF FILE
+================================================================================
