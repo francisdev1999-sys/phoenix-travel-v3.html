@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { computeCredibility } from '@/lib/source-credibility';
+import { SOURCE_TYPES } from '@/lib/validation/enums';
 
 const PAGE_SIZE = 20;
 
@@ -62,6 +63,13 @@ export async function POST(req: NextRequest) {
 
   if (!title?.trim())      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
   if (!sourceType?.trim()) return NextResponse.json({ error: 'Source type is required' }, { status: 400 });
+
+  if (!(SOURCE_TYPES as readonly string[]).includes(sourceType)) {
+    return NextResponse.json(
+      { error: `Invalid sourceType. Must be one of: ${SOURCE_TYPES.join(', ')}` },
+      { status: 400 },
+    );
+  }
 
   const year = publicationYear ? Number(publicationYear) : null;
 

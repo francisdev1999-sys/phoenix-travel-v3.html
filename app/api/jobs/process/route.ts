@@ -90,6 +90,10 @@ async function embedNode(nodeId: string) {
   ].filter(Boolean).join(' ').slice(0, 8000);
 
   const embedding = await generateEmbedding(text);
+  if (embedding === null) {
+    console.warn(`[embed-node] Skipped ${nodeId} — OPENAI_API_KEY not configured`);
+    return;
+  }
 
   await prisma.$executeRaw`
     INSERT INTO "NodeEmbedding" ("nodeId", "embedding", "model", "updatedAt")
@@ -111,6 +115,10 @@ async function embedSource(sourceId: string) {
     .filter(Boolean).join(' ').slice(0, 8000);
 
   const embedding = await generateEmbedding(text);
+  if (embedding === null) {
+    console.warn(`[embed-source] Skipped ${sourceId} — OPENAI_API_KEY not configured`);
+    return;
+  }
 
   await prisma.$executeRaw`
     INSERT INTO "SourceEmbedding" ("sourceId", "embedding", "model", "updatedAt")
@@ -150,15 +158,13 @@ async function rebuildAdjacency(nodeId: string) {
 
 // ── Embedding generation ──────────────────────────────────────────────────────
 
-async function generateEmbedding(text: string): Promise<string> {
+// Returns null when OPENAI_API_KEY is not configured — callers must skip
+// the DB write in that case. Never returns a zero-vector placeholder, which
+// would silently corrupt cosine-similarity queries.
+async function generateEmbedding(text: string): Promise<string | null> {
   const apiKey = process.env.OPENAI_API_KEY;
 
-  if (!apiKey) {
-    // Return a zero vector placeholder when no API key is configured.
-    // This lets the job complete without crashing so other job types still work.
-    const zeros = new Array(1536).fill(0).join(',');
-    return `[${zeros}]`;
-  }
+  if (!apiKey) return null;
 
   const res = await fetch('https://api.openai.com/v1/embeddings', {
     method: 'POST',

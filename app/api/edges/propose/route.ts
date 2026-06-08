@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { EVIDENCE_LEVELS, RELATIONSHIP_TYPES, isValidScore } from '@/lib/validation/enums';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -39,15 +40,50 @@ export async function POST(req: NextRequest) {
   if (!relationship?.trim()) return NextResponse.json({ error: 'relationship required' }, { status: 400 });
   if (!description?.trim())  return NextResponse.json({ error: 'description required' }, { status: 400 });
 
+  if (fromNodeId.trim() === toNodeId.trim()) {
+    return NextResponse.json({ error: 'Self-links are not allowed (fromNodeId === toNodeId)' }, { status: 400 });
+  }
+
+  if (!(RELATIONSHIP_TYPES as readonly string[]).includes(relationship.trim())) {
+    return NextResponse.json(
+      { error: `Invalid relationship. Must be one of: ${RELATIONSHIP_TYPES.join(', ')}` },
+      { status: 400 },
+    );
+  }
+
+  const resolvedEvidence = evidenceLevel ?? 'speculative';
+  if (!(EVIDENCE_LEVELS as readonly string[]).includes(resolvedEvidence)) {
+    return NextResponse.json(
+      { error: `Invalid evidenceLevel. Must be one of: ${EVIDENCE_LEVELS.join(', ')}` },
+      { status: 400 },
+    );
+  }
+
+  const resolvedConfidence = confidence ?? 0.5;
+  if (!isValidScore(resolvedConfidence)) {
+    return NextResponse.json(
+      { error: 'confidence must be a number between 0 and 1' },
+      { status: 400 },
+    );
+  }
+
+  const resolvedStrength = strengthScore ?? 0.5;
+  if (!isValidScore(resolvedStrength)) {
+    return NextResponse.json(
+      { error: 'strengthScore must be a number between 0 and 1' },
+      { status: 400 },
+    );
+  }
+
   const edge = await prisma.proposedEdge.create({
     data: {
       fromNodeId: fromNodeId.trim(),
       toNodeId: toNodeId.trim(),
-      relationship,
+      relationship: relationship.trim(),
       description: description.trim(),
-      evidenceLevel: evidenceLevel ?? 'speculative',
-      confidence: confidence ?? 0.5,
-      strengthScore: strengthScore ?? 0.5,
+      evidenceLevel: resolvedEvidence,
+      confidence: resolvedConfidence,
+      strengthScore: resolvedStrength,
       explanation: explanation?.trim() || null,
       historicalBasis: historicalBasis?.trim() || null,
       status: 'pending',

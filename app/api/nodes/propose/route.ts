@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { EVIDENCE_LEVELS, NODE_CATEGORIES, isValidScore } from '@/lib/validation/enums';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -39,14 +40,37 @@ export async function POST(req: NextRequest) {
   if (!category?.trim())    return NextResponse.json({ error: 'Category required' }, { status: 400 });
   if (!description?.trim()) return NextResponse.json({ error: 'Description required' }, { status: 400 });
 
+  const resolvedEvidence = evidenceLevel ?? 'speculative';
+  if (!(EVIDENCE_LEVELS as readonly string[]).includes(resolvedEvidence)) {
+    return NextResponse.json(
+      { error: `Invalid evidenceLevel. Must be one of: ${EVIDENCE_LEVELS.join(', ')}` },
+      { status: 400 },
+    );
+  }
+
+  if (!(NODE_CATEGORIES as readonly string[]).includes(category)) {
+    return NextResponse.json(
+      { error: `Invalid category. Must be one of: ${NODE_CATEGORIES.join(', ')}` },
+      { status: 400 },
+    );
+  }
+
+  const resolvedConfidence = confidence ?? 0.5;
+  if (!isValidScore(resolvedConfidence)) {
+    return NextResponse.json(
+      { error: 'confidence must be a number between 0 and 1' },
+      { status: 400 },
+    );
+  }
+
   const node = await prisma.proposedNode.create({
     data: {
       nodeId: nodeId?.trim() || null,
       label: label.trim(),
       category,
       description: description.trim(),
-      evidenceLevel: evidenceLevel ?? 'speculative',
-      confidence: confidence ?? 0.5,
+      evidenceLevel: resolvedEvidence,
+      confidence: resolvedConfidence,
       claims: claims ?? [],
       criticisms: criticisms ?? [],
       openQuestions: openQuestions ?? [],
