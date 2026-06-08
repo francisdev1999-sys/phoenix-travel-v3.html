@@ -1,0 +1,78 @@
+THE NEXUS ARCHIVE — What Is It?
+================================
+
+The Nexus Archive is an interactive research platform for exploring
+alternative history, ancient mysteries, and hidden connections in history.
+
+Think of it like Wikipedia meets a research conspiracy board — but
+organized, sourced, and community-driven. Every theory and claim on
+the site has to be backed by real cited sources.
+
+
+WHAT YOU CAN DO ON IT
+─────────────────────
+
+Explore a Knowledge Graph
+  An interactive visual map where theories and historical events are
+  connected by relationships. You can zoom in, click topics, and follow
+  connections between things like Göbekli Tepe, the Great Pyramid,
+  Atlantis, UAP programs, ancient texts, lost civilizations, and more.
+
+Rabbit Hole Mode
+  Click any topic and let the site guide you deeper and deeper through
+  connected theories, one step at a time. It tracks how deep you've gone
+  and shows you the path you took.
+
+Multiple Views
+  You can explore the same data as a 2D graph, a 3D universe/orbital
+  view, a geographic globe, or a historical timeline.
+
+Deep Research on Every Topic
+  Each topic has: key claims, criticisms, the mainstream perspective,
+  open questions, and linked academic sources with credibility ratings.
+
+Submit Your Own Theories
+  Signed-in users can propose new topics, connections, and sources.
+  Everything goes through a review process before it's published.
+
+AI Research Review
+  Admins can run an AI analysis on any topic. It rates the evidence,
+  flags hallucination risks, checks academic consensus, and recommends
+  improvements.
+
+Earn Ranks and Badges
+  The more quality contributions you make, the higher your rank. You
+  start as a "New Seeker" and can work your way up to "Archive Fellow"
+  and beyond. 19 badges to earn along the way.
+
+
+THE TRUST SYSTEM
+────────────────
+
+Every user has a trust score (0–100).
+  - Get your submissions approved → score goes up
+  - Submit fake or low-quality content → score drops
+  - Banned users can't submit anything
+  - You need a minimum trust score just to submit content
+
+This keeps the archive clean and research-quality.
+
+
+WHO IS IT FOR?
+──────────────
+
+Anyone curious about:
+  - Ancient civilizations and lost history
+  - Archaeological anomalies
+  - UFOs and UAP research
+  - Religious texts and mythology
+  - Alternative archaeology and forbidden history
+  - Hidden connections between historical events
+
+
+IN ONE SENTENCE
+───────────────
+
+The Nexus Archive is a community-built, source-backed research platform
+where you can explore and contribute to a living knowledge graph of
+alternative history — and the deeper you dig, the more it rewards you.
