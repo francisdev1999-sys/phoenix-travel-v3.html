@@ -1,44 +1,53 @@
 -- Foundation Architecture Migration
--- Adds: graph DB tables, taxonomy, vector embeddings, adjacency cache,
---       ingestion job queue, user progress junction tables, tsvector search,
---       pg_trgm fuzzy search, pgvector semantic search.
+-- Safe to re-run: all statements use IF NOT EXISTS.
+-- pgvector is optional — degrades gracefully when not installed on the host.
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- EXTENSIONS
+-- pg_trgm and unaccent are standard on all PostgreSQL installations.
+-- pgvector is optional — wrapped in exception handler so the migration
+-- succeeds even on Railway's default PostgreSQL without pgvector installed.
 -- ─────────────────────────────────────────────────────────────────────────────
 
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 CREATE EXTENSION IF NOT EXISTS "unaccent";
-CREATE EXTENSION IF NOT EXISTS "vector";
+
+DO $$
+BEGIN
+  CREATE EXTENSION IF NOT EXISTS "vector";
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'pgvector not available (%), skipping — semantic search disabled', SQLERRM;
+END;
+$$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- TAXONOMY
 -- ─────────────────────────────────────────────────────────────────────────────
 
-CREATE TABLE "Category" (
+CREATE TABLE IF NOT EXISTS "Category" (
     "id"          TEXT NOT NULL,
     "slug"        TEXT NOT NULL,
     "name"        TEXT NOT NULL,
     "description" TEXT,
     "color"       TEXT,
     "parentId"    TEXT,
-
     CONSTRAINT "Category_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "Category_slug_key" ON "Category"("slug");
-CREATE INDEX "Category_parentId_idx" ON "Category"("parentId");
+CREATE UNIQUE INDEX IF NOT EXISTS "Category_slug_key" ON "Category"("slug");
+CREATE INDEX IF NOT EXISTS "Category_parentId_idx" ON "Category"("parentId");
 
-ALTER TABLE "Category"
-    ADD CONSTRAINT "Category_parentId_fkey"
-    FOREIGN KEY ("parentId") REFERENCES "Category"("id")
-    ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "Category" ADD CONSTRAINT "Category_parentId_fkey"
+    FOREIGN KEY ("parentId") REFERENCES "Category"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- NODE  (graduated from static TS bundle)
+-- NODE
 -- ─────────────────────────────────────────────────────────────────────────────
 
-CREATE TABLE "Node" (
+CREATE TABLE IF NOT EXISTS "Node" (
     "id"              TEXT NOT NULL,
     "title"           TEXT NOT NULL,
     "categoryId"      TEXT NOT NULL,
@@ -48,49 +57,35 @@ CREATE TABLE "Node" (
     "confidenceScore" DOUBLE PRECISION NOT NULL DEFAULT 0.5,
     "color"           TEXT,
     "icon"            TEXT,
-
-    -- Geography
     "lat"             DOUBLE PRECISION,
     "lon"             DOUBLE PRECISION,
     "region"          TEXT,
     "country"         TEXT,
-
-    -- Temporal
     "year"            INTEGER,
     "dateStart"       INTEGER,
     "dateEnd"         INTEGER,
     "datePrecision"   TEXT,
-
-    -- Lifecycle
     "status"          TEXT NOT NULL DEFAULT 'draft',
     "version"         INTEGER NOT NULL DEFAULT 1,
     "publishedAt"     TIMESTAMP(3),
     "createdBy"       TEXT,
     "createdAt"       TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt"       TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    -- Full-text search vector (maintained by trigger below)
     "search_vector"   tsvector,
-
     CONSTRAINT "Node_pkey" PRIMARY KEY ("id")
 );
 
-CREATE INDEX "Node_categoryId_idx"        ON "Node"("categoryId");
-CREATE INDEX "Node_status_idx"            ON "Node"("status");
-CREATE INDEX "Node_evidenceLevel_idx"     ON "Node"("evidenceLevel");
-CREATE INDEX "Node_confidenceScore_idx"   ON "Node"("confidenceScore");
-CREATE INDEX "Node_geo_idx"               ON "Node"("lat", "lon");
-CREATE INDEX "Node_year_idx"              ON "Node"("year");
-CREATE INDEX "Node_dateRange_idx"         ON "Node"("dateStart", "dateEnd");
-CREATE INDEX "Node_createdAt_idx"         ON "Node"("createdAt");
+CREATE INDEX IF NOT EXISTS "Node_categoryId_idx"      ON "Node"("categoryId");
+CREATE INDEX IF NOT EXISTS "Node_status_idx"          ON "Node"("status");
+CREATE INDEX IF NOT EXISTS "Node_evidenceLevel_idx"   ON "Node"("evidenceLevel");
+CREATE INDEX IF NOT EXISTS "Node_confidenceScore_idx" ON "Node"("confidenceScore");
+CREATE INDEX IF NOT EXISTS "Node_geo_idx"             ON "Node"("lat", "lon");
+CREATE INDEX IF NOT EXISTS "Node_year_idx"            ON "Node"("year");
+CREATE INDEX IF NOT EXISTS "Node_dateRange_idx"       ON "Node"("dateStart", "dateEnd");
+CREATE INDEX IF NOT EXISTS "Node_createdAt_idx"       ON "Node"("createdAt");
+CREATE INDEX IF NOT EXISTS "Node_search_vector_idx"   ON "Node" USING GIN("search_vector");
+CREATE INDEX IF NOT EXISTS "Node_title_trgm_idx"      ON "Node" USING GIN("title" gin_trgm_ops);
 
--- GIN index for full-text search
-CREATE INDEX "Node_search_vector_idx" ON "Node" USING GIN("search_vector");
-
--- GIN index for trigram fuzzy search on title
-CREATE INDEX "Node_title_trgm_idx" ON "Node" USING GIN("title" gin_trgm_ops);
-
--- Trigger: keep search_vector in sync with content changes
 CREATE OR REPLACE FUNCTION node_search_vector_update() RETURNS trigger AS $$
 BEGIN
     NEW."search_vector" :=
@@ -101,42 +96,42 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS "Node_search_vector_trigger" ON "Node";
 CREATE TRIGGER "Node_search_vector_trigger"
     BEFORE INSERT OR UPDATE OF "title", "evidenceLevel", "description"
     ON "Node"
     FOR EACH ROW EXECUTE FUNCTION node_search_vector_update();
 
-ALTER TABLE "Node"
-    ADD CONSTRAINT "Node_categoryId_fkey"
-    FOREIGN KEY ("categoryId") REFERENCES "Category"("id")
-    ON DELETE RESTRICT ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "Node" ADD CONSTRAINT "Node_categoryId_fkey"
+    FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- NODE TAGS
 -- ─────────────────────────────────────────────────────────────────────────────
 
-CREATE TABLE "NodeTag" (
+CREATE TABLE IF NOT EXISTS "NodeTag" (
     "nodeId" TEXT NOT NULL,
     "tag"    TEXT NOT NULL,
-
     CONSTRAINT "NodeTag_pkey" PRIMARY KEY ("nodeId", "tag")
 );
 
-CREATE INDEX "NodeTag_tag_idx" ON "NodeTag"("tag");
+CREATE INDEX IF NOT EXISTS "NodeTag_tag_idx"      ON "NodeTag"("tag");
+CREATE INDEX IF NOT EXISTS "NodeTag_tag_trgm_idx" ON "NodeTag" USING GIN("tag" gin_trgm_ops);
 
--- GIN index for trigram fuzzy search on tags
-CREATE INDEX "NodeTag_tag_trgm_idx" ON "NodeTag" USING GIN("tag" gin_trgm_ops);
-
-ALTER TABLE "NodeTag"
-    ADD CONSTRAINT "NodeTag_nodeId_fkey"
-    FOREIGN KEY ("nodeId") REFERENCES "Node"("id")
-    ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "NodeTag" ADD CONSTRAINT "NodeTag_nodeId_fkey"
+    FOREIGN KEY ("nodeId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- EDGE
 -- ─────────────────────────────────────────────────────────────────────────────
 
-CREATE TABLE "Edge" (
+CREATE TABLE IF NOT EXISTS "Edge" (
     "id"               TEXT NOT NULL,
     "fromId"           TEXT NOT NULL,
     "toId"             TEXT NOT NULL,
@@ -150,79 +145,78 @@ CREATE TABLE "Edge" (
     "status"           TEXT NOT NULL DEFAULT 'draft',
     "createdAt"        TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt"        TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
     CONSTRAINT "Edge_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "Edge_fromId_toId_key"        ON "Edge"("fromId", "toId");
-CREATE INDEX "Edge_fromId_idx"                    ON "Edge"("fromId");
-CREATE INDEX "Edge_toId_idx"                      ON "Edge"("toId");
-CREATE INDEX "Edge_relationshipType_idx"          ON "Edge"("relationshipType");
-CREATE INDEX "Edge_confidenceScore_idx"           ON "Edge"("confidenceScore");
-CREATE INDEX "Edge_status_idx"                    ON "Edge"("status");
+CREATE UNIQUE INDEX IF NOT EXISTS "Edge_fromId_toId_key"   ON "Edge"("fromId", "toId");
+CREATE INDEX IF NOT EXISTS "Edge_fromId_idx"               ON "Edge"("fromId");
+CREATE INDEX IF NOT EXISTS "Edge_toId_idx"                 ON "Edge"("toId");
+CREATE INDEX IF NOT EXISTS "Edge_relationshipType_idx"     ON "Edge"("relationshipType");
+CREATE INDEX IF NOT EXISTS "Edge_confidenceScore_idx"      ON "Edge"("confidenceScore");
+CREATE INDEX IF NOT EXISTS "Edge_status_idx"               ON "Edge"("status");
 
-ALTER TABLE "Edge"
-    ADD CONSTRAINT "Edge_fromId_fkey"
+DO $$ BEGIN
+  ALTER TABLE "Edge" ADD CONSTRAINT "Edge_fromId_fkey"
     FOREIGN KEY ("fromId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE "Edge"
-    ADD CONSTRAINT "Edge_toId_fkey"
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER TABLE "Edge" ADD CONSTRAINT "Edge_toId_fkey"
     FOREIGN KEY ("toId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- CLAIMS / CRITICISMS / OPEN QUESTIONS  (first-class rows with stable IDs)
+-- CLAIMS / CRITICISMS / OPEN QUESTIONS
 -- ─────────────────────────────────────────────────────────────────────────────
 
-CREATE TABLE "Claim" (
+CREATE TABLE IF NOT EXISTS "Claim" (
     "id"         TEXT NOT NULL,
     "nodeId"     TEXT NOT NULL,
     "text"       TEXT NOT NULL,
     "orderIndex" INTEGER NOT NULL DEFAULT 0,
-
     CONSTRAINT "Claim_pkey" PRIMARY KEY ("id")
 );
-
-CREATE INDEX "Claim_nodeId_idx" ON "Claim"("nodeId");
-
-ALTER TABLE "Claim"
-    ADD CONSTRAINT "Claim_nodeId_fkey"
+CREATE INDEX IF NOT EXISTS "Claim_nodeId_idx" ON "Claim"("nodeId");
+DO $$ BEGIN
+  ALTER TABLE "Claim" ADD CONSTRAINT "Claim_nodeId_fkey"
     FOREIGN KEY ("nodeId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TABLE "Criticism" (
+CREATE TABLE IF NOT EXISTS "Criticism" (
     "id"         TEXT NOT NULL,
     "nodeId"     TEXT NOT NULL,
     "text"       TEXT NOT NULL,
     "orderIndex" INTEGER NOT NULL DEFAULT 0,
-
     CONSTRAINT "Criticism_pkey" PRIMARY KEY ("id")
 );
-
-CREATE INDEX "Criticism_nodeId_idx" ON "Criticism"("nodeId");
-
-ALTER TABLE "Criticism"
-    ADD CONSTRAINT "Criticism_nodeId_fkey"
+CREATE INDEX IF NOT EXISTS "Criticism_nodeId_idx" ON "Criticism"("nodeId");
+DO $$ BEGIN
+  ALTER TABLE "Criticism" ADD CONSTRAINT "Criticism_nodeId_fkey"
     FOREIGN KEY ("nodeId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TABLE "OpenQuestion" (
+CREATE TABLE IF NOT EXISTS "OpenQuestion" (
     "id"         TEXT NOT NULL,
     "nodeId"     TEXT NOT NULL,
     "text"       TEXT NOT NULL,
     "orderIndex" INTEGER NOT NULL DEFAULT 0,
-
     CONSTRAINT "OpenQuestion_pkey" PRIMARY KEY ("id")
 );
-
-CREATE INDEX "OpenQuestion_nodeId_idx" ON "OpenQuestion"("nodeId");
-
-ALTER TABLE "OpenQuestion"
-    ADD CONSTRAINT "OpenQuestion_nodeId_fkey"
+CREATE INDEX IF NOT EXISTS "OpenQuestion_nodeId_idx" ON "OpenQuestion"("nodeId");
+DO $$ BEGIN
+  ALTER TABLE "OpenQuestion" ADD CONSTRAINT "OpenQuestion_nodeId_fkey"
     FOREIGN KEY ("nodeId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- NODE VERSIONS  (full audit trail)
+-- NODE VERSIONS
 -- ─────────────────────────────────────────────────────────────────────────────
 
-CREATE TABLE "NodeVersion" (
+CREATE TABLE IF NOT EXISTS "NodeVersion" (
     "id"         TEXT NOT NULL,
     "nodeId"     TEXT NOT NULL,
     "version"    INTEGER NOT NULL,
@@ -230,84 +224,98 @@ CREATE TABLE "NodeVersion" (
     "changedBy"  TEXT,
     "changeNote" TEXT,
     "createdAt"  TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
     CONSTRAINT "NodeVersion_pkey" PRIMARY KEY ("id")
 );
-
-CREATE UNIQUE INDEX "NodeVersion_nodeId_version_key" ON "NodeVersion"("nodeId", "version");
-CREATE INDEX "NodeVersion_nodeId_idx" ON "NodeVersion"("nodeId");
-
-ALTER TABLE "NodeVersion"
-    ADD CONSTRAINT "NodeVersion_nodeId_fkey"
+CREATE UNIQUE INDEX IF NOT EXISTS "NodeVersion_nodeId_version_key" ON "NodeVersion"("nodeId", "version");
+CREATE INDEX IF NOT EXISTS "NodeVersion_nodeId_idx" ON "NodeVersion"("nodeId");
+DO $$ BEGIN
+  ALTER TABLE "NodeVersion" ADD CONSTRAINT "NodeVersion_nodeId_fkey"
     FOREIGN KEY ("nodeId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- VECTOR EMBEDDINGS
+-- Stored as float8[] when pgvector unavailable; vector(1536) when available.
+-- The HNSW index is only created when the vector extension exists.
 -- ─────────────────────────────────────────────────────────────────────────────
 
--- Store as native vector(1536) type for pgvector ANN index support.
--- Prisma writes via Float[] + ::vector cast in raw SQL.
-
-CREATE TABLE "NodeEmbedding" (
+CREATE TABLE IF NOT EXISTS "NodeEmbedding" (
     "nodeId"    TEXT NOT NULL,
-    "embedding" vector(1536),
+    "embedding" DOUBLE PRECISION[],
     "model"     TEXT NOT NULL DEFAULT 'text-embedding-3-small',
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
     CONSTRAINT "NodeEmbedding_pkey" PRIMARY KEY ("nodeId")
 );
-
--- HNSW index for approximate nearest neighbor search (cosine similarity)
--- ef_construction=128, m=16 are good defaults for 1536-dim embeddings
-CREATE INDEX "NodeEmbedding_embedding_hnsw_idx"
-    ON "NodeEmbedding"
-    USING hnsw ("embedding" vector_cosine_ops)
-    WITH (m = 16, ef_construction = 128);
-
-ALTER TABLE "NodeEmbedding"
-    ADD CONSTRAINT "NodeEmbedding_nodeId_fkey"
+DO $$ BEGIN
+  ALTER TABLE "NodeEmbedding" ADD CONSTRAINT "NodeEmbedding_nodeId_fkey"
     FOREIGN KEY ("nodeId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TABLE "SourceEmbedding" (
+-- Upgrade embedding column to native vector type and create HNSW index
+-- only when pgvector is installed. Fails silently otherwise.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector') THEN
+    EXECUTE 'ALTER TABLE "NodeEmbedding" ALTER COLUMN "embedding" TYPE vector(1536) USING "embedding"::vector';
+    EXECUTE 'CREATE INDEX IF NOT EXISTS "NodeEmbedding_embedding_hnsw_idx"
+             ON "NodeEmbedding" USING hnsw ("embedding" vector_cosine_ops)
+             WITH (m = 16, ef_construction = 128)';
+  END IF;
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'Could not upgrade NodeEmbedding to vector type: %', SQLERRM;
+END;
+$$;
+
+CREATE TABLE IF NOT EXISTS "SourceEmbedding" (
     "sourceId"  TEXT NOT NULL,
-    "embedding" vector(1536),
+    "embedding" DOUBLE PRECISION[],
     "model"     TEXT NOT NULL DEFAULT 'text-embedding-3-small',
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
     CONSTRAINT "SourceEmbedding_pkey" PRIMARY KEY ("sourceId")
 );
-
-CREATE INDEX "SourceEmbedding_embedding_hnsw_idx"
-    ON "SourceEmbedding"
-    USING hnsw ("embedding" vector_cosine_ops)
-    WITH (m = 16, ef_construction = 128);
-
-ALTER TABLE "SourceEmbedding"
-    ADD CONSTRAINT "SourceEmbedding_sourceId_fkey"
+DO $$ BEGIN
+  ALTER TABLE "SourceEmbedding" ADD CONSTRAINT "SourceEmbedding_sourceId_fkey"
     FOREIGN KEY ("sourceId") REFERENCES "Source"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector') THEN
+    EXECUTE 'ALTER TABLE "SourceEmbedding" ALTER COLUMN "embedding" TYPE vector(1536) USING "embedding"::vector';
+    EXECUTE 'CREATE INDEX IF NOT EXISTS "SourceEmbedding_embedding_hnsw_idx"
+             ON "SourceEmbedding" USING hnsw ("embedding" vector_cosine_ops)
+             WITH (m = 16, ef_construction = 128)';
+  END IF;
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'Could not upgrade SourceEmbedding to vector type: %', SQLERRM;
+END;
+$$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- ADJACENCY CACHE  (materialized 1–2 hop neighborhoods)
+-- ADJACENCY CACHE
 -- ─────────────────────────────────────────────────────────────────────────────
 
-CREATE TABLE "AdjacencyCache" (
+CREATE TABLE IF NOT EXISTS "AdjacencyCache" (
     "nodeId"   TEXT NOT NULL,
     "hop1"     JSONB NOT NULL,
     "hop2"     JSONB NOT NULL,
     "cachedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
     CONSTRAINT "AdjacencyCache_pkey" PRIMARY KEY ("nodeId")
 );
-
-ALTER TABLE "AdjacencyCache"
-    ADD CONSTRAINT "AdjacencyCache_nodeId_fkey"
+DO $$ BEGIN
+  ALTER TABLE "AdjacencyCache" ADD CONSTRAINT "AdjacencyCache_nodeId_fkey"
     FOREIGN KEY ("nodeId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- INGESTION JOB QUEUE
 -- ─────────────────────────────────────────────────────────────────────────────
 
-CREATE TABLE "IngestionJob" (
+CREATE TABLE IF NOT EXISTS "IngestionJob" (
     "id"          TEXT NOT NULL,
     "type"        TEXT NOT NULL,
     "targetId"    TEXT NOT NULL,
@@ -317,115 +325,109 @@ CREATE TABLE "IngestionJob" (
     "lastError"   TEXT,
     "createdAt"   TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "processedAt" TIMESTAMP(3),
-
     CONSTRAINT "IngestionJob_pkey" PRIMARY KEY ("id")
 );
-
--- Composite index on (status, priority DESC) for queue polling:
--- SELECT ... WHERE status = 'pending' ORDER BY priority DESC LIMIT N
-CREATE INDEX "IngestionJob_status_priority_idx" ON "IngestionJob"("status", "priority" DESC);
-CREATE INDEX "IngestionJob_type_status_idx"     ON "IngestionJob"("type", "status");
-CREATE INDEX "IngestionJob_targetId_idx"        ON "IngestionJob"("targetId");
+CREATE INDEX IF NOT EXISTS "IngestionJob_status_priority_idx" ON "IngestionJob"("status", "priority" DESC);
+CREATE INDEX IF NOT EXISTS "IngestionJob_type_status_idx"     ON "IngestionJob"("type", "status");
+CREATE INDEX IF NOT EXISTS "IngestionJob_targetId_idx"        ON "IngestionJob"("targetId");
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- USER PROGRESS JUNCTION TABLES
 -- ─────────────────────────────────────────────────────────────────────────────
 
-CREATE TABLE "NodeExploration" (
+CREATE TABLE IF NOT EXISTS "NodeExploration" (
     "userId"     TEXT NOT NULL,
     "nodeId"     TEXT NOT NULL,
     "exploredAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "xpAwarded"  INTEGER NOT NULL DEFAULT 30,
-
     CONSTRAINT "NodeExploration_pkey" PRIMARY KEY ("userId", "nodeId")
 );
-
-CREATE INDEX "NodeExploration_userId_idx"     ON "NodeExploration"("userId");
-CREATE INDEX "NodeExploration_nodeId_idx"     ON "NodeExploration"("nodeId");
-CREATE INDEX "NodeExploration_exploredAt_idx" ON "NodeExploration"("exploredAt");
-
-ALTER TABLE "NodeExploration"
-    ADD CONSTRAINT "NodeExploration_userId_fkey"
+CREATE INDEX IF NOT EXISTS "NodeExploration_userId_idx"     ON "NodeExploration"("userId");
+CREATE INDEX IF NOT EXISTS "NodeExploration_nodeId_idx"     ON "NodeExploration"("nodeId");
+CREATE INDEX IF NOT EXISTS "NodeExploration_exploredAt_idx" ON "NodeExploration"("exploredAt");
+DO $$ BEGIN
+  ALTER TABLE "NodeExploration" ADD CONSTRAINT "NodeExploration_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TABLE "ConnectionDiscovery" (
+CREATE TABLE IF NOT EXISTS "ConnectionDiscovery" (
     "userId"       TEXT NOT NULL,
     "fromNodeId"   TEXT NOT NULL,
     "toNodeId"     TEXT NOT NULL,
     "discoveredAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
     CONSTRAINT "ConnectionDiscovery_pkey" PRIMARY KEY ("userId", "fromNodeId", "toNodeId")
 );
-
-CREATE INDEX "ConnectionDiscovery_userId_idx"       ON "ConnectionDiscovery"("userId");
-CREATE INDEX "ConnectionDiscovery_discoveredAt_idx" ON "ConnectionDiscovery"("discoveredAt");
-
-ALTER TABLE "ConnectionDiscovery"
-    ADD CONSTRAINT "ConnectionDiscovery_userId_fkey"
+CREATE INDEX IF NOT EXISTS "ConnectionDiscovery_userId_idx"       ON "ConnectionDiscovery"("userId");
+CREATE INDEX IF NOT EXISTS "ConnectionDiscovery_discoveredAt_idx" ON "ConnectionDiscovery"("discoveredAt");
+DO $$ BEGIN
+  ALTER TABLE "ConnectionDiscovery" ADD CONSTRAINT "ConnectionDiscovery_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TABLE "UserAchievement" (
+CREATE TABLE IF NOT EXISTS "UserAchievement" (
     "userId"        TEXT NOT NULL,
     "achievementId" TEXT NOT NULL,
     "unlockedAt"    TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "xpAwarded"     INTEGER NOT NULL DEFAULT 0,
-
     CONSTRAINT "UserAchievement_pkey" PRIMARY KEY ("userId", "achievementId")
 );
-
-CREATE INDEX "UserAchievement_userId_idx" ON "UserAchievement"("userId");
-
-ALTER TABLE "UserAchievement"
-    ADD CONSTRAINT "UserAchievement_userId_fkey"
+CREATE INDEX IF NOT EXISTS "UserAchievement_userId_idx" ON "UserAchievement"("userId");
+DO $$ BEGIN
+  ALTER TABLE "UserAchievement" ADD CONSTRAINT "UserAchievement_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- SOURCE LINK — add new FK columns alongside legacy string-target columns
+-- SOURCE LINK — add FK columns alongside legacy string-target columns
 -- ─────────────────────────────────────────────────────────────────────────────
 
-ALTER TABLE "SourceLink"
-    ADD COLUMN IF NOT EXISTS "nodeId"      TEXT,
-    ADD COLUMN IF NOT EXISTS "edgeId"      TEXT,
-    ADD COLUMN IF NOT EXISTS "claimId"     TEXT,
-    ADD COLUMN IF NOT EXISTS "criticismId" TEXT;
+ALTER TABLE "SourceLink" ADD COLUMN IF NOT EXISTS "nodeId"      TEXT;
+ALTER TABLE "SourceLink" ADD COLUMN IF NOT EXISTS "edgeId"      TEXT;
+ALTER TABLE "SourceLink" ADD COLUMN IF NOT EXISTS "claimId"     TEXT;
+ALTER TABLE "SourceLink" ADD COLUMN IF NOT EXISTS "criticismId" TEXT;
 
--- Make old columns nullable (they were NOT NULL implicitly; new rows may use FK path)
-ALTER TABLE "SourceLink"
-    ALTER COLUMN "targetType" DROP NOT NULL,
-    ALTER COLUMN "targetId"   DROP NOT NULL;
+DO $$ BEGIN
+  ALTER TABLE "SourceLink" ALTER COLUMN "targetType" DROP NOT NULL;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER TABLE "SourceLink" ALTER COLUMN "targetId" DROP NOT NULL;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 
-CREATE INDEX "SourceLink_nodeId_idx"       ON "SourceLink"("nodeId");
-CREATE INDEX "SourceLink_edgeId_idx"       ON "SourceLink"("edgeId");
-CREATE INDEX "SourceLink_claimId_idx"      ON "SourceLink"("claimId");
-CREATE INDEX "SourceLink_criticismId_idx"  ON "SourceLink"("criticismId");
+CREATE INDEX IF NOT EXISTS "SourceLink_nodeId_idx"      ON "SourceLink"("nodeId");
+CREATE INDEX IF NOT EXISTS "SourceLink_edgeId_idx"      ON "SourceLink"("edgeId");
+CREATE INDEX IF NOT EXISTS "SourceLink_claimId_idx"     ON "SourceLink"("claimId");
+CREATE INDEX IF NOT EXISTS "SourceLink_criticismId_idx" ON "SourceLink"("criticismId");
 
-ALTER TABLE "SourceLink"
-    ADD CONSTRAINT "SourceLink_nodeId_fkey"
+DO $$ BEGIN
+  ALTER TABLE "SourceLink" ADD CONSTRAINT "SourceLink_nodeId_fkey"
     FOREIGN KEY ("nodeId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE "SourceLink"
-    ADD CONSTRAINT "SourceLink_edgeId_fkey"
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER TABLE "SourceLink" ADD CONSTRAINT "SourceLink_edgeId_fkey"
     FOREIGN KEY ("edgeId") REFERENCES "Edge"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE "SourceLink"
-    ADD CONSTRAINT "SourceLink_claimId_fkey"
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER TABLE "SourceLink" ADD CONSTRAINT "SourceLink_claimId_fkey"
     FOREIGN KEY ("claimId") REFERENCES "Claim"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE "SourceLink"
-    ADD CONSTRAINT "SourceLink_criticismId_fkey"
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER TABLE "SourceLink" ADD CONSTRAINT "SourceLink_criticismId_fkey"
     FOREIGN KEY ("criticismId") REFERENCES "Criticism"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- ─────────────────────────────────────────────────────────────────────────────
--- SOURCE — add credibilityScore index (needed for ingestion queue priority)
--- ─────────────────────────────────────────────────────────────────────────────
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 CREATE INDEX IF NOT EXISTS "Source_credibilityScore_idx" ON "Source"("credibilityScore");
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- HELPER FUNCTION: BFS traversal via recursive CTE
--- Called by retrieval layer for rabbit hole and related node queries.
--- Returns all nodes reachable from start_id within max_depth hops,
--- along with the path taken and cumulative confidence score.
+-- BFS TRAVERSAL FUNCTION
 -- ─────────────────────────────────────────────────────────────────────────────
 
 CREATE OR REPLACE FUNCTION graph_bfs(
@@ -433,24 +435,20 @@ CREATE OR REPLACE FUNCTION graph_bfs(
     max_depth INTEGER DEFAULT 2
 )
 RETURNS TABLE (
-    node_id         TEXT,
-    depth           INTEGER,
-    via_edge_id     TEXT,
-    path            TEXT[],
+    node_id          TEXT,
+    depth            INTEGER,
+    via_edge_id      TEXT,
+    path             TEXT[],
     cumulative_score DOUBLE PRECISION
 ) AS $$
 WITH RECURSIVE traversal AS (
-    -- Base: the start node
     SELECT
-        start_id                         AS node_id,
-        NULL::TEXT                       AS via_edge_id,
-        0                                AS depth,
-        ARRAY[start_id]                  AS path,
-        0.0::DOUBLE PRECISION            AS cumulative_score
-
+        start_id::TEXT                AS node_id,
+        NULL::TEXT                    AS via_edge_id,
+        0                             AS depth,
+        ARRAY[start_id::TEXT]         AS path,
+        0.0::DOUBLE PRECISION         AS cumulative_score
     UNION ALL
-
-    -- Recursive: hop to neighbors through published edges
     SELECT
         CASE WHEN e."fromId" = t.node_id THEN e."toId" ELSE e."fromId" END,
         e."id",
@@ -469,11 +467,7 @@ WITH RECURSIVE traversal AS (
         )
 )
 SELECT DISTINCT ON (node_id)
-    node_id,
-    depth,
-    via_edge_id,
-    path,
-    cumulative_score
+    node_id, depth, via_edge_id, path, cumulative_score
 FROM traversal
 WHERE depth > 0
 ORDER BY node_id, depth ASC, cumulative_score DESC

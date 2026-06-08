@@ -5,7 +5,7 @@ generator client {
 
 datasource db {
   provider   = "postgresql"
-  extensions = [pg_trgm, unaccent, pgvector(map: "vector")]
+  extensions = [pg_trgm, unaccent]
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
