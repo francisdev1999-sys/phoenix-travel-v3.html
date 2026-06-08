@@ -45,6 +45,18 @@ export const NODE_CATEGORIES = [
   'Legends & Folklore',
 ] as const;
 
+// Edge source_type uses snake_case (GraphEdge.source_type), distinct from
+// the human-readable ResearchSourceType used on nodes.
+export const EDGE_SOURCE_TYPES = [
+  'archaeological',
+  'academic',
+  'primary_text',
+  'historical_record',
+  'cultural_tradition',
+  'scientific',
+  'journalistic',
+] as const;
+
 /** Returns true if v is a finite number in [0, 1]. */
 export function isValidScore(v: unknown): v is number {
   return typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1;

@@ -183,6 +183,10 @@ model Node {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  // Import tracking
+  importBatchId   String?
+  importBatch     ImportBatch? @relation("BatchNodes", fields: [importBatchId], references: [id], onDelete: SetNull)
+
   // Relations
   category        Category       @relation(fields: [categoryId], references: [id])
   tags            NodeTag[]
@@ -204,6 +208,7 @@ model Node {
   @@index([year])
   @@index([dateStart, dateEnd])
   @@index([createdAt])
+  @@index([importBatchId])
   // Raw SQL adds:
   //   GIN index on search_vector (tsvector column added via migration)
   //   GIN index on title using gin_trgm_ops
@@ -233,6 +238,10 @@ model Edge {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  // Import tracking
+  importBatchId    String?
+  importBatch      ImportBatch? @relation("BatchEdges", fields: [importBatchId], references: [id], onDelete: SetNull)
+
   from        Node         @relation("EdgeFrom", fields: [fromId], references: [id], onDelete: Cascade)
   to          Node         @relation("EdgeTo",   fields: [toId],   references: [id], onDelete: Cascade)
   sourceLinks SourceLink[]
@@ -243,6 +252,7 @@ model Edge {
   @@index([relationshipType])
   @@index([confidenceScore])
   @@index([status])
+  @@index([importBatchId])
 }
 
 // Claims as first-class rows — stable IDs allow reliable source linking
@@ -386,6 +396,10 @@ model Source {
   submitter   User?   @relation("SubmittedSources", fields: [submittedBy], references: [id], onDelete: SetNull)
   reviewer    User?   @relation("ReviewedSources",  fields: [reviewedBy],  references: [id], onDelete: SetNull)
 
+  // Import tracking
+  importBatchId String?
+  importBatch   ImportBatch? @relation("BatchSources", fields: [importBatchId], references: [id], onDelete: SetNull)
+
   links     SourceLink[]
   embedding SourceEmbedding?
 
@@ -397,6 +411,7 @@ model Source {
   @@index([submittedBy])
   @@index([createdAt])
   @@index([credibilityScore])
+  @@index([importBatchId])
 }
 
 // Updated SourceLink: supports both legacy string-target pattern and new FK pattern.
@@ -501,4 +516,30 @@ model ProposedEdge {
   @@index([fromNodeId])
   @@index([toNodeId])
   @@index([submittedBy])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// IMPORT BATCH  (tracks bulk JSON imports; enables rollback and audit)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ImportBatch {
+  id               String    @id @default(cuid())
+  importedBy       String?   // user ID of the admin who ran the import
+  inputFormat      String    @default("json")
+  parsedCount      Int       @default(0)
+  acceptedCount    Int       @default(0)
+  rejectedCount    Int       @default(0)
+  warningCount     Int       @default(0)
+  validationReport Json      // full per-record validation detail
+  status           String    @default("committed") // committed | rolledback
+  rolledBackAt     DateTime?
+  rolledBackBy     String?
+  createdAt        DateTime  @default(now())
+
+  nodes   Node[]   @relation("BatchNodes")
+  edges   Edge[]   @relation("BatchEdges")
+  sources Source[] @relation("BatchSources")
+
+  @@index([status])
+  @@index([createdAt])
 }
