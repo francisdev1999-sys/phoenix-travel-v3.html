@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { trustLevel } from '@/lib/trust-score';
-import { evaluateBadges, refreshUserRank, logActivity } from '@/lib/rank-system';
+import { evaluateBadges, refreshUserRank } from '@/lib/rank-system';
 
 export async function GET(req: NextRequest) {
   const session  = await auth();
@@ -15,6 +15,15 @@ export async function GET(req: NextRequest) {
   if (!targetId) return NextResponse.json({ error: 'Not signed in' }, { status: 401 });
 
   const isSelf = session?.user?.id === targetId;
+
+  // Run rank refresh and badge evaluation BEFORE reading so the response
+  // always reflects the current state, not values from the previous session.
+  if (isSelf) {
+    await Promise.all([
+      evaluateBadges(targetId).catch(() => {}),
+      refreshUserRank(targetId).catch(() => {}),
+    ]);
+  }
 
   const user = await prisma.user.findUnique({
     where:  { id: targetId },
@@ -32,24 +41,17 @@ export async function GET(req: NextRequest) {
 
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-  // Auto-check badges and refresh rank on own profile load
-  if (isSelf) {
-    await Promise.all([evaluateBadges(targetId), refreshUserRank(targetId)]);
-    // Log activity
-    await logActivity(targetId, 'login').catch(() => {});
-  }
-
   return NextResponse.json({
-    id:          user.id,
-    name:        user.name,
-    image:       user.image,
-    role:        user.role,
-    rank:        user.rank,
-    trustScore:  Math.round(user.trustScore),
-    trustLevel:  trustLevel(user.trustScore),
+    id:            user.id,
+    name:          user.name,
+    image:         user.image,
+    role:          user.role,
+    rank:          user.rank,
+    trustScore:    Math.round(user.trustScore),
+    trustLevel:    trustLevel(user.trustScore),
     activityScore: Math.round(user.activityScore),
-    memberSince: user.createdAt,
-    lastActive:  user.lastActiveAt,
+    memberSince:   user.createdAt,
+    lastActive:    user.lastActiveAt,
     stats: {
       submissions: user.submissionCount,
       approved:    user.approvedCount,
@@ -63,7 +65,6 @@ export async function GET(req: NextRequest) {
       category:    b.badge.category,
       awardedAt:   b.awardedAt,
     })),
-    // Own profile extras
     ...(isSelf ? {
       email:        (user as { email?: string | null }).email,
       warningCount: (user as { warningCount?: number }).warningCount,

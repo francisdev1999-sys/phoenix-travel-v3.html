@@ -4,6 +4,7 @@ import Google from 'next-auth/providers/google';
 import GitHub from 'next-auth/providers/github';
 import { prisma } from '@/lib/db';
 import { authConfig } from '@/lib/auth.config';
+import { logActivity } from '@/lib/rank-system';
 
 // ── Role hierarchy ────────────────────────────────────────────────────────────
 // owner > admin > moderation_admin > reviewer > source_verifier
@@ -112,7 +113,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     ...authConfig.callbacks,
 
     async signIn({ user }) {
-      if (hasDB && user?.email === process.env.ADMIN_EMAIL) {
+      if (!hasDB) return true;
+
+      // Track login activity (updates lastActiveAt + activityScore)
+      if (user?.id) {
+        logActivity(user.id, 'login').catch(() => {});
+      }
+
+      // Ensure the owner email always has the owner role
+      if (user?.email === process.env.ADMIN_EMAIL) {
         try {
           await prisma.user.update({
             where: { email: user.email },
@@ -122,6 +131,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           // User row may not exist yet on first sign-in; role corrected next time.
         }
       }
+
       return true;
     },
   },
