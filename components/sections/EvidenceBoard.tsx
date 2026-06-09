@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Pin, FileText, MapPin, AlertTriangle } from 'lucide-react';
 import { useNodes } from '@/lib/graph/useNodes';
+import { nodes as staticNodes } from '@/lib/graph/nodes';
 import { GraphNode } from '@/lib/graph/types';
 
 const PIN_COLORS = ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#8b5cf6'];
@@ -37,7 +38,7 @@ function buildCards(node: GraphNode): EvidenceCard[] {
   });
 
   // Claims
-  node.claims.slice(0, 4).forEach((claim, i) => {
+  (Array.isArray(node.claims) ? node.claims : []).slice(0, 4).forEach((claim, i) => {
     result.push({
       id: `${node.id}-claim-${i}`,
       type: 'note',
@@ -52,7 +53,7 @@ function buildCards(node: GraphNode): EvidenceCard[] {
   });
 
   // Criticisms
-  node.criticisms.slice(0, 2).forEach((crit, i) => {
+  (Array.isArray(node.criticisms) ? node.criticisms : []).slice(0, 2).forEach((crit, i) => {
     result.push({
       id: `${node.id}-crit-${i}`,
       type: 'note',
@@ -101,7 +102,8 @@ function buildCards(node: GraphNode): EvidenceCard[] {
 
 export default function EvidenceBoard() {
   const nodes = useNodes();
-  const [selectedNode, setSelectedNode] = useState<GraphNode>(() => nodes[0]);
+  // Always initialize from static data — DB nodes are minimal snapshots without rich fields
+  const [selectedNode, setSelectedNode] = useState<GraphNode>(staticNodes[0]);
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
 
   const allCards = buildCards(selectedNode);

@@ -17,7 +17,33 @@ const edgeSubscribers = new Set<() => void>();
 
 function mergeNodes(base: GraphNode[], dbNodes: GraphNode[]): GraphNode[] {
   const map = new Map(base.map(n => [n.id, n]));
-  dbNodes.forEach(n => map.set(n.id, n)); // DB wins on conflict
+  dbNodes.forEach(n => {
+    if (map.has(n.id)) {
+      // Enrich static node with DB metadata only — keep static rich-content fields
+      // (claims, criticisms, description, etc.) since DB nodes are minimal snapshots
+      const existing = map.get(n.id)!;
+      map.set(n.id, {
+        ...existing,
+        // Only update fields the DB reliably tracks
+        evidence_level:   n.evidence_level   ?? existing.evidence_level,
+        confidence_score: n.confidence_score ?? existing.confidence_score,
+        color:            n.color            ?? existing.color,
+        icon:             n.icon             ?? existing.icon,
+      });
+    } else {
+      // New DB-only node: spread DB data then enforce safe types for rich fields
+      map.set(n.id, {
+        ...n,
+        claims:          Array.isArray(n.claims)     ? (n.claims as string[])     : [],
+        criticisms:      Array.isArray(n.criticisms) ? (n.criticisms as string[]) : [],
+        tags:            Array.isArray(n.tags)        ? (n.tags as string[])       : [],
+        description:     typeof n.description === 'string' ? n.description : (n.title ?? ''),
+        mainstream_view: typeof n.mainstream_view === 'string' ? n.mainstream_view : '',
+        open_questions:  Array.isArray(n.open_questions) ? n.open_questions : undefined,
+        sources:         Array.isArray(n.sources) ? n.sources : [],
+      });
+    }
+  });
   return [...map.values()];
 }
 
