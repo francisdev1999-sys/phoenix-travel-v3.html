@@ -6,6 +6,7 @@ import { EVIDENCE_LEVELS, NODE_CATEGORIES, isValidScore } from '@/lib/validation
 import { checkTrustGate, checkSubmissionRate, validateNodeSubmission, checkDuplicate } from '@/lib/quality-gates';
 import { logActivity } from '@/lib/rank-system';
 import { rateLimit } from '@/lib/rate-limiter';
+import { auditProposedNode } from '@/lib/ai/node-auditor';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -141,6 +142,9 @@ export async function POST(req: NextRequest) {
     prisma.user.update({ where: { id: session.user.id }, data: { submissionCount: { increment: 1 } } }),
     logActivity(session.user.id, 'submit', { type: 'node', proposalId: node.id }),
   ]);
+
+  // AI quality audit — fire-and-forget, never blocks the response
+  void auditProposedNode(node.id);
 
   return NextResponse.json({ ...node, warnings: validation.warnings, risk: validation.risk }, { status: 201 });
 }
