@@ -117,7 +117,16 @@ export default function ParticleField() {
       });
     };
 
+    const targetFPS = getPerfConfig(mode).targetFPS;
+    const frameBudget = 1000 / targetFPS;
+    let lastFrameTime = 0;
+
     const animate = () => {
+      animFrameRef.current = requestAnimationFrame(animate);
+      const now = performance.now();
+      if (now - lastFrameTime < frameBudget) return;
+      lastFrameTime = now;
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       if (!cachedTunnelGrad || cachedW !== canvas.width || cachedH !== canvas.height) {
@@ -191,7 +200,6 @@ export default function ParticleField() {
         ctx.globalAlpha = 1;
       });
 
-      animFrameRef.current = requestAnimationFrame(animate);
     };
 
     animate();

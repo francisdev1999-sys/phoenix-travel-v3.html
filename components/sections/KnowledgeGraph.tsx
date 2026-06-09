@@ -250,14 +250,20 @@ export default function KnowledgeGraph() {
       }
     };
 
+    let lastDrawTime = 0;
     const draw = () => {
+      const now = performance.now();
+      const frameBudget = 1000 / (perfConfigRef.current.targetFPS ?? 60);
+      frameRef.current = requestAnimationFrame(draw);
+      if (now - lastDrawTime < frameBudget) return;
+      lastDrawTime = now;
+
       time += 0.02;
       const selectedN = selectedNodeRef.current;
       const hId = hoveredIdRef.current;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // FPS tracking
-      const now = performance.now();
+      // FPS tracking (reuse `now` already computed above)
       fpsRef.current.frames++;
       if (now - fpsRef.current.lastTime >= 1000) {
         fpsRef.current.fps = fpsRef.current.frames;
@@ -402,7 +408,6 @@ export default function KnowledgeGraph() {
 
       ctx.restore();
       if (physicsActiveRef.current) applyForces();
-      frameRef.current = requestAnimationFrame(draw);
     };
 
     draw();

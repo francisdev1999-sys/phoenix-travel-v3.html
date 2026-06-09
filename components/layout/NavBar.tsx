@@ -11,6 +11,7 @@ import { useSession, signIn, signOut } from 'next-auth/react';
 import { nodes as staticNodes } from '@/lib/graph';
 import { CATEGORY_COLORS, EVIDENCE_COLORS } from '@/lib/graph';
 import UserProfilePanel from '@/components/sections/UserProfilePanel';
+import { usePerformanceStore, getEffectiveMode, type PerfMode } from '@/lib/store/performanceStore';
 
 const NAV_BASE = [
   { id: 'graph',          label: 'Knowledge Graph', icon: Grid3X3 },
@@ -63,9 +64,16 @@ function searchStatic(q: string): SearchResult[] {
     }));
 }
 
+const PERF_LABELS: Record<PerfMode, string> = {
+  auto: 'Auto', high: 'High', performance: 'Balanced', low: 'Low',
+};
+const PERF_CYCLE: PerfMode[] = ['auto', 'high', 'performance', 'low'];
+
 export default function NavBar() {
   const { currentView, setCurrentView, audioEnabled, toggleAudio, progress, setPendingRabbitHoleNodeId } = useUserStore();
   const { data: session, status } = useSession();
+  const { mode: perfMode, setMode: setPerfMode } = usePerformanceStore();
+  const effectivePerf = getEffectiveMode(perfMode);
   const [mobileOpen, setMobileOpen]     = useState(false);
   const [searchOpen, setSearchOpen]     = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -287,6 +295,20 @@ export default function NavBar() {
               <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
               <span className="text-xs text-purple-300 font-medium">{progress.xp} XP</span>
             </div>
+
+            {/* Performance mode toggle */}
+            <button
+              onClick={() => {
+                const idx = PERF_CYCLE.indexOf(perfMode);
+                setPerfMode(PERF_CYCLE[(idx + 1) % PERF_CYCLE.length]);
+              }}
+              className="hidden sm:flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium border transition-all border-white/10 hover:border-purple-500/40 hover:bg-purple-900/20"
+              style={{ color: effectivePerf === 'high' ? '#22c55e' : effectivePerf === 'performance' ? '#f59e0b' : '#ef4444' }}
+              title={`Performance: ${PERF_LABELS[perfMode]} (effective: ${effectivePerf}) — click to cycle`}
+            >
+              <Activity size={13} />
+              <span>{PERF_LABELS[perfMode]}</span>
+            </button>
 
             {/* Audio */}
             <button

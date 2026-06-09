@@ -442,7 +442,11 @@ export default function AncientGlobe() {
 
       {/* ── Globe canvas ── */}
       <div className="flex-1 relative min-h-0">
-        <Canvas camera={{ position: [0, 2, 7.5], fov: 48 }}>
+        <Canvas
+          camera={{ position: [0, 2, 7.5], fov: 48 }}
+          dpr={globeConfig.canvasDpr}
+          performance={{ min: globeConfig.skipHeavyEffects ? 0.1 : 0.5 }}
+        >
           <color attach="background" args={['#00000a']} />
           <ambientLight intensity={0.8} />
           <directionalLight position={[8, 5, 5]}   intensity={1.4} color="#7090e0" />

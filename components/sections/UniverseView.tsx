@@ -131,7 +131,7 @@ function EdgeLines({ nodeList, positions }: {
   return <primitive object={lineSegments} />;
 }
 
-function Scene({ visibleNodes, onSelect }: { visibleNodes: GraphNode[]; onSelect: SelectHandler }) {
+function Scene({ visibleNodes, onSelect, skipEffects }: { visibleNodes: GraphNode[]; onSelect: SelectHandler; skipEffects?: boolean }) {
   const [selected, setSelected] = useState<string | null>(null);
 
   // Positions computed once per node list — stable reference for EdgeLines memo
@@ -147,7 +147,7 @@ function Scene({ visibleNodes, onSelect }: { visibleNodes: GraphNode[]; onSelect
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} intensity={0.8} color="#8060ff" />
       <directionalLight position={[-8, -5, -8]} intensity={0.3} color="#4040aa" />
-      <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+      {!skipEffects && <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />}
 
       <EdgeLines nodeList={visibleNodes} positions={positions} />
 
@@ -197,9 +197,11 @@ export default function UniverseView() {
       <Canvas
         camera={{ position: [0, 0, 20], fov: 60 }}
         style={{ background: 'transparent' }}
+        dpr={config.canvasDpr}
+        performance={{ min: config.skipHeavyEffects ? 0.1 : 0.5 }}
       >
         <Suspense fallback={null}>
-          <Scene visibleNodes={visibleNodes} onSelect={handleSelect} />
+          <Scene visibleNodes={visibleNodes} onSelect={handleSelect} skipEffects={config.skipHeavyEffects} />
         </Suspense>
       </Canvas>
 
