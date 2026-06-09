@@ -1,18 +1,28 @@
 'use client';
-import { useRef, useState, Suspense } from 'react';
+import { useRef, useState, Suspense, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Stars, Text, Billboard, Html } from '@react-three/drei';
+import { OrbitControls, Stars, Text, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
-import { theories } from '@/lib/data/theories';
-import { Theory } from '@/lib/types';
+import { nodes } from '@/lib/graph/nodes';
+import { edges } from '@/lib/graph/edges';
+import { GraphNode } from '@/lib/graph/types';
 import { useUserStore } from '@/lib/store/userStore';
 
+// Build adjacency from edges so each node knows its neighbours
+const connectionsMap: Record<string, string[]> = {};
+edges.forEach(edge => {
+  if (!connectionsMap[edge.from]) connectionsMap[edge.from] = [];
+  if (!connectionsMap[edge.to]) connectionsMap[edge.to] = [];
+  connectionsMap[edge.from].push(edge.to);
+  connectionsMap[edge.to].push(edge.from);
+});
+
 function TheoryNode({ theory, position, isSelected, onSelect }: {
-  theory: Theory;
+  theory: GraphNode;
   position: [number, number, number];
   isSelected: boolean;
-  onSelect: (t: Theory) => void;
+  onSelect: (t: GraphNode) => void;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
@@ -30,7 +40,7 @@ function TheoryNode({ theory, position, isSelected, onSelect }: {
     }
   });
 
-  const color = new THREE.Color(theory.color);
+  const color = new THREE.Color(theory.color ?? '#7c3aed');
 
   return (
     <group position={position}>
@@ -76,6 +86,8 @@ function TheoryNode({ theory, position, isSelected, onSelect }: {
   );
 }
 
+type SelectHandler = (t: GraphNode) => void;
+
 function ConnectionLine({ start, end, color }: {
   start: [number, number, number];
   end: [number, number, number];
@@ -89,7 +101,7 @@ function ConnectionLine({ start, end, color }: {
   return <primitive object={lineObj} />;
 }
 
-function Scene({ onSelect }: { onSelect: (t: Theory) => void }) {
+function Scene({ onSelect }: { onSelect: SelectHandler }) {
   const [selected, setSelected] = useState<string | null>(null);
   const { camera } = useThree();
 
@@ -100,48 +112,53 @@ function Scene({ onSelect }: { onSelect: (t: Theory) => void }) {
   });
 
   const positions: Record<string, [number, number, number]> = {};
-  theories.forEach((theory, i) => {
-    const phi = Math.acos(-1 + (2 * i) / theories.length);
-    const theta = Math.sqrt(theories.length * Math.PI) * phi;
-    const r = 8;
-    positions[theory.id] = [
+  nodes.forEach((node, i) => {
+    const phi = Math.acos(-1 + (2 * i) / nodes.length);
+    const theta = Math.sqrt(nodes.length * Math.PI) * phi;
+    const r = 12;
+    positions[node.id] = [
       r * Math.sin(phi) * Math.cos(theta),
       r * Math.sin(phi) * Math.sin(theta),
       r * Math.cos(phi),
     ];
   });
 
-  const handleSelect = (theory: Theory) => {
-    setSelected(theory.id === selected ? null : theory.id);
-    onSelect(theory);
+  const handleSelect = (node: GraphNode) => {
+    setSelected(node.id === selected ? null : node.id);
+    onSelect(node);
   };
+
+  // Deduplicate connection lines (each edge is bidirectional in connectionsMap)
+  const renderedEdges = new Set<string>();
 
   return (
     <>
       <ambientLight intensity={0.2} />
       <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
 
-      {theories.map(theory =>
-        theory.connections.map(connId => {
-          const target = theories.find(t => t.id === connId);
-          if (!target || !positions[theory.id] || !positions[connId]) return null;
+      {nodes.map(node =>
+        (connectionsMap[node.id] ?? []).map(connId => {
+          const key = [node.id, connId].sort().join('--');
+          if (renderedEdges.has(key)) return null;
+          renderedEdges.add(key);
+          if (!positions[node.id] || !positions[connId]) return null;
           return (
             <ConnectionLine
-              key={`${theory.id}-${connId}`}
-              start={positions[theory.id]}
+              key={key}
+              start={positions[node.id]}
               end={positions[connId]}
-              color={theory.color}
+              color={node.color ?? '#7c3aed'}
             />
           );
         })
       )}
 
-      {theories.map(theory => (
+      {nodes.map(node => (
         <TheoryNode
-          key={theory.id}
-          theory={theory}
-          position={positions[theory.id]}
-          isSelected={selected === theory.id}
+          key={node.id}
+          theory={node}
+          position={positions[node.id]}
+          isSelected={selected === node.id}
           onSelect={handleSelect}
         />
       ))}
@@ -160,12 +177,12 @@ function Scene({ onSelect }: { onSelect: (t: Theory) => void }) {
 }
 
 export default function UniverseView() {
-  const [selectedTheory, setSelectedTheory] = useState<Theory | null>(null);
+  const [selectedTheory, setSelectedTheory] = useState<GraphNode | null>(null);
   const { exploreTheory, setCurrentView } = useUserStore();
 
-  const handleSelect = (theory: Theory) => {
-    setSelectedTheory(theory);
-    exploreTheory(theory.id);
+  const handleSelect = (node: GraphNode) => {
+    setSelectedTheory(node);
+    exploreTheory(node.id);
   };
 
   return (
@@ -182,7 +199,7 @@ export default function UniverseView() {
       <div className="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none">
         <div className="glass rounded-xl px-4 py-3">
           <h2 className="text-sm font-black text-white tracking-widest">UNIVERSE VIEW</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Navigate through the theory constellation</p>
+          <p className="text-xs text-slate-500 mt-0.5">{nodes.length} nodes · Navigate the knowledge constellation</p>
         </div>
         <div className="glass rounded-xl px-4 py-3 text-xs text-slate-400 space-y-1">
           <div>🖥️ Drag to rotate</div>
@@ -204,7 +221,7 @@ export default function UniverseView() {
               <div className="flex-1 min-w-0">
                 <div className="text-xs text-purple-400/70 uppercase tracking-widest">{selectedTheory.category}</div>
                 <h3 className="text-base font-bold text-white">{selectedTheory.title}</h3>
-                <p className="text-xs text-slate-400 mt-1 leading-relaxed">{selectedTheory.overview}</p>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">{selectedTheory.description}</p>
                 <div className="flex flex-wrap gap-1 mt-2">
                   {selectedTheory.tags.slice(0, 4).map(tag => (
                     <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-purple-900/30 text-purple-400">
