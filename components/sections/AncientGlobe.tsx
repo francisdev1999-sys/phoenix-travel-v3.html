@@ -181,28 +181,30 @@ function NodeMarker({
         />
       </mesh>
 
-      <Html center distanceFactor={8} style={{ pointerEvents: 'none' }}>
-        <div style={{
-          background:  'rgba(0,0,8,0.85)',
-          border:      `1px solid ${colorHex}80`,
-          borderRadius: 3,
-          padding:     '2px 6px',
-          fontSize:    9,
-          color:       colorHex,
-          whiteSpace:  'nowrap',
-          fontFamily:  'monospace',
-          letterSpacing: '0.05em',
-          marginTop:   18,
-          userSelect:  'none',
-          textShadow:  `0 0 6px ${colorHex}`,
-          opacity:     cred.opacity,
-        }}>
-          {node.title}
-          <span style={{ marginLeft: 4, fontSize: 7, opacity: 0.7 }}>
-            [{cred.badge}]
-          </span>
-        </div>
-      </Html>
+      {hovered && (
+        <Html center distanceFactor={8} style={{ pointerEvents: 'none' }}>
+          <div style={{
+            background:  'rgba(0,0,8,0.85)',
+            border:      `1px solid ${colorHex}80`,
+            borderRadius: 3,
+            padding:     '2px 6px',
+            fontSize:    9,
+            color:       colorHex,
+            whiteSpace:  'nowrap',
+            fontFamily:  'monospace',
+            letterSpacing: '0.05em',
+            marginTop:   18,
+            userSelect:  'none',
+            textShadow:  `0 0 6px ${colorHex}`,
+            opacity:     cred.opacity,
+          }}>
+            {node.title}
+            <span style={{ marginLeft: 4, fontSize: 7, opacity: 0.7 }}>
+              [{cred.badge}]
+            </span>
+          </div>
+        </Html>
+      )}
 
       <pointLight
         color={color}
@@ -360,11 +362,24 @@ export default function AncientGlobe() {
   const [opts, setOpts]                 = useState<CredibilityOptions>(DEFAULT_PUBLIC_OPTIONS);
   const [showControls, setShowControls] = useState(false);
 
-  // Nodes with valid coordinates that pass credibility filter
-  const globeNodes = nodes
-    .filter(n => isValidCoordinate(n.coordinates))
-    .filter(n => nodePassesFilter(n, opts))
-    .filter(n => evidenceFilter === 'all' || n.evidence_level === evidenceFilter);
+  // Memoized per-level counts — avoids repeated full-array scans per render
+  const levelCounts = useMemo(() => {
+    const base = nodes
+      .filter(n => isValidCoordinate(n.coordinates))
+      .filter(n => nodePassesFilter(n, opts));
+    return Object.fromEntries(
+      EVIDENCE_LEVELS_ORDERED.map(level => [level, base.filter(n => n.evidence_level === level).length])
+    ) as Record<string, number>;
+  }, [opts]);
+
+  // Memoized visible nodes — only recomputes when filters change
+  const globeNodes = useMemo(
+    () => nodes
+      .filter(n => isValidCoordinate(n.coordinates))
+      .filter(n => nodePassesFilter(n, opts))
+      .filter(n => evidenceFilter === 'all' || n.evidence_level === evidenceFilter),
+    [opts, evidenceFilter]
+  );
 
   return (
     <div className="h-full flex flex-col">
@@ -406,11 +421,7 @@ export default function AncientGlobe() {
 
           {EVIDENCE_LEVELS_ORDERED.map(level => {
             const cfg   = EVIDENCE_CFG[level];
-            const count = nodes
-              .filter(n => isValidCoordinate(n.coordinates))
-              .filter(n => nodePassesFilter(n, opts))
-              .filter(n => n.evidence_level === level)
-              .length;
+            const count = levelCounts[level] ?? 0;
             if (count === 0) return null;
             return (
               <button

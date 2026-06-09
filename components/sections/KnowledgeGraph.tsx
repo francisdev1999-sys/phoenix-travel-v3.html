@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ZoomIn, ZoomOut, RotateCcw, Layers } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, Layers, Activity } from 'lucide-react';
 import { nodes as staticNodes, edges as staticEdges, GraphNode, GraphEdge, CATEGORY_COLORS, EVIDENCE_COLORS } from '@/lib/graph';
 import { useUserStore } from '@/lib/store/userStore';
 import NodePanel from '@/components/sections/NodePanel';
@@ -17,6 +17,9 @@ interface VisualNode {
   pulsePhase: number;
 }
 
+// Cell size must exceed max repulsion distance: (26+26)*3 = 156px → 160
+const REPEL_CELL = 160;
+
 export default function KnowledgeGraph() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const nodesRef = useRef<VisualNode[]>([]);
@@ -31,11 +34,22 @@ export default function KnowledgeGraph() {
   const hoveredIdRef = useRef<string | null>(null);
   const { exploreTheory, discoverConnection } = useUserStore();
 
-  // Live graph data: static base + approved DB proposals
   const graphNodesRef = useRef<GraphNode[]>(staticNodes);
   const graphEdgesRef = useRef<GraphEdge[]>(staticEdges);
 
-  // Keep refs in sync so draw() reads current values without reinitializing canvas
+  // Precomputed graph structure — rebuilt in initGraph
+  const highDegreeSetRef = useRef<Set<string>>(new Set());
+  const adjMapRef = useRef<Record<string, string[]>>({});
+
+  // Physics convergence — simulation pauses once stable
+  const stableCountRef = useRef(0);
+  const physicsActiveRef = useRef(true);
+
+  // Diagnostics
+  const fpsRef = useRef({ frames: 0, lastTime: 0, fps: 0 });
+  const [showDiag, setShowDiag] = useState(false);
+  const [diagData, setDiagData] = useState({ nodes: 0, edges: 0, fps: 0, physics: true });
+
   useEffect(() => { selectedNodeRef.current = selectedNode; }, [selectedNode]);
   useEffect(() => { hoveredIdRef.current = hoveredId; }, [hoveredId]);
 
@@ -55,7 +69,7 @@ export default function KnowledgeGraph() {
         const canvas = canvasRef.current;
         if (canvas) initGraph(canvas.width, canvas.height);
       })
-      .catch(() => {/* silently ignore — graph still works from static data */});
+      .catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -65,6 +79,20 @@ export default function KnowledgeGraph() {
     const cx = w / 2;
     const cy = h / 2;
     const categories = [...new Set(nodes.map(n => n.category))];
+
+    // O(E) precompute — eliminates per-frame degree scans
+    const degMap: Record<string, number> = {};
+    const adjMap: Record<string, string[]> = {};
+    edges.forEach(e => {
+      degMap[e.from] = (degMap[e.from] ?? 0) + 1;
+      degMap[e.to]   = (degMap[e.to]   ?? 0) + 1;
+      if (!adjMap[e.from]) adjMap[e.from] = [];
+      if (!adjMap[e.to])   adjMap[e.to]   = [];
+      adjMap[e.from].push(e.to);
+      adjMap[e.to].push(e.from);
+    });
+    highDegreeSetRef.current = new Set(Object.keys(degMap).filter(id => (degMap[id] ?? 0) >= 5));
+    adjMapRef.current = adjMap;
 
     nodesRef.current = nodes.map(gNode => {
       const catIdx = categories.indexOf(gNode.category);
@@ -77,8 +105,6 @@ export default function KnowledgeGraph() {
       const angle = catAngle + spreadAngle;
       const radiusVariation = catRadius * (0.7 + Math.random() * 0.5);
 
-      const isHighDegree = edges.filter(e => e.from === gNode.id || e.to === gNode.id).length >= 5;
-
       return {
         id: gNode.id,
         x: cx + Math.cos(angle) * radiusVariation,
@@ -86,10 +112,13 @@ export default function KnowledgeGraph() {
         vx: (Math.random() - 0.5) * 0.5,
         vy: (Math.random() - 0.5) * 0.5,
         node: gNode,
-        radius: isHighDegree ? 26 : 18,
+        radius: (degMap[gNode.id] ?? 0) >= 5 ? 26 : 18,
         pulsePhase: Math.random() * Math.PI * 2,
       };
     });
+
+    stableCountRef.current = 0;
+    physicsActiveRef.current = true;
   }, []);
 
   useEffect(() => {
@@ -116,22 +145,39 @@ export default function KnowledgeGraph() {
       const cx = canvas.width / 2;
       const cy = canvas.height / 2;
 
+      // Spatial grid broad phase — O(n) instead of O(n²) repulsion
+      const cols = Math.ceil(canvas.width / REPEL_CELL) + 2;
+      const grid = new Map<number, VisualNode[]>();
+      vNodes.forEach(vn => {
+        const key = Math.floor(vn.y / REPEL_CELL) * cols + Math.floor(vn.x / REPEL_CELL);
+        if (!grid.has(key)) grid.set(key, []);
+        grid.get(key)!.push(vn);
+      });
+
       vNodes.forEach(vn => {
         vn.vx += (cx - vn.x) * 0.0002;
         vn.vy += (cy - vn.y) * 0.0002;
 
-        vNodes.forEach(other => {
-          if (other.id === vn.id) return;
-          const dx = vn.x - other.x;
-          const dy = vn.y - other.y;
-          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-          const minDist = (vn.radius + other.radius) * 3;
-          if (dist < minDist) {
-            const force = ((minDist - dist) / dist) * 0.3;
-            vn.vx += dx * force * 0.05;
-            vn.vy += dy * force * 0.05;
+        const ci = Math.floor(vn.x / REPEL_CELL);
+        const ri = Math.floor(vn.y / REPEL_CELL);
+        for (let dr = -1; dr <= 1; dr++) {
+          for (let dc = -1; dc <= 1; dc++) {
+            const cell = grid.get((ri + dr) * cols + (ci + dc));
+            if (!cell) continue;
+            cell.forEach(other => {
+              if (other.id === vn.id) return;
+              const dx = vn.x - other.x;
+              const dy = vn.y - other.y;
+              const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+              const minDist = (vn.radius + other.radius) * 3;
+              if (dist < minDist) {
+                const force = ((minDist - dist) / dist) * 0.3;
+                vn.vx += dx * force * 0.05;
+                vn.vy += dy * force * 0.05;
+              }
+            });
           }
-        });
+        }
 
         graphEdgesRef.current.forEach(edge => {
           if (edge.from === vn.id || edge.to === vn.id) {
@@ -156,6 +202,15 @@ export default function KnowledgeGraph() {
           vn.y += vn.vy;
         }
       });
+
+      // Convergence detection — pause physics when settled
+      let ke = 0;
+      vNodes.forEach(vn => { ke += vn.vx * vn.vx + vn.vy * vn.vy; });
+      if (ke < 0.005 * vNodes.length) {
+        if (++stableCountRef.current > 90) physicsActiveRef.current = false;
+      } else {
+        stableCountRef.current = 0;
+      }
     };
 
     const draw = () => {
@@ -163,6 +218,20 @@ export default function KnowledgeGraph() {
       const selectedN = selectedNodeRef.current;
       const hId = hoveredIdRef.current;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // FPS tracking
+      const now = performance.now();
+      fpsRef.current.frames++;
+      if (now - fpsRef.current.lastTime >= 1000) {
+        fpsRef.current.fps = fpsRef.current.frames;
+        fpsRef.current.frames = 0;
+        fpsRef.current.lastTime = now;
+      }
+
+      // Focus set: 1-hop neighborhood dims everything else
+      const focusSet: Set<string> | null = selectedN
+        ? new Set([selectedN.id, ...(adjMapRef.current[selectedN.id] ?? [])])
+        : null;
 
       const { x: tx, y: ty, scale } = transformRef.current;
       ctx.save();
@@ -174,6 +243,9 @@ export default function KnowledgeGraph() {
         const src = getVNode(edge.from);
         const tgt = getVNode(edge.to);
         if (!src || !tgt) return;
+
+        // Focus mode: hide edges outside selection's neighborhood
+        if (focusSet && !focusSet.has(src.id) && !focusSet.has(tgt.id)) return;
 
         const srcSelected = src.id === selectedN?.id;
         const tgtSelected = tgt.id === selectedN?.id;
@@ -195,7 +267,6 @@ export default function KnowledgeGraph() {
         ctx.lineWidth = isHighlighted ? 2 : isHovered ? 1.5 : 1;
         ctx.stroke();
 
-        // Animated particle on highlighted edge
         if (isHighlighted || isHovered) {
           const t = (time * 0.3 * edge.strength_score) % 1;
           const px = src.x + (tgt.x - src.x) * t;
@@ -211,12 +282,14 @@ export default function KnowledgeGraph() {
       nodesRef.current.forEach(vn => {
         const isSelected = vn.id === selectedN?.id;
         const isHovered = vn.id === hId;
+        const isDimmed = !!focusSet && !focusSet.has(vn.id);
         const pulse = Math.sin(time * 2 + vn.pulsePhase) * 0.3 + 0.7;
         const r = vn.radius * (isSelected ? 1.35 : isHovered ? 1.18 : 1);
         const nodeColor = vn.node.color ?? CATEGORY_COLORS[vn.node.category] ?? '#7c3aed';
         const evidenceColor = EVIDENCE_COLORS[vn.node.evidence_level] ?? '#7c3aed';
 
-        // Glow
+        if (isDimmed) ctx.globalAlpha = 0.2;
+
         const glowSize = r * (isSelected ? 3.2 : isHovered ? 2.6 : 2);
         const glow = ctx.createRadialGradient(vn.x, vn.y, 0, vn.x, vn.y, glowSize);
         glow.addColorStop(0, nodeColor + 'aa');
@@ -227,7 +300,6 @@ export default function KnowledgeGraph() {
         ctx.fillStyle = glow;
         ctx.fill();
 
-        // Selection ring
         if (isSelected) {
           ctx.beginPath();
           ctx.arc(vn.x, vn.y, r + 8 + pulse * 6, 0, Math.PI * 2);
@@ -236,7 +308,6 @@ export default function KnowledgeGraph() {
           ctx.stroke();
         }
 
-        // Node body
         const bodyGrad = ctx.createRadialGradient(vn.x - r * 0.3, vn.y - r * 0.3, 0, vn.x, vn.y, r);
         bodyGrad.addColorStop(0, nodeColor + 'ff');
         bodyGrad.addColorStop(1, nodeColor + '99');
@@ -245,21 +316,19 @@ export default function KnowledgeGraph() {
         ctx.fillStyle = bodyGrad;
         ctx.fill();
 
-        // Border (evidence level color)
         ctx.beginPath();
         ctx.arc(vn.x, vn.y, r, 0, Math.PI * 2);
         ctx.strokeStyle = isSelected ? evidenceColor + 'cc' : nodeColor + '70';
         ctx.lineWidth = isSelected ? 2.5 : 1.5;
         ctx.stroke();
 
-        // Icon
         ctx.font = `${r * 0.75}px serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(vn.node.icon ?? '◈', vn.x, vn.y);
 
-        // Label
-        if (isHovered || isSelected || graphEdgesRef.current.filter(e => e.from === vn.id || e.to === vn.id).length >= 5) {
+        // Precomputed high-degree set — no per-frame O(E) filter scan
+        if (isHovered || isSelected || highDegreeSetRef.current.has(vn.id)) {
           ctx.font = `bold ${Math.min(11, r * 0.45)}px system-ui`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'top';
@@ -269,10 +338,12 @@ export default function KnowledgeGraph() {
           ctx.fillText(vn.node.title, vn.x, vn.y + r + 4);
           ctx.shadowBlur = 0;
         }
+
+        if (isDimmed) ctx.globalAlpha = 1;
       });
 
       ctx.restore();
-      applyForces();
+      if (physicsActiveRef.current) applyForces();
       frameRef.current = requestAnimationFrame(draw);
     };
 
@@ -283,6 +354,20 @@ export default function KnowledgeGraph() {
       cancelAnimationFrame(frameRef.current);
     };
   }, [initGraph]);
+
+  // Live diagnostics update
+  useEffect(() => {
+    if (!showDiag) return;
+    const interval = setInterval(() => {
+      setDiagData({
+        nodes: nodesRef.current.length,
+        edges: graphEdgesRef.current.length,
+        fps: fpsRef.current.fps,
+        physics: physicsActiveRef.current,
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [showDiag]);
 
   const getCanvasPos = (clientX: number, clientY: number) => {
     const canvas = canvasRef.current!;
@@ -295,6 +380,8 @@ export default function KnowledgeGraph() {
     nodesRef.current.find(n => Math.sqrt((n.x - x) ** 2 + (n.y - y) ** 2) < n.radius + 5);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    physicsActiveRef.current = true;
+    stableCountRef.current = 0;
     const pos = getCanvasPos(e.clientX, e.clientY);
     const vn = findNodeAt(pos.x, pos.y);
     if (vn) {
@@ -353,6 +440,8 @@ export default function KnowledgeGraph() {
   };
 
   const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    physicsActiveRef.current = true;
+    stableCountRef.current = 0;
     if (e.touches.length === 1) {
       const t = e.touches[0];
       const pos = getCanvasPos(t.clientX, t.clientY);
@@ -446,7 +535,26 @@ export default function KnowledgeGraph() {
           className="p-2 glass rounded-lg text-slate-400 hover:text-white transition-colors">
           <RotateCcw size={16} />
         </button>
+        <button
+          onClick={() => setShowDiag(v => !v)}
+          className={`p-2 glass rounded-lg transition-colors ${showDiag ? 'text-purple-400' : 'text-slate-600 hover:text-slate-400'}`}
+          title="Diagnostics"
+        >
+          <Activity size={16} />
+        </button>
       </div>
+
+      {/* Diagnostics overlay */}
+      {showDiag && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 glass rounded-xl px-4 py-2 text-[10px] font-mono text-slate-400 flex gap-4 pointer-events-none">
+          <span>nodes: {diagData.nodes}</span>
+          <span>edges: {diagData.edges}</span>
+          <span>fps: {diagData.fps}</span>
+          <span className={diagData.physics ? 'text-green-500' : 'text-slate-600'}>
+            phys: {diagData.physics ? 'active' : 'idle'}
+          </span>
+        </div>
+      )}
 
       {/* Category legend */}
       <div className="absolute bottom-4 left-4 glass rounded-xl p-3 text-xs space-y-1.5 hidden sm:block">
