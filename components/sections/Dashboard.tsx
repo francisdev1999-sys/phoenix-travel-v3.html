@@ -2,7 +2,7 @@
 import { motion } from 'framer-motion';
 import { Trophy, Star, GitBranch, Rabbit, Clock, Target, TrendingUp, Award } from 'lucide-react';
 import { useUserStore, ACHIEVEMENTS } from '@/lib/store/userStore';
-import { nodes } from '@/lib/graph/nodes';
+import { useNodes } from '@/lib/graph/useNodes';
 
 const LEVEL_XP: Record<string, number> = {
   'Curious Visitor': 0,
@@ -23,6 +23,7 @@ const LEVEL_COLORS: Record<string, string> = {
 };
 
 export default function Dashboard() {
+  const nodes = useNodes();
   const { progress, getNextLevel } = useUserStore();
   const nextLevel = getNextLevel();
   const levelColor = LEVEL_COLORS[progress.level] || '#64748b';

@@ -5,13 +5,14 @@ import { ChevronDown, Compass, Zap } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import TunnelEffect from '@/components/effects/TunnelEffect';
 import ParticleField from '@/components/effects/ParticleField';
-import { nodes } from '@/lib/graph/nodes';
-import { edges } from '@/lib/graph/edges';
+import { useNodes, useEdges } from '@/lib/graph/useNodes';
 import { ancientSites } from '@/lib/data/sites';
 
 const GLYPHS = ['⬡', '◈', '⊕', '△', '◇', '✦', '⟁', '⬟', '✧', '⊗', '⌬', '⎔'];
 
 export default function LandingPage() {
+  const nodes = useNodes();
+  const edges = useEdges();
   const setCurrentView = useUserStore((s) => s.setCurrentView);
   const [glyphIndex, setGlyphIndex] = useState(0);
   const [titleVisible, setTitleVisible] = useState(false);

@@ -4,8 +4,8 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars, Text, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
-import { nodes } from '@/lib/graph/nodes';
 import { edges } from '@/lib/graph/edges';
+import { useNodes } from '@/lib/graph/useNodes';
 import { GraphNode } from '@/lib/graph/types';
 import { useUserStore } from '@/lib/store/userStore';
 import { usePerformanceStore, getPerfConfig } from '@/lib/store/performanceStore';
@@ -176,6 +176,7 @@ function Scene({ visibleNodes, onSelect, skipEffects }: { visibleNodes: GraphNod
 }
 
 export default function UniverseView() {
+  const nodes = useNodes();
   const [selectedTheory, setSelectedTheory] = useState<GraphNode | null>(null);
   const { exploreTheory, setCurrentView } = useUserStore();
   const { mode } = usePerformanceStore();
@@ -184,7 +185,7 @@ export default function UniverseView() {
   // Apply performance mode node cap
   const visibleNodes = useMemo(
     () => nodes.length <= config.maxNodes ? nodes : nodes.slice(0, config.maxNodes),
-    [config.maxNodes]
+    [nodes, config.maxNodes]
   );
 
   const handleSelect = (node: GraphNode) => {

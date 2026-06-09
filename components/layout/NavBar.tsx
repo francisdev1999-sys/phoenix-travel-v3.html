@@ -17,7 +17,7 @@ const NAV_BASE = [
   { id: 'graph',          label: 'Knowledge Graph', icon: Grid3X3 },
   { id: 'universe',       label: 'Universe View',   icon: Globe },
   { id: 'timeline',       label: 'Timeline',        icon: Clock },
-  { id: 'globe',          label: 'Ancient Sites',   icon: MapPin },
+  { id: 'globe',          label: 'Nexus Globe',     icon: MapPin },
   { id: 'evidence-board', label: 'Evidence Board',  icon: BarChart3 },
   { id: 'rabbit-hole',    label: 'Rabbit Hole',     icon: Rabbit },
   { id: 'dashboard',      label: 'Dashboard',       icon: User },

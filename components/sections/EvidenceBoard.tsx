@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Pin, FileText, MapPin, AlertTriangle } from 'lucide-react';
-import { nodes } from '@/lib/graph/nodes';
+import { useNodes } from '@/lib/graph/useNodes';
 import { GraphNode } from '@/lib/graph/types';
 
 const PIN_COLORS = ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#8b5cf6'];
@@ -100,7 +100,8 @@ function buildCards(node: GraphNode): EvidenceCard[] {
 }
 
 export default function EvidenceBoard() {
-  const [selectedNode, setSelectedNode] = useState<GraphNode>(nodes[0]);
+  const nodes = useNodes();
+  const [selectedNode, setSelectedNode] = useState<GraphNode>(() => nodes[0]);
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
 
   const allCards = buildCards(selectedNode);

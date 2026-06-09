@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Info, SlidersHorizontal, BookOpen, X } from 'lucide-react';
 import { usePerformanceStore, getPerfConfig } from '@/lib/store/performanceStore';
-import { nodes } from '@/lib/graph/index';
+import { useNodes } from '@/lib/graph/useNodes';
 import { GraphNode, EvidenceLevel } from '@/lib/graph/types';
 import {
   getCredibilityDisplay,
@@ -337,6 +337,7 @@ function ControlsPanel({
 // ── Main component ──────────────────────────────────────────────────────────
 
 export default function AncientGlobe() {
+  const nodes = useNodes();
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [evidenceFilter, setEvidenceFilter] = useState<EvidenceLevel | 'all'>('all');
   const [opts, setOpts]                 = useState<CredibilityOptions>(DEFAULT_PUBLIC_OPTIONS);
@@ -352,7 +353,7 @@ export default function AncientGlobe() {
     return Object.fromEntries(
       EVIDENCE_LEVELS_ORDERED.map(level => [level, base.filter(n => n.evidence_level === level).length])
     ) as Record<string, number>;
-  }, [opts]);
+  }, [opts, nodes]);
 
   // Memoized visible nodes — only recomputes when filters change; capped by performance mode
   const globeNodes = useMemo(
@@ -363,7 +364,7 @@ export default function AncientGlobe() {
         .filter(n => evidenceFilter === 'all' || n.evidence_level === evidenceFilter);
       return filtered.length > globeConfig.maxNodes ? filtered.slice(0, globeConfig.maxNodes) : filtered;
     },
-    [opts, evidenceFilter, globeConfig.maxNodes]
+    [opts, evidenceFilter, globeConfig.maxNodes, nodes]
   );
 
   return (
@@ -373,7 +374,7 @@ export default function AncientGlobe() {
       <div className="flex-shrink-0 p-4 border-b border-purple-900/20">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div>
-            <h2 className="text-base font-black text-white">Research Sites</h2>
+            <h2 className="text-base font-black text-white">Nexus Globe</h2>
             <p className="text-[10px] text-slate-500 mt-0.5">
               Map markers indicate research subjects — they do not verify claims.
             </p>

@@ -2,7 +2,7 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, ChevronDown, ChevronUp, MapPin, Info, SlidersHorizontal, AlertTriangle, BookOpen } from 'lucide-react';
-import { nodes } from '@/lib/graph/index';
+import { useNodes } from '@/lib/graph/useNodes';
 import { GraphNode } from '@/lib/graph/types';
 import {
   getCredibilityDisplay,
@@ -151,6 +151,7 @@ function ControlsPanel({
 // ── Main component ──────────────────────────────────────────────────────────
 
 export default function TimelineExplorer() {
+  const nodes = useNodes();
   const [selectedNode, setSelectedNode]   = useState<GraphNode | null>(null);
   const [activeEras, setActiveEras]       = useState<Era[]>([...ERA_ORDER]);
   const [opts, setOpts]                   = useState<CredibilityOptions>(DEFAULT_PUBLIC_OPTIONS);
@@ -164,7 +165,7 @@ export default function TimelineExplorer() {
       .filter(n => nodePassesFilter(n, opts))
       .filter(n => activeEras.includes(getEra(n.year)))
       .sort((a, b) => a.year - b.year),
-    [opts, activeEras]
+    [opts, activeEras, nodes]
   );
 
   // Era counts memoized separately — only recalcs when opts change
@@ -176,7 +177,7 @@ export default function TimelineExplorer() {
         .length;
       return acc;
     }, {} as Record<Era, number>),
-    [opts]
+    [opts, nodes]
   );
 
   const toggleEra = (era: Era) =>
