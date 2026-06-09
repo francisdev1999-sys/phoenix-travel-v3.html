@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, ChevronDown, ChevronUp, MapPin, Info, SlidersHorizontal, AlertTriangle, BookOpen } from 'lucide-react';
 import { nodes } from '@/lib/graph/index';
@@ -182,6 +182,30 @@ export default function TimelineExplorer() {
   const toggleEra = (era: Era) =>
     setActiveEras(prev => prev.includes(era) ? prev.filter(e => e !== era) : [...prev, era]);
 
+  // Scroll-based windowing for large datasets — renders visible items ± overscan
+  const ITEM_HEIGHT = 100; // estimated collapsed item height
+  const OVERSCAN = 8;
+  const [scrollTop, setScrollTop] = useState(0);
+  const [containerH, setContainerH] = useState(600);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    setContainerH(el.clientHeight);
+    const obs = new ResizeObserver(([e]) => setContainerH(e.contentRect.height));
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  const { visibleStart, visibleEnd } = useMemo(() => {
+    const start = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - OVERSCAN);
+    const end   = Math.min(timelineNodes.length, Math.ceil((scrollTop + containerH) / ITEM_HEIGHT) + OVERSCAN);
+    return { visibleStart: start, visibleEnd: end };
+  }, [scrollTop, containerH, timelineNodes.length]);
+
+  const topPad    = visibleStart * ITEM_HEIGHT;
+  const bottomPad = Math.max(0, (timelineNodes.length - visibleEnd) * ITEM_HEIGHT);
+
   return (
     <div className="h-full flex flex-col overflow-hidden">
 
@@ -264,7 +288,11 @@ export default function TimelineExplorer() {
       </div>
 
       {/* ── Timeline ── */}
-      <div ref={containerRef} className="flex-1 overflow-y-auto p-6">
+      <div
+        ref={containerRef}
+        className="flex-1 overflow-y-auto p-6"
+        onScroll={e => setScrollTop((e.currentTarget as HTMLDivElement).scrollTop)}
+      >
         {timelineNodes.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-16 text-center">
             <BookOpen size={28} className="text-slate-600" />
@@ -277,8 +305,12 @@ export default function TimelineExplorer() {
           <div className="relative">
             <div className="absolute left-4 top-0 bottom-0 w-px bg-gradient-to-b from-purple-500/50 via-cyan-500/30 to-purple-500/10" />
 
+            {/* Top padding spacer preserves scroll height for virtual window */}
+            {topPad > 0 && <div style={{ height: topPad }} />}
+
             <div className="space-y-5 pl-12">
-              {timelineNodes.map((node, i) => {
+              {timelineNodes.slice(visibleStart, visibleEnd).map((node, relIdx) => {
+                const i = visibleStart + relIdx;
                 const era        = getEra(node.year);
                 const eraColor   = ERA_COLORS[era];
                 const cred       = getCredibilityDisplay(node);
@@ -433,6 +465,9 @@ export default function TimelineExplorer() {
                 );
               })}
             </div>
+
+            {/* Bottom padding spacer preserves scroll height for virtual window */}
+            {bottomPad > 0 && <div style={{ height: bottomPad }} />}
           </div>
         )}
       </div>

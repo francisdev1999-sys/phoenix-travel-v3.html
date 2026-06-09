@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef } from 'react';
+import { usePerformanceStore, getPerfConfig } from '@/lib/store/performanceStore';
 
 interface Particle {
   x: number;
@@ -25,12 +26,14 @@ export default function ParticleField() {
   const particlesRef = useRef<Particle[]>([]);
   const mouseRef = useRef({ x: 0, y: 0 });
   const animFrameRef = useRef<number>(0);
+  const { mode } = usePerformanceStore();
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    const particleMultiplier = getPerfConfig(mode).particleMultiplier;
 
     // Cached tunnel gradient — rebuilt only on resize
     let cachedTunnelGrad: CanvasGradient | null = null;
@@ -69,7 +72,7 @@ export default function ParticleField() {
 
     const initParticles = () => {
       particlesRef.current = [];
-      const count = Math.floor((canvas.width * canvas.height) / 8000);
+      const count = Math.floor((canvas.width * canvas.height) / 8000 * particleMultiplier);
       for (let i = 0; i < count; i++) {
         particlesRef.current.push(createParticle(canvas.width, canvas.height));
       }
@@ -198,7 +201,7 @@ export default function ParticleField() {
       window.removeEventListener('mousemove', handleMouse);
       cancelAnimationFrame(animFrameRef.current);
     };
-  }, []);
+  }, [mode]);
 
   return (
     <canvas

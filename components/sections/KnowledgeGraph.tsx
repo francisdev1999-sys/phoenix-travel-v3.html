@@ -1,10 +1,11 @@
 'use client';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ZoomIn, ZoomOut, RotateCcw, Layers, Activity } from 'lucide-react';
 import { nodes as staticNodes, edges as staticEdges, GraphNode, GraphEdge, CATEGORY_COLORS, EVIDENCE_COLORS } from '@/lib/graph';
 import { useUserStore } from '@/lib/store/userStore';
 import NodePanel from '@/components/sections/NodePanel';
+import { usePerformanceStore, getPerfConfig } from '@/lib/store/performanceStore';
 
 interface VisualNode {
   id: string;
@@ -36,6 +37,8 @@ export default function KnowledgeGraph() {
 
   const graphNodesRef = useRef<GraphNode[]>(staticNodes);
   const graphEdgesRef = useRef<GraphEdge[]>(staticEdges);
+  // Limited working set — filtered by performance mode; used in draw + physics
+  const drawEdgesRef = useRef<GraphEdge[]>(staticEdges);
 
   // Precomputed graph structure — rebuilt in initGraph
   const highDegreeSetRef = useRef<Set<string>>(new Set());
@@ -45,6 +48,12 @@ export default function KnowledgeGraph() {
   // Physics convergence — simulation pauses once stable
   const stableCountRef = useRef(0);
   const physicsActiveRef = useRef(true);
+
+  // Performance mode — applied in initGraph; reinitialises graph when mode changes
+  const { mode } = usePerformanceStore();
+  const perfConfig = useMemo(() => getPerfConfig(mode), [mode]);
+  const perfConfigRef = useRef(perfConfig);
+  useEffect(() => { perfConfigRef.current = perfConfig; }, [perfConfig]);
 
   // Diagnostics
   const fpsRef = useRef({ frames: 0, lastTime: 0, fps: 0 });
@@ -75,10 +84,29 @@ export default function KnowledgeGraph() {
   }, []);
 
   const initGraph = useCallback((w: number, h: number) => {
-    const nodes = graphNodesRef.current;
-    const edges = graphEdgesRef.current;
+    const allNodes = graphNodesRef.current;
+    const allEdges = graphEdgesRef.current;
+    const maxN = perfConfigRef.current.maxNodes;
     const cx = w / 2;
     const cy = h / 2;
+
+    // First-pass degree map on full graph — used to prioritise hub nodes when limiting
+    const fullDegMap: Record<string, number> = {};
+    allEdges.forEach(e => {
+      fullDegMap[e.from] = (fullDegMap[e.from] ?? 0) + 1;
+      fullDegMap[e.to]   = (fullDegMap[e.to]   ?? 0) + 1;
+    });
+
+    // Apply node cap: keep highest-degree nodes so the graph stays well-connected
+    const nodes = allNodes.length > maxN
+      ? [...allNodes].sort((a, b) => (fullDegMap[b.id] ?? 0) - (fullDegMap[a.id] ?? 0)).slice(0, maxN)
+      : allNodes;
+
+    // Filter edges to only those between visible nodes
+    const nodeIds = new Set(nodes.map(n => n.id));
+    const edges = allEdges.filter(e => nodeIds.has(e.from) && nodeIds.has(e.to));
+    drawEdgesRef.current = edges;
+
     const categories = [...new Set(nodes.map(n => n.category))];
 
     // O(E) precompute — eliminates per-frame degree scans
@@ -128,7 +156,7 @@ export default function KnowledgeGraph() {
 
     stableCountRef.current = 0;
     physicsActiveRef.current = true;
-  }, []);
+  }, [perfConfig]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -248,7 +276,7 @@ export default function KnowledgeGraph() {
       ctx.scale(scale, scale);
 
       // Draw edges
-      graphEdgesRef.current.forEach(edge => {
+      drawEdgesRef.current.forEach(edge => {
         const src = getVNode(edge.from);
         const tgt = getVNode(edge.to);
         if (!src || !tgt) return;
@@ -306,15 +334,24 @@ export default function KnowledgeGraph() {
 
         if (isDimmed) ctx.globalAlpha = 0.2;
 
-        const glowSize = r * (isSelected ? 3.2 : isHovered ? 2.6 : 2);
-        const glow = ctx.createRadialGradient(vn.x, vn.y, 0, vn.x, vn.y, glowSize);
-        glow.addColorStop(0, nodeColor + 'aa');
-        glow.addColorStop(0.5, nodeColor + '33');
-        glow.addColorStop(1, 'transparent');
-        ctx.beginPath();
-        ctx.arc(vn.x, vn.y, glowSize, 0, Math.PI * 2);
-        ctx.fillStyle = glow;
-        ctx.fill();
+        // Glow: full radial gradient only for selected/hovered; flat circle for the rest
+        // Saves ~2 createRadialGradient calls per inactive node per frame
+        if (isSelected || isHovered) {
+          const glowSize = r * (isSelected ? 3.2 : 2.6);
+          const glow = ctx.createRadialGradient(vn.x, vn.y, 0, vn.x, vn.y, glowSize);
+          glow.addColorStop(0, nodeColor + 'aa');
+          glow.addColorStop(0.5, nodeColor + '33');
+          glow.addColorStop(1, 'transparent');
+          ctx.beginPath();
+          ctx.arc(vn.x, vn.y, glowSize, 0, Math.PI * 2);
+          ctx.fillStyle = glow;
+          ctx.fill();
+        } else if (!isDimmed) {
+          ctx.beginPath();
+          ctx.arc(vn.x, vn.y, r * 2, 0, Math.PI * 2);
+          ctx.fillStyle = nodeColor + '1a';
+          ctx.fill();
+        }
 
         if (isSelected) {
           ctx.beginPath();
@@ -324,12 +361,17 @@ export default function KnowledgeGraph() {
           ctx.stroke();
         }
 
-        const bodyGrad = ctx.createRadialGradient(vn.x - r * 0.3, vn.y - r * 0.3, 0, vn.x, vn.y, r);
-        bodyGrad.addColorStop(0, nodeColor + 'ff');
-        bodyGrad.addColorStop(1, nodeColor + '99');
+        // Body: gradient for selected/hovered; flat fill for inactive nodes
         ctx.beginPath();
         ctx.arc(vn.x, vn.y, r, 0, Math.PI * 2);
-        ctx.fillStyle = bodyGrad;
+        if (isSelected || isHovered) {
+          const bodyGrad = ctx.createRadialGradient(vn.x - r * 0.3, vn.y - r * 0.3, 0, vn.x, vn.y, r);
+          bodyGrad.addColorStop(0, nodeColor + 'ff');
+          bodyGrad.addColorStop(1, nodeColor + '99');
+          ctx.fillStyle = bodyGrad;
+        } else {
+          ctx.fillStyle = nodeColor + 'cc';
+        }
         ctx.fill();
 
         ctx.beginPath();
@@ -377,7 +419,7 @@ export default function KnowledgeGraph() {
     const interval = setInterval(() => {
       setDiagData({
         nodes: nodesRef.current.length,
-        edges: graphEdgesRef.current.length,
+        edges: drawEdgesRef.current.length,
         fps: fpsRef.current.fps,
         physics: physicsActiveRef.current,
       });

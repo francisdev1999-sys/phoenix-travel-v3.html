@@ -5,6 +5,7 @@ import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Info, SlidersHorizontal, BookOpen, X } from 'lucide-react';
+import { usePerformanceStore, getPerfConfig } from '@/lib/store/performanceStore';
 import { nodes } from '@/lib/graph/index';
 import { GraphNode, EvidenceLevel } from '@/lib/graph/types';
 import {
@@ -361,6 +362,8 @@ export default function AncientGlobe() {
   const [evidenceFilter, setEvidenceFilter] = useState<EvidenceLevel | 'all'>('all');
   const [opts, setOpts]                 = useState<CredibilityOptions>(DEFAULT_PUBLIC_OPTIONS);
   const [showControls, setShowControls] = useState(false);
+  const { mode } = usePerformanceStore();
+  const globeConfig = useMemo(() => getPerfConfig(mode), [mode]);
 
   // Memoized per-level counts — avoids repeated full-array scans per render
   const levelCounts = useMemo(() => {
@@ -372,13 +375,16 @@ export default function AncientGlobe() {
     ) as Record<string, number>;
   }, [opts]);
 
-  // Memoized visible nodes — only recomputes when filters change
+  // Memoized visible nodes — only recomputes when filters change; capped by performance mode
   const globeNodes = useMemo(
-    () => nodes
-      .filter(n => isValidCoordinate(n.coordinates))
-      .filter(n => nodePassesFilter(n, opts))
-      .filter(n => evidenceFilter === 'all' || n.evidence_level === evidenceFilter),
-    [opts, evidenceFilter]
+    () => {
+      const filtered = nodes
+        .filter(n => isValidCoordinate(n.coordinates))
+        .filter(n => nodePassesFilter(n, opts))
+        .filter(n => evidenceFilter === 'all' || n.evidence_level === evidenceFilter);
+      return filtered.length > globeConfig.maxNodes ? filtered.slice(0, globeConfig.maxNodes) : filtered;
+    },
+    [opts, evidenceFilter, globeConfig.maxNodes]
   );
 
   return (
