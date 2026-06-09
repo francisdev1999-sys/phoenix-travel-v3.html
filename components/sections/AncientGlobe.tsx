@@ -150,12 +150,9 @@ function NodeMarker({
   onSelect: (n: GraphNode) => void;
 }) {
   const [hovered, setHovered] = useState(false);
-  const cred     = getCredibilityDisplay(node);
-  const colorHex = cred.badgeColor;
-  const color    = useMemo(() => new THREE.Color(colorHex), [colorHex]);
-  const pos      = useMemo(
+  const cred = getCredibilityDisplay(node);
+  const pos  = useMemo(
     () => latLonToXYZ(node.coordinates![0], node.coordinates![1], R + 0.1),
-    // coordinates are static per node — no need to include array ref
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [node.coordinates![0], node.coordinates![1]]
   );
@@ -163,37 +160,29 @@ function NodeMarker({
   return (
     <group position={pos}>
       <mesh
-        scale={hovered ? 2.8 : 1}
+        scale={hovered ? 2 : 1}
         onClick={e => { e.stopPropagation(); onSelect(node); }}
         onPointerOver={() => { setHovered(true); document.body.style.cursor = 'pointer'; }}
         onPointerOut={() => { setHovered(false); document.body.style.cursor = 'default'; }}
       >
-        <sphereGeometry args={[0.11, 14, 14]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={hovered ? 4 : 2.5 * cred.opacity}
-          transparent
-          opacity={cred.opacity}
-        />
+        <sphereGeometry args={[0.08, 6, 6]} />
+        <meshBasicMaterial color="#ff2222" />
       </mesh>
 
       {hovered && (
         <Html center distanceFactor={8} style={{ pointerEvents: 'none' }}>
           <div style={{
-            background:  'rgba(0,0,8,0.85)',
-            border:      `1px solid ${colorHex}80`,
-            borderRadius: 3,
-            padding:     '2px 6px',
-            fontSize:    9,
-            color:       colorHex,
-            whiteSpace:  'nowrap',
-            fontFamily:  'monospace',
+            background:    'rgba(0,0,8,0.85)',
+            border:        '1px solid #ff222280',
+            borderRadius:  3,
+            padding:       '2px 6px',
+            fontSize:      9,
+            color:         '#ff4444',
+            whiteSpace:    'nowrap',
+            fontFamily:    'monospace',
             letterSpacing: '0.05em',
-            marginTop:   18,
-            userSelect:  'none',
-            textShadow:  `0 0 6px ${colorHex}`,
-            opacity:     cred.opacity,
+            marginTop:     18,
+            userSelect:    'none',
           }}>
             {node.title}
             <span style={{ marginLeft: 4, fontSize: 7, opacity: 0.7 }}>
