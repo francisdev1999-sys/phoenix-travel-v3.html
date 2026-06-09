@@ -166,18 +166,18 @@ function NodeMarker({
         onPointerOut={() => { setHovered(false); document.body.style.cursor = 'default'; }}
       >
         <sphereGeometry args={[0.08, 6, 6]} />
-        <meshBasicMaterial color="#ff2222" />
+        <meshBasicMaterial color={cred.badgeColor} />
       </mesh>
 
       {hovered && (
         <Html center distanceFactor={8} style={{ pointerEvents: 'none' }}>
           <div style={{
-            background:    'rgba(0,0,8,0.85)',
-            border:        '1px solid #ff222280',
+            background:    'rgba(0,0,8,0.88)',
+            border:        `1px solid ${cred.badgeColor}80`,
             borderRadius:  3,
             padding:       '2px 6px',
             fontSize:      9,
-            color:         '#ff4444',
+            color:         cred.badgeColor,
             whiteSpace:    'nowrap',
             fontFamily:    'monospace',
             letterSpacing: '0.05em',
@@ -568,29 +568,36 @@ export default function AncientGlobe() {
           })()}
         </AnimatePresence>
 
-        {/* ── Evidence legend ── */}
-        <div className="absolute bottom-4 left-4 glass rounded-xl p-3 hidden sm:block">
-          <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-2">
-            Evidence level
+        {/* ── Dot colour key (always visible, left side) ── */}
+        <div className="absolute top-3 left-3 glass rounded-xl p-3">
+          <div className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+            Dot colour key
           </div>
           {EVIDENCE_LEVELS_ORDERED.map(level => {
             const cfg = EVIDENCE_CFG[level];
+            const active = evidenceFilter === 'all' || evidenceFilter === level;
             return (
-              <div key={level} className="flex items-center gap-2 text-[10px] text-slate-500 mb-1">
-                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: cfg.color }} />
-                {cfg.badge}
-              </div>
+              <button
+                key={level}
+                onClick={() => setEvidenceFilter(evidenceFilter === level ? 'all' : level)}
+                className="flex items-center gap-2 w-full text-left py-0.5 group"
+              >
+                <div
+                  className="w-2.5 h-2.5 rounded-full flex-shrink-0 transition-transform group-hover:scale-125"
+                  style={{ background: cfg.color, opacity: active ? 1 : 0.3 }}
+                />
+                <span
+                  className="text-[10px] transition-colors"
+                  style={{ color: evidenceFilter === level ? cfg.color : '#64748b' }}
+                >
+                  {cfg.badge}
+                </span>
+              </button>
             );
           })}
-          <div className="border-t border-white/5 pt-2 mt-2 text-[8px] text-slate-700 leading-relaxed">
-            Opacity reflects evidence strength.<br />
-            Markers do not validate claims.
+          <div className="border-t border-white/5 pt-2 mt-1.5 text-[9px] text-slate-600">
+            Drag · Scroll · Click
           </div>
-        </div>
-
-        {/* ── Interaction hint ── */}
-        <div className="absolute top-3 left-3 glass rounded-lg px-3 py-2 hidden sm:block">
-          <div className="text-[10px] text-slate-500">Drag · Scroll · Click markers</div>
         </div>
       </div>
     </div>
