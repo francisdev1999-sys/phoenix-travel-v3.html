@@ -5,6 +5,9 @@ import { ChevronDown, Compass, Zap } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import TunnelEffect from '@/components/effects/TunnelEffect';
 import ParticleField from '@/components/effects/ParticleField';
+import { nodes } from '@/lib/graph/nodes';
+import { edges } from '@/lib/graph/edges';
+import { ancientSites } from '@/lib/data/sites';
 
 const GLYPHS = ['⬡', '◈', '⊕', '△', '◇', '✦', '⟁', '⬟', '✧', '⊗', '⌬', '⎔'];
 
@@ -194,9 +197,9 @@ export default function LandingPage() {
             className="flex items-center gap-8 mt-8"
           >
             {[
-              { label: 'Theories', value: '50+' },
-              { label: 'Connections', value: '200+' },
-              { label: 'Ancient Sites', value: '12' },
+              { label: 'Theories', value: String(nodes.length) },
+              { label: 'Connections', value: String(edges.length) },
+              { label: 'Ancient Sites', value: String(ancientSites.length) },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <div className="text-2xl font-black text-purple-300">{stat.value}</div>
