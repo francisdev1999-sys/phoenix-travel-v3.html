@@ -2152,7 +2152,7 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
     {
       id: 'src-dt-4',
       title: 'The Dragon in China and Japan',
-      source_type: 'Folklore Collection',
+      source_type: 'Historical Text',
       author: 'Marinus Willem de Visser',
       publication_year: 1913,
       credibility_score: 0.78,

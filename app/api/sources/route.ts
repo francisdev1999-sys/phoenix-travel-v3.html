@@ -79,6 +79,7 @@ export async function POST(req: NextRequest) {
   const {
     title, sourceType, author, publicationYear, publisher, journal,
     volume, issue, pages, url, doi, isbn, abstract, notes, language,
+    sourceTrustExplanation,
   } = body;
 
   if (!title?.trim())      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
@@ -117,6 +118,7 @@ export async function POST(req: NextRequest) {
       abstract:        abstract?.trim()  || null,
       notes:           notes?.trim()     || null,
       language:        language          || 'en',
+      sourceTrustExplanation: sourceTrustExplanation?.trim() || null,
       credibilityScore: score,
       credibilityFactors: factors,
       status: 'pending',

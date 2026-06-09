@@ -9,7 +9,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'gobekli-tepe',
     title: 'Göbekli Tepe',
-    category: 'Ancient Civilizations',
+    category: 'Ancient Civilization',
     description: 'A Neolithic sanctuary in southeastern Turkey dated to approximately 9600–8200 BCE, making it the oldest known monumental stone structure in the world — predating Stonehenge by 6,000 years and the Egyptian pyramids by 7,000 years. Discovered by Klaus Schmidt in 1994, the site consists of T-shaped limestone pillars up to 5.5 meters tall arranged in circular enclosures, decorated with sophisticated bas-relief carvings of animals and abstract symbols. It was deliberately buried around 8000 BCE.',
     claims: [
       'Challenges the accepted model that agriculture preceded monumental architecture — the reverse may be true.',
@@ -35,7 +35,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'atlantis',
     title: 'Atlantis',
-    category: 'Ancient Civilizations',
+    category: 'Ancient Civilization',
     description: 'A legendary island civilization first described by the Greek philosopher Plato in his dialogues Timaeus and Critias (c. 360 BCE). Plato portrayed Atlantis as a powerful naval empire located "beyond the Pillars of Hercules" that sank into the Atlantic Ocean roughly 9,000 years before Solon\'s time following divine punishment for moral corruption. The story has generated centuries of scholarly debate about whether it represents allegory, philosophical invention, or a memory of real events.',
     claims: [
       'Plato claimed the story originated from Egyptian priests who told Solon of a historical event.',
@@ -61,7 +61,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'sumerian-civilization',
     title: 'Sumerian Civilization',
-    category: 'Ancient Civilizations',
+    category: 'Ancient Civilization',
     description: 'One of the earliest known complex civilizations, emerging in Mesopotamia (modern southern Iraq) around 4500–4000 BCE. The Sumerians developed cuneiform writing, monumental ziggurats, sophisticated legal systems (including the Code of Ur-Nammu), astronomy, mathematics including a base-60 system still used for time and angles, and elaborate mythological traditions recorded in texts such as the Enuma Elish and the Epic of Gilgamesh. Sumerian culture profoundly influenced Babylonian, Assyrian, and later civilizations.',
     claims: [
       'Sumerian astronomical records show sophisticated observation of planetary cycles centuries before Greek astronomy.',
@@ -85,7 +85,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'indus-valley',
     title: 'Indus Valley Civilization',
-    category: 'Ancient Civilizations',
+    category: 'Ancient Civilization',
     description: 'A Bronze Age civilization (c. 3300–1300 BCE) centered in the northwestern regions of South Asia, comprising the modern countries of Pakistan and northwest India. At its peak, it encompassed over 1 million square kilometres — larger than ancient Egypt or Mesopotamia. Cities like Mohenjo-daro and Harappa featured planned street grids, sophisticated drainage systems, standardized weights and measures, and evidence of long-distance trade. The Indus script remains undeciphered.',
     claims: [
       'The undeciphered Indus script may represent a sophisticated language system encoding unknown knowledge.',
@@ -109,7 +109,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'easter-island',
     title: 'Easter Island (Rapa Nui)',
-    category: 'Ancient Civilizations',
+    category: 'Ancient Civilization',
     description: 'A remote Polynesian island in the southeastern Pacific Ocean, home to the Rapa Nui people who erected approximately 900 massive stone statues called moai between roughly 1200 and 1500 CE. The moai average 4 meters in height and 12.5 tons in weight, with the largest standing 10 meters and weighing 74 tons. How the relatively small island population transported and erected these statues — and the role of internal conflict and deforestation in the civilization\'s decline — are subjects of ongoing research.',
     claims: [
       'The logistics of moai transport without wheels or draft animals represents an organizational and engineering achievement that continues to be debated.',
@@ -133,7 +133,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'younger-dryas',
     title: 'Younger Dryas Event',
-    category: 'Ancient Civilizations',
+    category: 'Ancient Civilization',
     description: 'A rapid and severe climatic cooling period approximately 12,900–11,700 years ago that interrupted the warming trend following the Last Glacial Maximum. Temperatures in Greenland dropped by approximately 10°C within decades. The Younger Dryas Boundary (YDB) is marked globally by a distinctive layer of platinum, nano-diamonds, and microspherules. An ongoing scientific debate concerns whether a cosmic impact or airburst event triggered the cooling, which may have caused widespread megafauna extinction, human population decline, and the conditions that spurred the Agricultural Revolution.',
     claims: [
       'The Younger Dryas Impact Hypothesis proposes that a fragmented comet struck or exploded above North America, triggering cooling, massive fires, and megafauna extinction.',
@@ -157,7 +157,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'nabta-playa',
     title: 'Nabta Playa',
-    category: 'Ancient Civilizations',
+    category: 'Ancient Civilization',
     description: 'An ancient basin in the Nubian Desert of Egypt containing one of the world\'s earliest known astronomical alignments, dated to approximately 6700–5000 BCE — predating Stonehenge by at least 1,000 years. The site includes a stone circle with alignment to the summer solstice sunrise and five megalithic structures that may correspond to bright stars. It was occupied by cattle-herding peoples during a wetter climatic period in the Sahara.',
     claims: [
       'The Nabta Playa stone circle represents the earliest confirmed astronomical alignment in Africa.',
@@ -181,7 +181,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'ancient-megalithic-sites',
     title: 'Ancient Megalithic Architecture',
-    category: 'Ancient Civilizations',
+    category: 'Ancient Civilization',
     description: 'A global pattern of monumental stone construction spanning from the British Isles to Southeast Asia, dating from approximately 4500 BCE through 1500 CE. Key examples include Stonehenge (UK), Carnac (France), Avebury (UK), Newgrange (Ireland), Puma Punku (Bolivia), and hundreds of sites across Europe, the Mediterranean, and the Pacific. The movement and precision placement of stones weighing tens to hundreds of tons, often aligned to astronomical events, represents a consistent engineering tradition across cultures with no known direct contact.',
     claims: [
       'The global distribution of megalithic construction traditions suggests either diffusion of knowledge or independent convergent development of similar solutions.',
@@ -209,7 +209,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'great-pyramid',
     title: 'Great Pyramid of Giza',
-    category: 'Egypt & Ancient Engineering',
+    category: 'Ancient Site',
     description: 'The largest of the Giza pyramids, constructed c. 2560 BCE under Pharaoh Khufu of the Fourth Dynasty. It originally stood 146.5 meters tall and contains approximately 2.3 million stone blocks averaging 2.5 tons each, with some granite blocks exceeding 80 tons. The pyramid aligns to true north within 3/60 of a degree. For 3,800 years it was the tallest human-made structure on Earth. The Khufu graffiti — cartouches identifying work gangs — found in relieving chambers provides direct historical attribution.',
     claims: [
       'Mathematical relationships between the pyramid\'s dimensions encode Pi and the Golden Ratio — though debate continues about whether these were intentional or emergent from construction methods.',
@@ -236,7 +236,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'sphinx',
     title: 'Great Sphinx of Giza',
-    category: 'Egypt & Ancient Engineering',
+    category: 'Ancient Site',
     description: 'A monolithic limestone statue depicting a recumbent lion with a human head, located on the Giza plateau in Egypt. Mainstream Egyptology dates it to the reign of Pharaoh Khafre (c. 2558–2532 BCE). The Sphinx faces due east and aligns with the rising sun at the spring and autumn equinoxes. It is the largest surviving monolithic statue in the world, approximately 73 meters long and 20 meters tall.',
     claims: [
       'Geologist Robert Schoch argues that erosion patterns on the Sphinx enclosure walls show characteristics of water weathering rather than wind erosion, implying a date predating 5000 BCE when Egypt last experienced significant rainfall.',
@@ -261,7 +261,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'pyramid-construction-debate',
     title: 'Pyramid Construction Methods',
-    category: 'Egypt & Ancient Engineering',
+    category: 'Ancient Site',
     description: 'The engineering methods used to construct the Egyptian pyramids remain an active area of research. While the conventional framework — organized state labor, copper tools, wooden sledges, and ramp systems — is supported by extensive archaeological evidence, specific logistical details continue to be debated. Key questions include the exact ramp configuration, how granite beams were moved from Aswan to Giza, and the organization of the approximately 20,000-strong workforce.',
     claims: [
       'The Wadi al-Jarf papyri (discovered 2013) are the oldest papyri ever found and document the transport of limestone for the Great Pyramid under inspector Merer.',
@@ -289,7 +289,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'book-of-enoch',
     title: 'Book of Enoch (1 Enoch)',
-    category: 'Religious Texts & Mythology',
+    category: 'Religion',
     description: 'An ancient Jewish religious text attributed to Enoch, the great-grandfather of Noah, composed primarily between the 3rd century BCE and 1st century CE. It describes the Watchers — a class of angels who descended to Earth, took human wives, and taught forbidden knowledge — and their offspring the Nephilim. Multiple copies were found among the Dead Sea Scrolls, confirming its circulation in Second Temple Judaism. The Ethiopian Orthodox Church includes it in its biblical canon. The Epistle of Jude in the New Testament quotes directly from 1 Enoch.',
     claims: [
       'The Watchers narrative provides a detailed account of divine-human interbreeding and the transmission of advanced knowledge to humanity.',
@@ -313,7 +313,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'watchers',
     title: 'The Watchers (Grigori)',
-    category: 'Religious Texts & Mythology',
+    category: 'Religion',
     description: 'A class of angels described in the Book of Enoch who are assigned to observe humanity but instead descend to Mount Hermon, take human wives, and teach forbidden knowledge. The text names 200 Watchers who made a binding oath on the mountain. Their leader Samyaza, alongside named angels including Azazel, is said to have taught metalworking, cosmetics, sorcery, astrology, and weapons manufacture. The resulting corruption of humanity is presented as a cause of the biblical flood.',
     claims: [
       'The Watcher narrative is the most detailed account in Jewish literature of divine beings directly intervening in human civilization and transmitting knowledge.',
@@ -337,7 +337,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'nephilim',
     title: 'Nephilim',
-    category: 'Religious Texts & Mythology',
+    category: 'Religion',
     description: 'Beings described in Genesis 6:4 and Numbers 13:33 as arising from the union of the "sons of God" and "daughters of men." The term has been translated as "giants," "fallen ones," or "those who cause others to fall." The Book of Enoch elaborates them as the offspring of the Watchers. In Numbers, Israelite spies describe the inhabitants of Canaan as Nephilim, causing the Israelites to see themselves as grasshoppers by comparison. The Rephaim and Anakim in the Hebrew Bible are sometimes connected to post-flood Nephilim traditions.',
     claims: [
       'The Nephilim narrative reflects widespread ancient traditions of semi-divine heroic beings predating recorded civilization.',
@@ -361,7 +361,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'dead-sea-scrolls',
     title: 'Dead Sea Scrolls',
-    category: 'Religious Texts & Mythology',
+    category: 'Religion',
     description: 'A collection of approximately 900 manuscripts discovered between 1947 and 1956 in caves near Qumran on the northwestern shore of the Dead Sea. Dated to between 150 BCE and 70 CE, they include the oldest known surviving copies of books later included in the Hebrew Bible, apocryphal texts including multiple copies of 1 Enoch and the Book of Jubilees, sectarian texts believed to originate from the Essene community at Qumran, and the enigmatic Copper Scroll describing hidden treasures. They fundamentally advanced understanding of Second Temple Judaism and early Christianity.',
     claims: [
       'The scrolls provide evidence that Jewish textual diversity in the Second Temple period was far greater than previously understood.',
@@ -382,7 +382,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'epic-of-gilgamesh',
     title: 'Epic of Gilgamesh',
-    category: 'Religious Texts & Mythology',
+    category: 'Religion',
     description: 'Among the oldest known works of literature, the Epic of Gilgamesh is a Babylonian poem originating from Sumerian sources around 2100 BCE and compiled into a standard version by the scholar Sîn-lēqi-unninni around 1200 BCE. It follows the legendary king Gilgamesh of Uruk and his companion Enkidu through adventures, the death of Enkidu, and Gilgamesh\'s subsequent quest for immortality. Tablet XI contains a detailed flood narrative that predates and closely parallels the biblical account of Noah, including a divinely-chosen hero, a boat containing animals, a dove and raven sent to find land, and the vessel coming to rest on a mountain.',
     claims: [
       'The flood narrative in Gilgamesh (and the older Atra-Hasis epic) is sufficiently similar to the Genesis flood account to suggest a shared Mesopotamian literary tradition or common historical memory.',
@@ -405,7 +405,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'flood-narratives',
     title: 'Global Flood Traditions',
-    category: 'Religious Texts & Mythology',
+    category: 'Religion',
     description: 'Flood mythology appears in an estimated 200+ independent cultural traditions worldwide, including in Mesopotamia (Gilgamesh, Atra-Hasis), the Hebrew Bible (Noah), Hindu texts (Manu), ancient Greece (Deucalion), Mesoamerica (Popol Vuh), the American Pacific Northwest, Aboriginal Australia, and China. The consistency of core elements — a divinely-ordered catastrophe, a chosen survivor, a boat containing animals or seeds, and post-flood world renewal — has generated sustained debate about whether these reflect shared historical memory of real catastrophic flooding events.',
     claims: [
       'The global distribution of structurally similar flood myths suggests a common cultural memory of real events, potentially including Black Sea flooding (~5600 BCE per Ryan and Pitman) or Younger Dryas sea level rise.',
@@ -429,7 +429,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'comparative-mythology',
     title: 'Comparative Mythology',
-    category: 'Religious Texts & Mythology',
+    category: 'Religion',
     description: 'The academic field studying relationships between mythologies of different cultures. Key figures include Max Müller, James Frazer, Carl Jung, Joseph Campbell, and Georges Dumézil. Central findings include recurring mythological structures (Campbell\'s monomyth/Hero\'s Journey), shared Indo-European mythological inheritance documented through linguistic and textual analysis, and consistent archetypes across unrelated cultures. The field bridges folklore, linguistics, psychology, anthropology, and religious studies.',
     claims: [
       'The consistency of mythological archetypes across unrelated cultures — dying and rising gods, trickster figures, world trees, primordial floods — may reflect universal features of human cognition (Jung\'s collective unconscious) or shared very ancient cultural heritage.',
@@ -558,7 +558,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'human-evolution',
     title: 'Human Evolution',
-    category: 'Human Origins',
+    category: 'Forbidden Archaeology',
     description: 'The evolutionary history of Homo sapiens, tracing the lineage from common ancestors with other great apes through australopithecines and various Homo species to anatomically modern humans (c. 300,000 years ago in Africa). Supported by convergent evidence from paleontology, comparative anatomy, genetics, and genomics. Key milestones include bipedalism (c. 4+ million years ago), stone tool use (Oldowan c. 3.3 million years ago), controlled fire use (c. 1 million years ago), and behavioral modernity (c. 70,000–50,000 years ago).',
     claims: [
       'Genomic analysis has revealed that modern humans carry 1–4% Neanderthal DNA (non-African populations) and some populations carry Denisovan DNA, documenting interbreeding events.',
@@ -578,7 +578,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'neanderthals',
     title: 'Neanderthals',
-    category: 'Human Origins',
+    category: 'Forbidden Archaeology',
     description: 'An archaic human species (Homo neanderthalensis) that inhabited Europe and western Asia from approximately 400,000 to 40,000 years ago, overlapping with the arrival of Homo sapiens in Europe. Neanderthals had larger brains than modern humans (on average), made sophisticated Mousterian tools, buried their dead, used pigments and feathers for adornment, and may have produced rudimentary symbolic art. Ancient DNA analysis has confirmed interbreeding with Homo sapiens — non-African modern humans carry approximately 1–4% Neanderthal DNA.',
     claims: [
       'The presence of Neanderthal DNA in modern non-African human populations is definitively established through ancient DNA analysis.',
@@ -598,7 +598,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'denisovans',
     title: 'Denisovans',
-    category: 'Human Origins',
+    category: 'Forbidden Archaeology',
     description: 'An archaic human population or species known almost entirely from ancient DNA analysis of fragmentary remains found in Denisova Cave, Siberia, dated to approximately 30,000–200,000 years ago. Denisovans are genetically distinct from both Neanderthals and Homo sapiens. Modern Melanesian, Aboriginal Australian, and some East Asian and Pacific Islander populations carry up to 5% Denisovan DNA, suggesting interbreeding. A jawbone from Tibet (Xiahe mandible) suggests Denisovans were adapted to high altitude environments.',
     claims: [
       'Denisovans represent a major human lineage previously completely unknown until ancient DNA analysis in 2010.',
@@ -618,7 +618,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'stoned-ape-theory',
     title: 'Stoned Ape Theory',
-    category: 'Human Origins',
+    category: 'Forbidden Archaeology',
     description: 'A hypothesis proposed by ethnobotanist Terence McKenna in his 1992 book "Food of the Gods," suggesting that the consumption of psilocybin-containing mushrooms by early hominids in sub-Saharan Africa played a role in the rapid expansion of human cognitive capabilities, contributing to the development of language, art, and consciousness.',
     claims: [
       'Psilocybe cubensis grows naturally in the dung of African cattle — a food source that expanding hominid groups following herds would have encountered.',
@@ -642,7 +642,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'human-migration',
     title: 'Human Migration Out of Africa',
-    category: 'Human Origins',
+    category: 'Forbidden Archaeology',
     description: 'The "Out of Africa" model, supported by extensive genetic, archaeological, and paleontological evidence, proposes that anatomically modern Homo sapiens evolved in Africa and dispersed across the globe beginning approximately 60,000–70,000 years ago. By 45,000 years ago, humans had reached Australia; by 15,000–25,000 years ago, the Americas.',
     claims: [
       'The genetic evidence for a recent African origin of all modern humans is robust and supported by multiple independent analyses.',
@@ -666,7 +666,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'simulation-hypothesis',
     title: 'Simulation Hypothesis',
-    category: 'Consciousness & Reality',
+    category: 'Unexplained Phenomenon',
     description: 'A philosophical proposition formalized by Nick Bostrom in his 2003 paper "Are You Living in a Computer Simulation?" arguing that at least one of three scenarios must be true: (1) nearly all civilizations go extinct before developing simulation technology; (2) advanced civilizations choose not to run such simulations; or (3) we are almost certainly living in a computer simulation.',
     claims: [
       'The mathematical precision of physical laws is consistent with computational design.',
@@ -690,7 +690,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'hard-problem-consciousness',
     title: 'Hard Problem of Consciousness',
-    category: 'Consciousness & Reality',
+    category: 'Unexplained Phenomenon',
     description: 'Philosopher David Chalmers coined the phrase "hard problem of consciousness" in 1995 to describe the explanatory gap between objective physical brain processes and subjective experience (qualia). The hard problem asks: why is there subjective experience at all? Why does brain activity feel like something from the inside? This problem remains one of the deepest unsolved questions in philosophy of mind.',
     claims: [
       'No current physical theory explains why any physical process should give rise to subjective experience.',
@@ -713,7 +713,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'quantum-consciousness',
     title: 'Quantum Consciousness (Orch-OR)',
-    category: 'Consciousness & Reality',
+    category: 'Unexplained Phenomenon',
     description: 'The Orchestrated Objective Reduction (Orch-OR) theory proposed by physicist Roger Penrose and anesthesiologist Stuart Hameroff proposes that consciousness arises from quantum computations in microtubules within neurons, and that consciousness is connected to fundamental features of spacetime geometry.',
     claims: [
       'Microtubules in neurons may maintain quantum coherence long enough for quantum computation to play a role in neural information processing.',
@@ -737,7 +737,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'collective-unconscious',
     title: 'Collective Unconscious',
-    category: 'Consciousness & Reality',
+    category: 'Unexplained Phenomenon',
     description: 'Carl Jung\'s concept of a part of the unconscious mind shared among beings of the same species, containing archetypes — universal, archaic patterns and images that derive from the accumulated experience of humanity. Jung proposed that the collective unconscious explains why myths and symbols from unrelated cultures share structural similarities.',
     claims: [
       'The consistent appearance of structurally similar mythological figures and themes across unrelated cultures supports the existence of shared unconscious structures.',
@@ -763,7 +763,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'freemasonry',
     title: 'Freemasonry',
-    category: 'Secret Societies & Esoteric',
+    category: 'Esoterica',
     description: 'A fraternal organization tracing its formal origins to the founding of the Grand Lodge of England in 1717. Its initiatory structure involves three craft degrees (Entered Apprentice, Fellow Craft, Master Mason) plus additional rites. Notable Freemasons have included George Washington, Benjamin Franklin, and Wolfgang Amadeus Mozart.',
     claims: [
       'The physical layout of Washington D.C. incorporates Masonic symbols and geometric relationships.',
@@ -787,7 +787,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'rosicrucianism',
     title: 'Rosicrucianism',
-    category: 'Secret Societies & Esoteric',
+    category: 'Esoterica',
     description: 'A philosophical and esoteric tradition that emerged in early 17th-century Europe with the anonymous publication of the Rosicrucian manifestos: the Fama Fraternitatis (1614), the Confessio Fraternitatis (1615), and The Chymical Wedding of Christian Rosenkreuz (1616). Whether an actual Rosicrucian brotherhood existed at the time or the manifestos were a literary hoax remains debated.',
     claims: [
       'The Rosicrucian manifestos influenced early modern natural philosophy and arguably contributed to the intellectual environment from which the Royal Society emerged.',
@@ -809,7 +809,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'hermeticism',
     title: 'Hermeticism',
-    category: 'Secret Societies & Esoteric',
+    category: 'Esoterica',
     description: 'A philosophical, religious, and esoteric tradition based primarily on writings attributed to Hermes Trismegistus, a legendary figure representing a synthesis of the Greek god Hermes and the Egyptian god Thoth. The Hermetic corpus, compiled in Alexandria between the 1st and 3rd centuries CE, covers theology, astrology, alchemy, and theurgy. Core Hermetic principles include "As above, so below."',
     claims: [
       'The Hermetic texts preserve ancient Egyptian and Neoplatonic wisdom transmitted through a tradition of initiated scholars.',
@@ -831,7 +831,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'illuminati-history',
     title: 'Illuminati (Historical)',
-    category: 'Secret Societies & Esoteric',
+    category: 'Esoterica',
     description: 'The Order of the Illuminati was founded by Adam Weishaupt on May 1, 1776, in Bavaria. Its goals were the opposition to superstition, religious influence over public life, and abuses of state power. At its peak it had approximately 2,000 members drawn from Enlightenment intellectuals. It was infiltrated by the Bavarian government and formally dissolved in 1785.',
     claims: [
       'The Illuminati\'s documented membership included significant Enlightenment intellectuals.',
@@ -853,7 +853,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'mystery-schools',
     title: 'Ancient Mystery Schools',
-    category: 'Secret Societies & Esoteric',
+    category: 'Esoterica',
     description: 'Initiatory religious institutions of ancient Greece and Rome offering initiates direct experience of divine mysteries through rituals, altered states, and symbolic dramas. The Eleusinian Mysteries were celebrated for nearly 2,000 years and attracted initiates including Plato, Aristotle, and Marcus Aurelius.',
     claims: [
       'The Eleusinian kykeon, likely containing ergot alkaloids with psychedelic properties, may have produced genuine visionary experiences as the core of the initiatory ritual.',
@@ -879,7 +879,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'bronze-age-collapse',
     title: 'Bronze Age Collapse',
-    category: 'Global Mysteries',
+    category: 'Modern Mystery',
     description: 'One of history\'s most dramatic civilizational collapses, occurring approximately 1200–1150 BCE. Within a few decades, virtually every major palace civilization of the eastern Mediterranean — the Mycenaeans, the Hittites, the Kassite Babylonians, Ugarit — collapsed. The cause remains debated among historians.',
     claims: [
       'The "Sea Peoples" mentioned in Egyptian records have traditionally been blamed for the collapse, but the cause of their own movement is unclear.',
@@ -902,7 +902,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'antikythera-mechanism',
     title: 'Antikythera Mechanism',
-    category: 'Global Mysteries',
+    category: 'Modern Mystery',
     description: 'An ancient Greek analogue computer recovered from a shipwreck near the island of Antikythera, dated to approximately 87–60 BCE. It is the most sophisticated mechanical device known from antiquity — a hand-powered orrery capable of predicting astronomical positions and eclipses decades in advance. CT scanning has revealed approximately 30 interlocking bronze gears. Nothing of comparable mechanical complexity appears in the historical record for over 1,400 years after its manufacture.',
     claims: [
       'The Mechanism demonstrates that ancient Greek engineering capabilities substantially exceeded what scholars had assumed before its discovery.',
@@ -925,7 +925,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'younger-dryas-impact',
     title: 'Younger Dryas Impact Hypothesis',
-    category: 'Global Mysteries',
+    category: 'Modern Mystery',
     description: 'A scientific hypothesis proposing that a fragmented comet or asteroid struck or exploded above North America approximately 12,900 years ago, triggering the Younger Dryas cooling period, contributing to North American megafauna extinction, and potentially devastating human populations. The hypothesis was first formally proposed in 2007 by Firestone et al. and remains actively debated in peer-reviewed literature.',
     claims: [
       'The YDB platinum anomaly appears at multiple sites on multiple continents, suggesting a simultaneous global event.',
@@ -949,7 +949,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'silk-road',
     title: 'Silk Road Knowledge Transfer',
-    category: 'Global Mysteries',
+    category: 'Modern Mystery',
     description: 'The Silk Road — a network of trade routes connecting China, Central Asia, India, the Middle East, and Europe — facilitated not only commerce but the transfer of technologies, religions, diseases, and ideas across Eurasia from approximately the 2nd century BCE to the 15th century CE.',
     claims: [
       'Technological and intellectual transfers along the Silk Road may explain apparent simultaneous developments in geographically distant civilizations.',
@@ -968,7 +968,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'ancient-stargate-hypothesis',
     title: 'Ancient Stargate Hypothesis',
-    category: 'Global Mysteries',
+    category: 'Modern Mystery',
     description: 'The Ancient Stargate Hypothesis proposes that certain ancient structures, monuments, and texts constitute evidence that past civilizations — or non-human entities operating in the ancient world — possessed functional dimensional portals capable of traversing space, time, or interdimensional boundaries. The hypothesis draws primarily on Sumerian and Akkadian textual traditions (particularly the Anunnaki narratives and the cosmological concept of the \'abzu\'), Egyptian temple architecture at the Fifth Dynasty solar complex of Abu Ghurab near Abusir, and the Puerta de Hayu Marca, a pre-Columbian carved stone face at Lake Titicaca, Peru. It has been developed largely outside mainstream academic institutions, most prominently by Nashville-based author and self-described investigative mythologist William Henry, a consulting producer on the History Channel\'s Ancient Aliens series. The hypothesis overlaps with but is distinct from the broader ancient astronaut hypothesis: where the latter proposes extraterrestrial visitation, the stargate hypothesis proposes a specific technological mechanism — dimensional portals — for how non-human or advanced entities traversed between realms. It has not been published in any peer-reviewed journal or endorsed by any accredited archaeologist, Egyptologist, or Assyriologist.',
     claims: [
       'Sumerian and Akkadian texts describe the Anunnaki using a cosmological passage — the \'abzu\' and related \'gates of heaven\' — to move between a non-terrestrial point of origin and Earth; proponents interpret this as describing dimensional technology, while mainstream Assyriology treats the same language as standard Mesopotamian religious cosmology.',
@@ -1006,7 +1006,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'giants-ancient-texts',
     title: 'Giants in Ancient Texts',
-    category: 'Legends & Folklore',
+    category: 'Mythology',
     description: 'References to beings of extraordinary physical stature appear across the ancient world\'s literature and mythology: the Nephilim and Rephaim of the Hebrew Bible; the Titans and Gigantes of Greek mythology; the Jötnar of Norse mythology; the Asuras of Hindu epics; and giant traditions in Mesoamerican, Native American, and Aboriginal Australian oral traditions.',
     claims: [
       'The global distribution of giant traditions may preserve collective memory of real genetic or physical diversity in ancient human populations.',
@@ -1028,7 +1028,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'dragon-traditions',
     title: 'Dragon Traditions',
-    category: 'Legends & Folklore',
+    category: 'Mythology',
     description: 'Large, powerful, reptilian or serpentine beings appear in the mythological traditions of cultures on every inhabited continent: the fire-breathing winged dragons of European medieval tradition; the benevolent Lóng of Chinese mythology; the feathered Quetzalcoatl of Mesoamerica; the Nāga of South and Southeast Asia; the Norse Jörmungandr; the Aboriginal Australian Rainbow Serpent.',
     claims: [
       'The near-universal presence of dragon/serpent beings in ancient mythology may reflect an innate human fear response to large snakes, predatory birds, and other predators — a composite predator archetype.',

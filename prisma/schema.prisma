@@ -427,6 +427,8 @@ model Source {
   isbn            String?
   abstract        String?  @db.Text
   notes           String?  @db.Text
+  // Why the submitter believes this source is credible — required for AI review context
+  sourceTrustExplanation String? @db.Text
   language        String   @default("en")
 
   credibilityScore   Float @default(0.5)

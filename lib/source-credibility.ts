@@ -1,17 +1,7 @@
-import { SourceType } from './source-types';
+import { SOURCE_TYPE_BASE_CREDIBILITY, SOURCE_TYPE_COLORS as ST_COLORS, resolveSourceType } from './taxonomy/source-types';
 
-// Base credibility by source type
-const BASE: Record<string, number> = {
-  'Academic Paper':        0.82,
-  'Archaeological Report': 0.80,
-  'Government Document':   0.75,
-  'Museum Archive':        0.74,
-  'Historical Text':       0.70,
-  'Religious Text':        0.58,
-  'Book':                  0.62,
-  'News Investigation':    0.52,
-  'Folklore Collection':   0.38,
-};
+// Base credibility by source type — delegates to taxonomy definition
+const BASE: Record<string, number> = SOURCE_TYPE_BASE_CREDIBILITY as Record<string, number>;
 
 // Weight applied to each link classification when aggregating per-node credibility.
 // 'primary' is the most authoritative; 'contradicts' is half-weighted to avoid
@@ -40,7 +30,8 @@ export function computeCredibility(src: SourceInput): {
   factors: Record<string, number>;
 } {
   const factors: Record<string, number> = {};
-  const base = BASE[src.sourceType] ?? 0.5;
+  const resolvedType = resolveSourceType(src.sourceType);
+  const base = BASE[resolvedType] ?? 0.5;
   factors.base_source_type = base;
   let score = base;
 
@@ -116,17 +107,8 @@ export function aggregateSourceCredibility(
   return totalWeight > 0 ? Math.round((weightedSum / totalWeight) * 100) / 100 : 0;
 }
 
-export const SOURCE_TYPE_COLORS: Record<string, string> = {
-  'Academic Paper':        '#6366f1',
-  'Archaeological Report': '#a16207',
-  'Government Document':   '#22c55e',
-  'Historical Text':       '#f59e0b',
-  'Religious Text':        '#dc2626',
-  'Museum Archive':        '#06b6d4',
-  'Book':                  '#8b5cf6',
-  'News Investigation':    '#ec4899',
-  'Folklore Collection':   '#64748b',
-};
+// Re-export from taxonomy so all consumers get updated colors
+export const SOURCE_TYPE_COLORS: Record<string, string> = ST_COLORS as Record<string, string>;
 
 export const STATUS_COLORS: Record<string, string> = {
   pending:        '#eab308',

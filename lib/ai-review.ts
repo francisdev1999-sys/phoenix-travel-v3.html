@@ -185,6 +185,7 @@ async function buildResearchPackage(nodeId: string): Promise<string> {
               isbn:            true,
               credibilityScore: true,
               credibilityOverride: true,
+              sourceTrustExplanation: true,
               status:          true,
             },
           },
@@ -252,7 +253,7 @@ ${node.mainstreamView ? `Mainstream View:\n${node.mainstreamView}` : 'Mainstream
     const srcLines = node.sourceLinks.map(l => {
       const s = l.source;
       const eff = s.credibilityOverride ?? s.credibilityScore;
-      return `- [${l.linkType.toUpperCase()}] "${s.title}" | ${s.sourceType} | ${s.author ?? 'No author'} | ${s.publicationYear ?? 'No year'} | Credibility: ${Math.round(eff * 100)}% | DOI: ${s.doi ?? 'none'} | URL: ${s.url ?? 'none'}`;
+      return `- [${l.linkType.toUpperCase()}] "${s.title}" | ${s.sourceType} | ${s.author ?? 'No author'} | ${s.publicationYear ?? 'No year'} | Credibility: ${Math.round(eff * 100)}% | DOI: ${s.doi ?? 'none'} | URL: ${s.url ?? 'none'} | Trust: ${(s as { sourceTrustExplanation?: string | null }).sourceTrustExplanation ?? 'not provided'}`;
     });
     sections.push(`Attached Sources (approved):\n${srcLines.join('\n')}`);
   } else {
