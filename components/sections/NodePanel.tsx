@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, BookOpen, GitBranch, AlertCircle, Globe, Clock, Link2, HelpCircle, FileText, Rabbit, MapPin } from 'lucide-react';
+import { X, BookOpen, GitBranch, AlertCircle, Globe, Clock, Link2, HelpCircle, FileText, Rabbit, MapPin, ShieldAlert } from 'lucide-react';
 import {
   GraphNode, getEdgesForNode, getNode, getRelatedEdges, getTimelineNeighbors,
   getGeographicNeighbors, computeResearchScore, CATEGORY_COLORS, EVIDENCE_LABELS,
@@ -14,8 +14,9 @@ import SourceCard from '@/components/research/SourceCard';
 import RelationshipCard from '@/components/research/RelationshipCard';
 import ClaimBlock from '@/components/research/ClaimBlock';
 import NodeSourceStrength from '@/components/sources/NodeSourceStrength';
+import IntegrityScores from '@/components/integrity/IntegrityScores';
 
-type Tab = 'overview' | 'claims' | 'criticisms' | 'mainstream' | 'relationships' | 'sources' | 'questions';
+type Tab = 'overview' | 'claims' | 'criticisms' | 'mainstream' | 'relationships' | 'sources' | 'questions' | 'integrity';
 
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: 'overview',       label: 'Overview',       icon: BookOpen },
@@ -25,6 +26,7 @@ const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: 'relationships',  label: 'Connections',    icon: Link2 },
   { id: 'sources',        label: 'Sources',        icon: FileText },
   { id: 'questions',      label: 'Questions',      icon: HelpCircle },
+  { id: 'integrity',      label: 'Balance',        icon: ShieldAlert },
 ];
 
 interface Props {
@@ -273,6 +275,17 @@ export default function NodePanel({ node, onClose }: Props) {
                 ) : (
                   <ClaimBlock claims={node.open_questions} type="question" />
                 )}
+              </>
+            )}
+
+            {activeTab === 'integrity' && (
+              <>
+                <p className="text-xs text-slate-500 italic mb-2">
+                  Research balance scores help identify one-sided or incomplete entries. They measure
+                  presence of criticisms, mainstream perspectives, source diversity, and contradictory
+                  relationships — not factual accuracy.
+                </p>
+                <IntegrityScores node={node} />
               </>
             )}
 

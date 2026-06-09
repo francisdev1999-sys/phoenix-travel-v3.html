@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useSession, signIn } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, Network, GitBranch, BookMarked, Activity, FileWarning, Plus, Loader2, Package, InboxIcon, Sparkles, Users, BarChart3, AlertOctagon, Brain } from 'lucide-react';
+import { ShieldCheck, Network, GitBranch, BookMarked, Activity, FileWarning, Plus, Loader2, Package, InboxIcon, Sparkles, Users, BarChart3, AlertOctagon, Brain, ShieldAlert } from 'lucide-react';
 import AdminStats from '@/components/admin/AdminStats';
 import ProposedNodeCard from '@/components/admin/ProposedNodeCard';
 import ProposedEdgeCard from '@/components/admin/ProposedEdgeCard';
@@ -19,8 +19,9 @@ import UserManagement from '@/components/admin/UserManagement';
 import ModerationQueue from '@/components/admin/ModerationQueue';
 import PlatformHealthDashboard from '@/components/admin/PlatformHealthDashboard';
 import UserIntelligenceDashboard from '@/components/admin/UserIntelligenceDashboard';
+import ArchiveBiasAudit from '@/components/admin/ArchiveBiasAudit';
 
-type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports' | 'imports' | 'drafts' | 'suggestions' | 'users' | 'moderation' | 'platform' | 'intelligence';
+type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports' | 'imports' | 'drafts' | 'suggestions' | 'users' | 'moderation' | 'platform' | 'intelligence' | 'integrity';
 
 export default function AdminPanel() {
   const { data: session, status } = useSession();
@@ -102,6 +103,7 @@ export default function AdminPanel() {
     { id: 'edges',        label: 'Relationships', icon: <GitBranch size={13} /> },
     { id: 'sources',      label: 'Sources',       icon: <BookMarked size={13} /> },
     { id: 'suggestions',  label: 'Suggestions',   icon: <Sparkles size={13} /> },
+    { id: 'integrity',    label: 'Bias Audit',    icon: <ShieldAlert size={13} /> },
     { id: 'users',        label: 'Users',         icon: <Users size={13} /> },
     { id: 'moderation',   label: 'Moderation',    icon: <AlertOctagon size={13} /> },
     { id: 'diagnostics',  label: 'Diagnostics',   icon: <Activity size={13} /> },
@@ -254,6 +256,7 @@ export default function AdminPanel() {
           {tab === 'sources' && <SourceReviewQueue />}
 
           {tab === 'suggestions' && <RelationshipSuggestions />}
+          {tab === 'integrity'   && <ArchiveBiasAudit />}
           {tab === 'diagnostics' && <GraphDiagnostics />}
 
           {tab === 'users'        && <UserManagement />}

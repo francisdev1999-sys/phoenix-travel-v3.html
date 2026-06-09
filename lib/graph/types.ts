@@ -8,7 +8,9 @@ export type RelationshipType =
   | 'textual'
   | 'thematic'
   | 'influence'
-  | 'contradictory';
+  | 'contradictory'
+  | 'alternative_explanation'
+  | 'criticism';
 
 export type SourceType =
   | 'archaeological'

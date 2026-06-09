@@ -16,7 +16,7 @@
 import { prisma } from '@/lib/db';
 
 const AUDIT_MODEL         = 'claude-haiku-4-5-20251001';
-const MAX_OUTPUT_TOKENS   = 600;
+const MAX_OUTPUT_TOKENS   = 800;
 const COST_PER_M_INPUT    = 0.80;
 const COST_PER_M_OUTPUT   = 4.00;
 
@@ -39,6 +39,15 @@ export interface AuditFlag {
   detail:   string;
 }
 
+export interface SixQuestions {
+  supports:        string; // What in the submission supports its claims?
+  contradicts:     string; // What in the submission complicates its claims?
+  mainstream_view: string; // Does the submission include a mainstream perspective?
+  missing_evidence:string; // What evidence or perspectives appear to be missing?
+  assumptions:     string; // What assumptions underlie the framing?
+  archive_bias:    string; // Could an archive featuring this entry over-weight one interpretation?
+}
+
 export interface NodeAuditResult {
   quality_score:      number;                                           // 0–100
   recommendation:     'approve' | 'flag_for_review' | 'needs_revision';
@@ -46,6 +55,7 @@ export interface NodeAuditResult {
   flags:              AuditFlag[];
   strengths:          string[];
   summary:            string;
+  six_questions?:     SixQuestions;
   model:              string;
   input_tokens:       number;
   output_tokens:      number;
@@ -108,15 +118,16 @@ function buildPrompt(n: NodeInput): string {
     `Tags: ${n.tags.join(', ') || '(none)'}`,
     ``,
     `Return ONLY valid JSON matching exactly:`,
-    `{"quality_score":<0-100>,"recommendation":"approve"|"flag_for_review"|"needs_revision","confidence":"high"|"medium"|"low","flags":[{"type":"<flag_type>","severity":"low"|"medium"|"high","detail":"<specific text from submission>"}],"strengths":["..."],"summary":"<1-2 sentences, no fact claims>"}`,
+    `{"quality_score":<0-100>,"recommendation":"approve"|"flag_for_review"|"needs_revision","confidence":"high"|"medium"|"low","flags":[{"type":"<flag_type>","severity":"low"|"medium"|"high","detail":"<specific text from submission>"}],"strengths":["..."],"summary":"<1-2 sentences, no fact claims>","six_questions":{"supports":"...","contradicts":"...","mainstream_view":"...","missing_evidence":"...","assumptions":"...","archive_bias":"..."}}`,
     ``,
     `Valid flag types: vague_claim | contradictory_claims | evidence_level_mismatch | missing_criticisms | sensational_language | unsupported_claim | duplicate_content | incomplete_section | overconfident_claim`,
+    `six_questions instructions: answer each using ONLY what is written in the submission. If a section is absent, say so. Do NOT claim facts from outside knowledge.`,
   ].join('\n');
 }
 
 // ── Response parser ───────────────────────────────────────────────────────────
 
-function parseResponse(raw: string): Omit<NodeAuditResult, 'model' | 'input_tokens' | 'output_tokens' | 'estimated_cost_usd' | 'audited_at'> {
+function parseResponse(raw: string): Omit<NodeAuditResult, 'model' | 'input_tokens' | 'output_tokens' | 'estimated_cost_usd' | 'audited_at' | 'six_questions'> & { six_questions?: SixQuestions } {
   const cleaned = raw
     .replace(/^```json\s*/i, '')
     .replace(/^```\s*/i, '')
@@ -147,6 +158,9 @@ function parseResponse(raw: string): Omit<NodeAuditResult, 'model' | 'input_toke
     summary: typeof p.summary === 'string'
       ? p.summary.slice(0, 400)
       : 'Audit completed.',
+    six_questions: p.six_questions && typeof p.six_questions === 'object'
+      ? p.six_questions as SixQuestions
+      : undefined,
   };
 }
 

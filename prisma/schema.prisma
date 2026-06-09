@@ -535,6 +535,7 @@ model ProposedNode {
   reviewer    User?     @relation("ReviewedNodes",  fields: [reviewedBy],  references: [id], onDelete: SetNull)
 
   // AI quality audit (Claude Haiku, fire-and-forget on submission)
+
   aiAuditResult Json?
   aiAuditedAt   DateTime?
 
