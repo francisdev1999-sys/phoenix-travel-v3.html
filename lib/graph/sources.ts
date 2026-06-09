@@ -2169,4 +2169,185 @@ export const NODE_SOURCES: Record<string, ResearchSource[]> = {
     },
   ],
 
+  // ── TEST BATCH 1 — 2026-06-09 ──
+  // Sources from 50-Node Seed Pack. All sources independently
+  // verified as real publications before inclusion.
+  // DO NOT add sources here without verifying author, year, and title.
+
+  'stonehenge': [
+    {
+      id: 'src-sh-1',
+      title: 'Stonehenge, Avebury and Associated Sites',
+      source_type: 'Website',
+      publication_year: 1986,
+      url: 'https://whc.unesco.org/en/list/373/',
+      credibility_score: 0.92,
+      notes: 'UNESCO World Heritage List entry. Official inscription documentation and Outstanding Universal Value statement.',
+    },
+    {
+      id: 'src-sh-2',
+      title: 'Stonehenge: Exploring the Greatest Stone Age Mystery',
+      source_type: 'Book',
+      author: 'Mike Parker Pearson',
+      publication_year: 2012,
+      credibility_score: 0.92,
+      notes: 'Simon & Schuster. Parker Pearson led the Stonehenge Riverside Project and is one of the foremost authorities on the site. Synthesises decades of excavation.',
+    },
+    {
+      id: 'src-sh-3',
+      title: 'Stonehenge: The Biography of a Landscape',
+      source_type: 'Book',
+      author: 'Timothy Darvill',
+      publication_year: 2006,
+      credibility_score: 0.90,
+      notes: 'Tempus Publishing. Darvill has directed excavations at Stonehenge; covers the monument within its wider Neolithic landscape context.',
+    },
+    {
+      id: 'src-sh-4',
+      title: 'Stonehenge — English Heritage Official Site',
+      source_type: 'Website',
+      url: 'https://www.english-heritage.org.uk/visit/places/stonehenge/',
+      credibility_score: 0.88,
+      notes: 'English Heritage manages and maintains the site. Official documentation, visitor and research resources.',
+    },
+  ],
+
+  'anunnaki': [
+    {
+      id: 'src-an-1',
+      title: 'Electronic Text Corpus of Sumerian Literature (ETCSL)',
+      source_type: 'Website',
+      url: 'https://etcsl.orinst.ox.ac.uk/',
+      credibility_score: 0.96,
+      notes: 'University of Oxford. Authoritative academic corpus of Sumerian literary texts in transliteration and translation. Primary source base for any study of Sumerian deities.',
+    },
+    {
+      id: 'src-an-2',
+      title: 'Gods, Demons and Symbols of Ancient Mesopotamia: An Illustrated Dictionary',
+      source_type: 'Book',
+      author: 'Jeremy Black and Anthony Green',
+      publication_year: 1992,
+      credibility_score: 0.93,
+      notes: 'British Museum Press. Standard reference dictionary for Mesopotamian religious figures including the Anunnaki. Used by Assyriologists.',
+    },
+    {
+      id: 'src-an-3',
+      title: 'Sumerian Mythology: A Study of Spiritual and Literary Achievement in the Third Millennium BC',
+      source_type: 'Book',
+      author: 'Samuel Noah Kramer',
+      publication_year: 1944,
+      credibility_score: 0.88,
+      notes: 'University of Pennsylvania Press. Foundational survey of Sumerian mythology. Kramer translated key texts involving the Anunnaki directly from cuneiform.',
+    },
+    {
+      id: 'src-an-4',
+      title: 'Sitchin Is Wrong: A Scholarly Rebuttal of Zecharia Sitchin\'s Sumerian Translations',
+      source_type: 'Website',
+      author: 'Michael S. Heiser',
+      credibility_score: 0.87,
+      notes: 'Academic critique by a biblical scholar and trained Sumerologist. Documents specific translational errors and methodological failures in Sitchin\'s claimed ancient astronaut evidence. Available at sitchiniswrong.com.',
+    },
+  ],
+
+  'project-blue-book': [
+    {
+      id: 'src-pbb-1',
+      title: 'Project Blue Book Records',
+      source_type: 'Government Document',
+      credibility_score: 0.96,
+      notes: 'U.S. National Archives, Record Group 341. The declassified official files of Project Blue Book — primary source for all case records and program documentation.',
+    },
+    {
+      id: 'src-pbb-2',
+      title: 'Scientific Study of Unidentified Flying Objects (Condon Report)',
+      source_type: 'Research Report',
+      author: 'Edward U. Condon (director)',
+      publication_year: 1968,
+      credibility_score: 0.88,
+      notes: 'University of Colorado study commissioned by the Air Force. Its conclusions led directly to Project Blue Book\'s termination. Published by Bantam Books, 1969.',
+    },
+    {
+      id: 'src-pbb-3',
+      title: 'The UFO Experience: A Scientific Inquiry',
+      source_type: 'Book',
+      author: 'J. Allen Hynek',
+      publication_year: 1972,
+      credibility_score: 0.85,
+      notes: 'Henry Regnery Company. Hynek\'s own account of his years as Blue Book scientific consultant, including his development of the Close Encounter classification system and his evolving skepticism about the program.',
+    },
+    {
+      id: 'src-pbb-4',
+      title: 'Project Blue Book — U.S. Air Force Fact Sheet',
+      source_type: 'Government Document',
+      credibility_score: 0.90,
+      notes: 'Official Air Force summary statement on Project Blue Book, its history, conclusions, and termination. Part of the public record.',
+    },
+  ],
+
+  'black-death': [
+    {
+      id: 'src-bd-1',
+      title: 'The Black Death 1346–1353: The Complete History',
+      source_type: 'Book',
+      author: 'Ole J. Benedictow',
+      publication_year: 2004,
+      credibility_score: 0.92,
+      notes: 'Boydell Press. Comprehensive demographic and epidemiological history of the Black Death. Benedictow is the leading quantitative historian of the plague pandemic.',
+    },
+    {
+      id: 'src-bd-2',
+      title: 'WHO Plague Fact Sheet',
+      source_type: 'Website',
+      url: 'https://www.who.int/news-room/fact-sheets/detail/plague',
+      credibility_score: 0.88,
+      notes: 'World Health Organization. Current epidemiological guidance on plague including Yersinia pestis biology, transmission, and historical context.',
+    },
+    {
+      id: 'src-bd-3',
+      title: 'A draft genome of Yersinia pestis from victims of the Black Death',
+      source_type: 'Academic Paper',
+      author: 'Kirsten I. Bos et al.',
+      publication_year: 2011,
+      url: 'https://doi.org/10.1038/nature10549',
+      credibility_score: 0.95,
+      notes: 'Nature 478, 506–510. Genomic confirmation of Y. pestis as the Black Death pathogen from 14th-century London East Smithfield burial site. Foundational ancient DNA study.',
+    },
+  ],
+
+  'mkultra': [
+    {
+      id: 'src-mk-1',
+      title: 'Final Report of the Select Committee to Study Governmental Operations with Respect to Intelligence Activities (Church Committee)',
+      source_type: 'Government Document',
+      publication_year: 1976,
+      credibility_score: 0.97,
+      notes: 'U.S. Senate. Volume 1 covers intelligence abuses including MKUltra. Primary legislative investigation into CIA human experimentation programs.',
+    },
+    {
+      id: 'src-mk-2',
+      title: 'CIA MKULTRA Collection (CREST)',
+      source_type: 'Declassified Document',
+      url: 'https://www.cia.gov/readingroom/collection/mkultra-declassified-documents',
+      credibility_score: 0.96,
+      notes: 'CIA Reading Room. Approximately 20,000 pages of declassified MKUltra documents released under FOIA — the surviving record after Helms ordered most files destroyed in 1973.',
+    },
+    {
+      id: 'src-mk-3',
+      title: 'The Search for the "Manchurian Candidate": The CIA and Mind Control',
+      source_type: 'Book',
+      author: 'John Marks',
+      publication_year: 1979,
+      credibility_score: 0.88,
+      notes: 'Times Books. Marks used FOIA requests to obtain 16,000 CIA documents; this remains the foundational journalistic and historical account of MKUltra based on primary documentation.',
+    },
+    {
+      id: 'src-mk-4',
+      title: 'Project MKULTRA, The CIA\'s Program of Research in Behavioral Modification — Joint Hearing Before the Select Committee on Intelligence',
+      source_type: 'Government Document',
+      publication_year: 1977,
+      credibility_score: 0.96,
+      notes: 'U.S. Senate, 95th Congress, 1st Session, August 3, 1977. Key congressional hearing record; includes CIA Director Stansfield Turner testimony and victim accounts.',
+    },
+  ],
+
 };

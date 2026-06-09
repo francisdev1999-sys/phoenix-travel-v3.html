@@ -1047,4 +1047,167 @@ export const nodes: GraphNode[] = [
     year: -3000,
   },
 
+  // ═══════════════════════════════════════════
+  // TEST BATCH 1 — 2026-06-09
+  // 5 nodes from 50-Node Seed Pack
+  // Staged import: duplicate analysis complete,
+  // selected for category diversity and platform
+  // coverage. Pending full source audit and review.
+  // ═══════════════════════════════════════════
+
+  {
+    id: 'stonehenge',
+    title: 'Stonehenge',
+    category: 'Ancient Site',
+    description: 'A prehistoric stone monument in Wiltshire, southern England, constructed and modified in multiple phases from approximately 3000 to 1500 BCE. The monument is famous for its large sarsen standing stones, the astronomical alignment of the Avenue with the midsummer sunrise and midwinter sunset, and the transport of smaller bluestones from the Preseli Hills in Wales approximately 250 kilometres away. Stonehenge is the centrepiece of a wider Neolithic and Bronze Age ritual landscape designated a UNESCO World Heritage Site.',
+    claims: [
+      'Stonehenge functioned as part of a broader ritual landscape incorporating nearby monuments, cursus earthworks, and burial mounds extending across the Salisbury Plain.',
+      'Astronomical alignments with the midsummer sunrise and midwinter sunset were very likely intentional and central to the monument\'s construction and use.',
+      'Alternative theories have proposed functions including healing centre, ancestor monument, unified British calendar, and large-scale ceremonial gathering place.',
+      'Transport of bluestones from the Preseli Hills in Wales approximately 250 kilometres away demonstrates significant organizational and logistical capability in Neolithic society.',
+    ],
+    criticisms: [
+      'No single purpose fully explains all phases of Stonehenge\'s construction — the monument changed in form and likely in function over nearly two millennia.',
+      'Popular accounts often exaggerate mystery; experimental archaeology has documented viable construction and transport methods for both sarsen and bluestone elements.',
+      'Ritual landscape archaeology reduces the interpretive isolation of the monument, making exotic explanations unnecessary.',
+    ],
+    mainstream_view: 'Stonehenge is treated by archaeologists as a prehistoric ceremonial and ritual monument within a wider Neolithic and Bronze Age landscape. Its astronomical alignments are well-established. Its precise religious and social functions remain subjects of active research but do not require extraordinary explanations.',
+    open_questions: [
+      'How did the monument\'s meaning and function change across its nearly two-thousand-year construction history?',
+      'What social groups organized its construction and what was the ritual relationship between Stonehenge and nearby monuments such as Avebury and Durrington Walls?',
+      'How were the solstice observations embedded in the specific ritual practices of Stonehenge\'s builders?',
+    ],
+    tags: ['Neolithic', 'Bronze Age', 'England', 'UNESCO', 'solstice', 'megalith', 'Wiltshire', 'ritual landscape', 'bluestones', 'sarsen'],
+    evidence_level: 'verified',
+    confidence_score: 0.96,
+    color: '#ca8a04',
+    icon: '🪨',
+    coordinates: [51.1789, -1.8262],
+    date_start: -3000,
+    date_end: -2000,
+    year: -3000,
+  },
+
+  {
+    id: 'anunnaki',
+    title: 'Anunnaki',
+    category: 'Religion',
+    description: 'Divine beings of the Sumerian, Akkadian, Babylonian, and Assyrian pantheons, appearing in Mesopotamian religious texts, cosmological narratives, king lists, and ritual literature from approximately the 3rd millennium BCE onward. Their roles, attributes, and hierarchical significance vary across periods and genres. The Anunnaki appear in major texts including the Enuma Elish, Atrahasis, Descent of Inanna, and the Sumerian King List. They have been extensively and incorrectly reinterpreted in modern alternative history as extraterrestrial beings — a reading rejected by all professional Assyriologists.',
+    claims: [
+      'Mainstream scholarship treats the Anunnaki as a collective designation for the divine assembly in Mesopotamian religion, with roles that vary by period, text, and cosmological context.',
+      'The Anunnaki\'s documented roles include cosmic judges, underworld powers, members of the divine council, and figures associated with the fate of the dead.',
+      'Zecharia Sitchin reinterpreted the Anunnaki as extraterrestrial beings from a hypothetical planet Nibiru who created humanity as a slave race — interpretations rejected as mistranslation by every professional Sumerologist who has examined them.',
+    ],
+    criticisms: [
+      'Sitchin\'s translations are rejected by professional Assyriologists and Sumerologists as non-standard, selective, and without philological support in the cuneiform record.',
+      'Modern internet narratives frequently conflate the Anunnaki with unrelated mythologies and attribute characteristics not found in any primary Mesopotamian text.',
+      'The textual evidence supports religious cosmology and palace ideology; no primary source supports an extraterrestrial or technological interpretation.',
+    ],
+    mainstream_view: 'Assyriologists interpret the Anunnaki as Mesopotamian deities within documented ancient religious systems, fully explicable within the scholarly study of Sumerian and Akkadian religion. Extraterrestrial reinterpretations are considered pseudohistorical and are not endorsed by any accredited Assyriologist or Sumerologist.',
+    open_questions: [
+      'How did the designation and role of the Anunnaki shift across Sumerian, Akkadian, Babylonian, and Assyrian periods?',
+      'How did Anunnaki theology relate to temple economy, political legitimacy, and funerary ritual in different Mesopotamian city-states?',
+      'Why have the Anunnaki become a central focus of modern alternative history, and how can public education most effectively address circulating mistranslations?',
+    ],
+    tags: ['Mesopotamia', 'Sumerian', 'Akkadian', 'Babylonian', 'deities', 'Enuma Elish', 'ancient religion', 'Iraq', 'cuneiform'],
+    evidence_level: 'verified',
+    confidence_score: 0.90,
+    color: '#dc2626',
+    icon: '⚡',
+    year: -2500,
+  },
+
+  {
+    id: 'project-blue-book',
+    title: 'Project Blue Book',
+    category: 'Government Program',
+    description: 'A U.S. Air Force program for systematic collection, investigation, and analysis of UFO reports, operating from 1952 to 1969. The third and longest-running official Air Force UFO study — preceded by Project Sign (1948) and Project Grudge (1949). Astronomer J. Allen Hynek served as scientific consultant throughout. The project collected over 12,000 reports; 701 were officially classified as unexplained at closure. The program was terminated following the 1968 Condon Report\'s finding that continued study was unlikely to yield scientific value.',
+    claims: [
+      'Project Blue Book represents officially documented U.S. Air Force interest in investigating UFO reports over nearly two decades, making it a verified government program — not a rumoured or speculative one.',
+      'J. Allen Hynek, initially a skeptic commissioned to debunk UFO claims, concluded during the program that some cases warranted genuine scientific attention; he later developed the Close Encounter classification system.',
+      'Critics have argued the program\'s structure in its later phases prioritized case closure over genuine scientific inquiry, with institutional pressure toward conventional explanations.',
+    ],
+    criticisms: [
+      '"Unexplained" in Project Blue Book files means insufficient data to identify a conventional cause — it does not constitute evidence of extraterrestrial origin.',
+      'The Air Force\'s 1969 formal conclusion stated that no UFO had ever represented a threat to national security or demonstrated technology beyond the range of present scientific knowledge.',
+      'Data collection and case documentation quality varied widely across the program\'s 17-year history.',
+    ],
+    mainstream_view: 'Project Blue Book is a historically verified U.S. Air Force UFO investigation program. Its 701 unresolved cases represent data gaps, not evidence of specific origin. The program\'s closure, the Condon Report, and the Air Force statement are the official institutional conclusions.',
+    open_questions: [
+      'Which of the 701 officially unresolved cases might yield new insights under modern analytical and imaging methods?',
+      'How did Cold War intelligence concerns shape case handling, classification decisions, and the program\'s institutional culture?',
+      'What relationship existed between Blue Book\'s public case files and classified military aerospace intelligence reporting on the same incidents?',
+    ],
+    tags: ['U.S. Air Force', 'UFO', 'government program', 'J. Allen Hynek', 'Condon Report', 'Cold War', '1950s', '1960s', 'investigation'],
+    evidence_level: 'verified',
+    confidence_score: 0.94,
+    color: '#0284c7',
+    icon: '📂',
+    date_start: 1952,
+    date_end: 1969,
+    year: 1952,
+  },
+
+  {
+    id: 'black-death',
+    title: 'Black Death',
+    category: 'Disease & Pandemic',
+    description: 'A catastrophic pandemic caused primarily by Yersinia pestis that struck Eurasia, the Middle East, and Europe between approximately 1346 and 1353 CE. The major European wave of 1347–1351 is estimated to have killed between 30% and 60% of Europe\'s population — with some regions experiencing higher mortality — making it among the deadliest events in recorded human history. The pandemic arrived in Sicily and southern Italy via trading vessels in autumn 1347 and spread across the continent within five years. Ancient DNA analysis from burial sites across Europe and Central Asia has confirmed Y. pestis as the causative agent.',
+    claims: [
+      'The Black Death fundamentally reshaped medieval European society — demographic, economic, religious, and institutional consequences unfolded over the subsequent century.',
+      'Trade route ecology involving rodent reservoirs, flea vectors, and intensified human commercial movement drove spread; climate stress and malnutrition likely increased population vulnerability.',
+      'Labour market disruptions following the pandemic contributed to the decline of serfdom and rising peasant bargaining power in parts of Western Europe.',
+    ],
+    criticisms: [
+      'Regional mortality estimates vary widely and some earlier figures may be overstated; modern scholarship refines estimates through burial archaeology and documentary evidence.',
+      'Transmission dynamics were more complex than the simplified rat-flea-human model; pneumonic plague, direct human-to-human transmission, and environmental factors played additional roles.',
+      'Monocausal explanations attributing subsequent medieval social changes solely to the pandemic oversimplify a complex and regionally variable transition.',
+    ],
+    mainstream_view: 'The Black Death is one of the best-documented pandemics in history, supported by contemporary chronicles, burial archaeology across multiple countries, and ancient DNA analysis confirming Yersinia pestis as the pathogen. Its demographic and social consequences are extensively studied across history, archaeology, and epidemiology.',
+    open_questions: [
+      'What ecological and climatic factors drove the specific regional variation in mortality rates across Europe and the Middle East?',
+      'How did plague reservoirs persist in rodent populations between major epidemic waves?',
+      'What role did the pre-existing Great Famine (1315–1322) and early 14th-century climate deterioration play in population vulnerability?',
+    ],
+    tags: ['plague', 'Yersinia pestis', 'medieval', 'Europe', 'pandemic', '14th century', 'mortality', 'ancient DNA', 'bubonic'],
+    evidence_level: 'verified',
+    confidence_score: 0.98,
+    color: '#e11d48',
+    icon: '☠️',
+    date_start: 1347,
+    date_end: 1351,
+    year: 1347,
+  },
+
+  {
+    id: 'mkultra',
+    title: 'MKUltra',
+    category: 'Intelligence Operation',
+    description: 'A covert CIA program of human experimentation in behavioural research, mind-control techniques, and interrogation methods, authorized in April 1953 under Director Allen Dulles and continuing into the early 1970s. MKUltra involved administration of LSD and other psychoactive drugs to subjects often without their knowledge or consent, sensory deprivation, hypnosis, psychological manipulation, and collaboration with academic researchers and hospitals across the United States and Canada. The program was publicly exposed through the Church Committee (1975) and Senate hearings (1977) following CIA Director Richard Helms\'s order to destroy most MKUltra records in 1973.',
+    claims: [
+      'MKUltra is documented proof that the CIA conducted unauthorized, non-consensual human experimentation — a verified historical case of institutional abuse, not a conspiracy theory.',
+      'The Church Committee and subsequent FOIA releases confirmed the program\'s scale, including experiments on unwitting subjects in hospitals, prisons, and universities.',
+      'Richard Helms\'s 1973 destruction of MKUltra records severely limited accountability and means the surviving documentation represents only a fraction of the full program.',
+    ],
+    criticisms: [
+      'Documented MKUltra facts should not be used to validate unrelated or unsubstantiated mind-control claims that go beyond the surviving historical record.',
+      'Popular narratives routinely merge MKUltra with fictional programs and speculative claims, distorting public understanding of what the documented record actually shows.',
+      'The destruction of most records makes definitive statements about the full scope of the program permanently impossible.',
+    ],
+    mainstream_view: 'MKUltra is a historically verified CIA program and a major documented case of Cold War-era intelligence-community ethical failure. It is studied as a benchmark for the consequences of inadequate oversight and as evidence that confirmed government conspiracies can be distinguished from speculative ones by documentary evidence and institutional investigation.',
+    open_questions: [
+      'What was the full scope and subject count of MKUltra before Helms ordered the records destroyed in January 1973?',
+      'How many individuals were subjected to non-consensual experimentation without ever being informed?',
+      'How can oversight mechanisms prevent similar programs from developing within intelligence bureaucracies operating under classification?',
+    ],
+    tags: ['CIA', 'Cold War', 'mind control', 'LSD', 'human experimentation', 'Church Committee', 'non-consensual', '1950s', '1960s', 'Allen Dulles'],
+    evidence_level: 'verified',
+    confidence_score: 0.95,
+    color: '#1d4ed8',
+    icon: '🧬',
+    date_start: 1953,
+    date_end: 1973,
+    year: 1953,
+  },
+
 ];
