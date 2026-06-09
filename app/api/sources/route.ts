@@ -6,6 +6,7 @@ import { computeCredibility } from '@/lib/source-credibility';
 import { SOURCE_TYPES } from '@/lib/validation/enums';
 import { checkTrustGate, checkSubmissionRate } from '@/lib/quality-gates';
 import { logActivity } from '@/lib/rank-system';
+import { getNodeStaticSources, filterNodeSources } from '@/lib/graph/node-sources';
 
 const PAGE_SIZE = 20;
 
@@ -34,21 +35,40 @@ export async function GET(req: NextRequest) {
     ];
   }
 
-  const [total, sources] = await Promise.all([
+  // Static node-derived sources (only in non-mine Browse view)
+  const staticSources = mine
+    ? []
+    : filterNodeSources(getNodeStaticSources(), { q, type, status });
+  const staticTotal = staticSources.length;
+
+  // Paginate: static entries fill the front of the combined list
+  const globalStart  = (page - 1) * PAGE_SIZE;
+  const globalEnd    = globalStart + PAGE_SIZE;
+  const staticSlice  = staticSources.slice(globalStart, Math.min(globalEnd, staticTotal));
+  const dbSkip       = Math.max(0, globalStart - staticTotal);
+  const dbTake       = PAGE_SIZE - staticSlice.length;
+
+  const [dbTotal, dbSources] = await Promise.all([
     prisma.source.count({ where }),
-    prisma.source.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-      include: {
-        submitter: { select: { id: true, name: true, email: true, image: true } },
-        links: true,
-      },
-    }),
+    dbTake > 0
+      ? prisma.source.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip: dbSkip,
+          take: dbTake,
+          include: {
+            submitter: { select: { id: true, name: true, email: true, image: true } },
+            links: true,
+          },
+        })
+      : Promise.resolve([]),
   ]);
 
-  return NextResponse.json({ sources, total, page, pages: Math.ceil(total / PAGE_SIZE) });
+  const total   = staticTotal + dbTotal;
+  const pages   = Math.ceil(total / PAGE_SIZE) || 1;
+  const sources = [...staticSlice, ...dbSources];
+
+  return NextResponse.json({ sources, total, page, pages });
 }
 
 export async function POST(req: NextRequest) {
