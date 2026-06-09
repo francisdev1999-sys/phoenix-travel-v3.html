@@ -40,6 +40,7 @@ export default function KnowledgeGraph() {
   // Precomputed graph structure — rebuilt in initGraph
   const highDegreeSetRef = useRef<Set<string>>(new Set());
   const adjMapRef = useRef<Record<string, string[]>>({});
+  const edgeMapRef = useRef<Record<string, GraphEdge>>({});
 
   // Physics convergence — simulation pauses once stable
   const stableCountRef = useRef(0);
@@ -93,6 +94,14 @@ export default function KnowledgeGraph() {
     });
     highDegreeSetRef.current = new Set(Object.keys(degMap).filter(id => (degMap[id] ?? 0) >= 5));
     adjMapRef.current = adjMap;
+
+    // Bidirectional edge lookup — enables O(D) spring force per node
+    const edgeMap: Record<string, GraphEdge> = {};
+    edges.forEach(e => {
+      edgeMap[`${e.from}|${e.to}`] = e;
+      edgeMap[`${e.to}|${e.from}`] = e;
+    });
+    edgeMapRef.current = edgeMap;
 
     nodesRef.current = nodes.map(gNode => {
       const catIdx = categories.indexOf(gNode.category);
@@ -179,19 +188,19 @@ export default function KnowledgeGraph() {
           }
         }
 
-        graphEdgesRef.current.forEach(edge => {
-          if (edge.from === vn.id || edge.to === vn.id) {
-            const otherId = edge.from === vn.id ? edge.to : edge.from;
-            const other = getVNode(otherId);
-            if (!other) return;
-            const dx = other.x - vn.x;
-            const dy = other.y - vn.y;
-            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-            const target = 180 + (1 - edge.strength_score) * 80;
-            if (dist > target) {
-              vn.vx += dx * 0.0003 * edge.strength_score;
-              vn.vy += dy * 0.0003 * edge.strength_score;
-            }
+        // O(D) spring attraction — uses precomputed adjacency, not full edge scan
+        (adjMapRef.current[vn.id] ?? []).forEach(neighborId => {
+          const edge = edgeMapRef.current[`${vn.id}|${neighborId}`];
+          if (!edge) return;
+          const other = getVNode(neighborId);
+          if (!other) return;
+          const dx = other.x - vn.x;
+          const dy = other.y - vn.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          const target = 180 + (1 - edge.strength_score) * 80;
+          if (dist > target) {
+            vn.vx += dx * 0.0003 * edge.strength_score;
+            vn.vy += dy * 0.0003 * edge.strength_score;
           }
         });
 
@@ -252,19 +261,26 @@ export default function KnowledgeGraph() {
         const isHighlighted = srcSelected || tgtSelected;
         const isHovered = src.id === hId || tgt.id === hId;
 
-        const alpha = isHighlighted ? 0.7 : isHovered ? 0.45 : 0.1;
         const srcColor = src.node.color ?? CATEGORY_COLORS[src.node.category] ?? '#7c3aed';
         const tgtColor = tgt.node.color ?? CATEGORY_COLORS[tgt.node.category] ?? '#7c3aed';
-
-        const grad = ctx.createLinearGradient(src.x, src.y, tgt.x, tgt.y);
-        grad.addColorStop(0, srcColor + Math.floor(alpha * 255).toString(16).padStart(2, '0'));
-        grad.addColorStop(1, tgtColor + Math.floor(alpha * 255).toString(16).padStart(2, '0'));
 
         ctx.beginPath();
         ctx.moveTo(src.x, src.y);
         ctx.lineTo(tgt.x, tgt.y);
-        ctx.strokeStyle = grad;
-        ctx.lineWidth = isHighlighted ? 2 : isHovered ? 1.5 : 1;
+        if (isHighlighted || isHovered) {
+          // Gradient only for the small number of interactive edges
+          const alpha = isHighlighted ? 0.7 : 0.45;
+          const grad = ctx.createLinearGradient(src.x, src.y, tgt.x, tgt.y);
+          const hex = Math.floor(alpha * 255).toString(16).padStart(2, '0');
+          grad.addColorStop(0, srcColor + hex);
+          grad.addColorStop(1, tgtColor + hex);
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = isHighlighted ? 2 : 1.5;
+        } else {
+          // Flat color for inactive edges — no gradient object created
+          ctx.strokeStyle = srcColor + '19'; // 0.1 opacity
+          ctx.lineWidth = 1;
+        }
         ctx.stroke();
 
         if (isHighlighted || isHovered) {

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, ChevronDown, ChevronUp, MapPin, Info, SlidersHorizontal, AlertTriangle, BookOpen } from 'lucide-react';
 import { nodes } from '@/lib/graph/index';
@@ -157,21 +157,27 @@ export default function TimelineExplorer() {
   const [showControls, setShowControls]   = useState(false);
   const containerRef                      = useRef<HTMLDivElement>(null);
 
-  // Nodes that have a valid year, pass credibility filter, and match active eras
-  const timelineNodes = nodes
-    .filter((n): n is GraphNode & { year: number } => n.year !== undefined)
-    .filter(n => nodePassesFilter(n, opts))
-    .filter(n => activeEras.includes(getEra(n.year)))
-    .sort((a, b) => a.year - b.year);
-
-  // Era counts after credibility filter (ignoring era filter to show non-zero counts)
-  const eraCounts = ERA_ORDER.reduce<Record<Era, number>>((acc, era) => {
-    acc[era] = nodes
+  // Memoized — only recomputes when credibility opts or era selection changes
+  const timelineNodes = useMemo(
+    () => nodes
       .filter((n): n is GraphNode & { year: number } => n.year !== undefined)
-      .filter(n => nodePassesFilter(n, opts) && getEra(n.year) === era)
-      .length;
-    return acc;
-  }, {} as Record<Era, number>);
+      .filter(n => nodePassesFilter(n, opts))
+      .filter(n => activeEras.includes(getEra(n.year)))
+      .sort((a, b) => a.year - b.year),
+    [opts, activeEras]
+  );
+
+  // Era counts memoized separately — only recalcs when opts change
+  const eraCounts = useMemo(
+    () => ERA_ORDER.reduce<Record<Era, number>>((acc, era) => {
+      acc[era] = nodes
+        .filter((n): n is GraphNode & { year: number } => n.year !== undefined)
+        .filter(n => nodePassesFilter(n, opts) && getEra(n.year) === era)
+        .length;
+      return acc;
+    }, {} as Record<Era, number>),
+    [opts]
+  );
 
   const toggleEra = (era: Era) =>
     setActiveEras(prev => prev.includes(era) ? prev.filter(e => e !== era) : [...prev, era]);
