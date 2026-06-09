@@ -150,24 +150,20 @@ function NodeMarker({
   onSelect: (n: GraphNode) => void;
 }) {
   const [hovered, setHovered] = useState(false);
-  const dotRef   = useRef<THREE.Mesh>(null);
   const cred     = getCredibilityDisplay(node);
   const colorHex = cred.badgeColor;
-  const color    = new THREE.Color(colorHex);
-  const pos      = latLonToXYZ(node.coordinates![0], node.coordinates![1], R + 0.1);
-
-  useFrame(({ clock }) => {
-    if (!dotRef.current) return;
-    const pulse = Math.sin(clock.elapsedTime * 2.5 + node.id.length) * 0.18 + 1;
-    dotRef.current.scale.setScalar(hovered ? pulse * 2.8 : pulse);
-    (dotRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity =
-      hovered ? 4 : 2.5 * cred.opacity;
-  });
+  const color    = useMemo(() => new THREE.Color(colorHex), [colorHex]);
+  const pos      = useMemo(
+    () => latLonToXYZ(node.coordinates![0], node.coordinates![1], R + 0.1),
+    // coordinates are static per node — no need to include array ref
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [node.coordinates![0], node.coordinates![1]]
+  );
 
   return (
     <group position={pos}>
       <mesh
-        ref={dotRef}
+        scale={hovered ? 2.8 : 1}
         onClick={e => { e.stopPropagation(); onSelect(node); }}
         onPointerOver={() => { setHovered(true); document.body.style.cursor = 'pointer'; }}
         onPointerOut={() => { setHovered(false); document.body.style.cursor = 'default'; }}
@@ -176,7 +172,7 @@ function NodeMarker({
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={2.5 * cred.opacity}
+          emissiveIntensity={hovered ? 4 : 2.5 * cred.opacity}
           transparent
           opacity={cred.opacity}
         />
@@ -206,12 +202,6 @@ function NodeMarker({
           </div>
         </Html>
       )}
-
-      <pointLight
-        color={color}
-        intensity={hovered ? 2 * cred.opacity : 0.8 * cred.opacity}
-        distance={1.2}
-      />
     </group>
   );
 }

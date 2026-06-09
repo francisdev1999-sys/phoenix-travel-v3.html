@@ -100,7 +100,6 @@ function TheoryNode({ theory, position, isSelected, onSelect }: {
         </Billboard>
       )}
 
-      <pointLight color={color} intensity={isSelected ? 2 : 0.5} distance={3} />
     </group>
   );
 }
@@ -145,7 +144,9 @@ function Scene({ visibleNodes, onSelect }: { visibleNodes: GraphNode[]; onSelect
 
   return (
     <>
-      <ambientLight intensity={0.2} />
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[10, 10, 5]} intensity={0.8} color="#8060ff" />
+      <directionalLight position={[-8, -5, -8]} intensity={0.3} color="#4040aa" />
       <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
 
       <EdgeLines nodeList={visibleNodes} positions={positions} />
