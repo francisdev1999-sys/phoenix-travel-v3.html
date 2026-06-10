@@ -1,20 +1,10 @@
 // Shared source types used across API + UI
+// Definitions live in lib/taxonomy/source-types.ts — re-exported here for convenience.
 
-export const SOURCE_TYPES = [
-  'Academic Paper',
-  'Archaeological Report',
-  'Government Document',
-  'Historical Text',
-  'Religious Text',
-  'Museum Archive',
-  'Book',
-  'News Investigation',
-  'Folklore Collection',
-] as const;
+export { SOURCE_TYPE_VALUES as SOURCE_TYPES, resolveSourceType } from './taxonomy/source-types';
+export type { SourceTypeValue as SourceType } from './taxonomy/source-types';
 
-export type SourceType = typeof SOURCE_TYPES[number];
-
-export const LINK_TYPES = ['supports', 'contradicts', 'references'] as const;
+export const LINK_TYPES = ['primary', 'supports', 'context', 'contradicts', 'references'] as const;
 export type LinkType = typeof LINK_TYPES[number];
 
 export const SOURCE_STATUS = ['pending', 'approved', 'rejected', 'needs_revision'] as const;
@@ -25,9 +15,10 @@ export type TargetType = typeof TARGET_TYPES[number];
 
 export interface SourceFormData {
   title: string;
-  sourceType: SourceType;
+  sourceType: string;
   author: string;
   publicationYear: string;
+  // Common structured metadata
   publisher: string;
   journal: string;
   volume: string;
@@ -36,8 +27,29 @@ export interface SourceFormData {
   url: string;
   doi: string;
   isbn: string;
+  edition: string;
+  // Government / official docs
+  agency: string;
+  documentNumber: string;
+  // Court records
+  court: string;
+  caseNumber: string;
+  jurisdiction: string;
+  // Interviews
+  interviewee: string;
+  interviewer: string;
+  interviewDate: string;
+  // Video
+  videoUrl: string;
+  recordingDate: string;
+  // Photographs
+  photographer: string;
+  dateTaken: string;
+  photoLocation: string;
+  // Free text
   abstract: string;
   notes: string;
+  sourceTrustExplanation: string;
   language: string;
 }
 
@@ -57,9 +69,13 @@ export interface SourceRecord {
   isbn?: string | null;
   abstract?: string | null;
   notes?: string | null;
+  sourceTrustExplanation?: string | null;
   language: string;
-  credibilityScore: number;
+  credibilityScore:    number;
   credibilityFactors?: Record<string, number> | null;
+  credibilityOverride?: number | null;
+  overriddenBy?:        string | null;
+  overrideReason?:      string | null;
   status: string;
   reviewNotes?: string | null;
   reviewedAt?: string | null;

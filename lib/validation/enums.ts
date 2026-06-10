@@ -19,30 +19,59 @@ export const RELATIONSHIP_TYPES = [
   'thematic',
   'influence',
   'contradictory',
+  'speculative',
 ] as const;
 
 export const SOURCE_TYPES = [
   'Academic Paper',
   'Archaeological Report',
+  'Government Document',
+  'Declassified Document',
+  'FOIA Release',
+  'Court Record',
+  'Museum Archive',
   'Historical Text',
   'Religious Text',
-  'Museum Archive',
-  'Government Document',
-  'News Investigation',
-  'Folklore Collection',
   'Book',
+  'News Investigation',
+  'Research Report',
+  'Scientific Dataset',
+  'Interview',
+  'Witness Testimony',
+  'Photograph',
+  'Video Evidence',
+  'Website',
+  'Other',
 ] as const;
 
 export const NODE_CATEGORIES = [
-  'Ancient Civilizations',
-  'Egypt & Ancient Engineering',
-  'Religious Texts & Mythology',
+  'Ancient Civilization',
+  'Ancient Site',
+  'Artifact',
+  'Lost Knowledge',
+  'Ancient Technology',
+  'Forbidden Archaeology',
+  'Alternative History',
+  'Religion',
+  'Mythology',
+  'Ancient Text',
   'UFO / UAP',
-  'Human Origins',
-  'Consciousness & Reality',
-  'Secret Societies & Esoteric',
-  'Global Mysteries',
-  'Legends & Folklore',
+  'Extraterrestrial Hypothesis',
+  'Government Program',
+  'Government Secrecy',
+  'Intelligence Operation',
+  'Secret Project',
+  'Conspiracy Theory',
+  'Historical Controversy',
+  'Whistleblower',
+  'Disease & Pandemic',
+  'Unexplained Phenomenon',
+  'Symbolism',
+  'Esoterica',
+  'Historical Figure',
+  'Organization',
+  'Technology',
+  'Modern Mystery',
 ] as const;
 
 // Edge source_type uses snake_case (GraphEdge.source_type), distinct from
@@ -55,6 +84,16 @@ export const EDGE_SOURCE_TYPES = [
   'cultural_tradition',
   'scientific',
   'journalistic',
+] as const;
+
+// Source link classification — used in NodeSourceManager and API validation.
+// 'primary' is the most authoritative; 'context' provides background only.
+export const LINK_TYPES = [
+  'primary',
+  'supports',
+  'context',
+  'contradicts',
+  'references',
 ] as const;
 
 /** Returns true if v is a finite number in [0, 1]. */

@@ -1,11 +1,13 @@
 'use client';
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useState, useMemo, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Clock } from 'lucide-react';
 import { ancientSites } from '@/lib/data/sites';
 import { AncientSite } from '@/lib/types';
+import { useUserStore } from '@/lib/store/userStore';
 
 const R = 3;
 
@@ -288,12 +290,45 @@ function SiteMarker({ site, onSelect }: { site: AncientSite; onSelect: (s: Ancie
   );
 }
 
-function RotatingGlobe({ filteredSites, onSelect }: { filteredSites: AncientSite[]; onSelect: (s: AncientSite) => void }) {
-  const groupRef = useRef<THREE.Group>(null);
+function RotatingGlobe({
+  filteredSites, onSelect, focusTarget,
+}: {
+  filteredSites: AncientSite[];
+  onSelect: (s: AncientSite) => void;
+  focusTarget: [number, number] | null;
+}) {
+  const groupRef    = useRef<THREE.Group>(null);
   const earthTexture = useMemo(() => createEarthTexture(), []);
+  const targetYRef  = useRef<number | null>(null);
+  const focusingRef = useRef(false);
+
+  // When focusTarget changes, compute target Y rotation (shortest path)
+  useEffect(() => {
+    if (!focusTarget || !groupRef.current) return;
+    const [, lon] = focusTarget;
+    // Camera is at +Z: to face lon toward camera, targetY = π/2 - lon_rad
+    const rawTarget = Math.PI / 2 - (lon * Math.PI) / 180;
+    const cur = groupRef.current.rotation.y;
+    let diff  = (rawTarget - cur) % (2 * Math.PI);
+    if (diff < -Math.PI) diff += 2 * Math.PI;
+    if (diff >  Math.PI) diff -= 2 * Math.PI;
+    targetYRef.current  = cur + diff;
+    focusingRef.current = true;
+  }, [focusTarget]);
 
   useFrame(() => {
-    if (groupRef.current) groupRef.current.rotation.y += 0.0018;
+    if (!groupRef.current) return;
+    if (focusingRef.current && targetYRef.current !== null) {
+      const diff = targetYRef.current - groupRef.current.rotation.y;
+      if (Math.abs(diff) < 0.008) {
+        groupRef.current.rotation.y = targetYRef.current;
+        focusingRef.current = false;
+      } else {
+        groupRef.current.rotation.y += diff * 0.06; // smooth lerp
+      }
+    } else {
+      groupRef.current.rotation.y += 0.0018; // idle auto-rotate
+    }
   });
 
   return (
@@ -334,6 +369,29 @@ export default function AncientGlobe() {
   const [selectedSite, setSelectedSite] = useState<AncientSite | null>(null);
   const [filter, setFilter] = useState<string>('all');
 
+  const { focusedTheoryId, setFocusedTheoryId } = useUserStore();
+
+  // When Timeline (or any view) sets focusedTheoryId, find and highlight the matching site
+  useEffect(() => {
+    if (!focusedTheoryId) return;
+    const match = ancientSites.find(s => s.relatedTheories.includes(focusedTheoryId));
+    if (match) setSelectedSite(match);
+  }, [focusedTheoryId]);
+
+  const handleSiteSelect = (site: AncientSite) => {
+    setSelectedSite(site);
+    setFocusedTheoryId(site.relatedTheories[0] ?? null);
+  };
+
+  // Focus target: coords of the site matched by focusedTheoryId (or selected site)
+  const focusTarget = useMemo<[number, number] | null>(() => {
+    if (focusedTheoryId) {
+      const match = ancientSites.find(s => s.relatedTheories.includes(focusedTheoryId));
+      if (match) return match.coordinates;
+    }
+    return null;
+  }, [focusedTheoryId]);
+
   const siteTypes = [
     { id: 'all', label: 'All Sites', color: '#ffffff' },
     { id: 'pyramid', label: 'Pyramids', color: '#ffd700' },
@@ -348,7 +406,15 @@ export default function AncientGlobe() {
   return (
     <div className="h-full flex flex-col">
       <div className="flex-shrink-0 p-4 border-b border-purple-900/20">
-        <h2 className="text-lg font-black text-white mb-3">Ancient Sites Globe</h2>
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <h2 className="text-lg font-black text-white">Ancient Sites Globe</h2>
+          {focusedTheoryId && ancientSites.some(s => s.relatedTheories.includes(focusedTheoryId)) && (
+            <div className="flex items-center gap-1.5 text-[10px] text-cyan-400 bg-cyan-900/20 border border-cyan-500/30 rounded-full px-2.5 py-1">
+              <Clock size={9} />
+              Synced with Timeline
+            </div>
+          )}
+        </div>
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {siteTypes.map(type => (
             <button
@@ -377,7 +443,7 @@ export default function AncientGlobe() {
           <pointLight position={[0, 8, 0]} intensity={0.5} color="#ffffff" />
           <pointLight position={[0, -8, 0]} intensity={0.2} color="#3060ff" />
 
-          <RotatingGlobe filteredSites={filteredSites} onSelect={setSelectedSite} />
+          <RotatingGlobe filteredSites={filteredSites} onSelect={handleSiteSelect} focusTarget={focusTarget} />
 
           <OrbitControls
             enablePan={false}

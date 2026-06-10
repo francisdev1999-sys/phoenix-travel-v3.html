@@ -4,18 +4,28 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Globe, BarChart3, Clock, MapPin, Grid3X3, User,
   Volume2, VolumeX, Menu, X, LogIn, LogOut, Activity, BookMarked,
-  ShieldCheck, Rabbit, Loader2, MoreHorizontal, Wrench,
+  ShieldCheck, Rabbit, Loader2, MoreHorizontal, Wrench, Trophy, UserCheck, Eye,
 } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { nodes as staticNodes } from '@/lib/graph';
-import { CATEGORY_COLORS, EVIDENCE_COLORS } from '@/lib/graph';
+import { CATEGORY_COLORS } from '@/lib/graph/colors';
+
+type LightNode = { id: string; title: string; category: string; description?: string; tags?: string[]; icon?: string; evidence_level?: string };
+let _staticNodes: LightNode[] | null = null;
+async function lazyStaticNodes(): Promise<LightNode[]> {
+  if (_staticNodes) return _staticNodes;
+  const mod = await import('@/lib/graph/nodes');
+  _staticNodes = mod.nodes as unknown as LightNode[];
+  return _staticNodes;
+}
+import UserProfilePanel from '@/components/sections/UserProfilePanel';
+import { usePerformanceStore, getEffectiveMode, type PerfMode } from '@/lib/store/performanceStore';
 
 const NAV_PRIMARY = [
   { id: 'graph',          label: 'Knowledge Graph', icon: Grid3X3 },
   { id: 'universe',       label: 'Universe View',   icon: Globe },
   { id: 'timeline',       label: 'Timeline',        icon: Clock },
-  { id: 'globe',          label: 'Ancient Sites',   icon: MapPin },
+  { id: 'globe',          label: 'Nexus Globe',     icon: MapPin },
   { id: 'evidence-board', label: 'Evidence Board',  icon: BarChart3 },
   { id: 'rabbit-hole',    label: 'Rabbit Hole',     icon: Rabbit },
   { id: 'dashboard',      label: 'Dashboard',       icon: User },
@@ -48,9 +58,10 @@ function normaliseDbNode(n: Record<string, unknown>): SearchResult {
   };
 }
 
-function searchStatic(q: string): SearchResult[] {
+async function searchStatic(q: string): Promise<SearchResult[]> {
   const lq = q.toLowerCase();
-  return staticNodes
+  const nodes = await lazyStaticNodes();
+  return nodes
     .filter(n =>
       n.title.toLowerCase().includes(lq) ||
       n.description?.toLowerCase().includes(lq) ||
@@ -67,37 +78,159 @@ function searchStatic(q: string): SearchResult[] {
     }));
 }
 
+const PERF_LABELS: Record<PerfMode, string> = {
+  auto: 'Auto', high: 'High', performance: 'Balanced', low: 'Low',
+};
+const PERF_CYCLE: PerfMode[] = ['auto', 'high', 'performance', 'low'];
+
+// ── Sign-in modal ─────────────────────────────────────────────────────────────
+function SignInModal({ onClose, onGuest }: { onClose: () => void; onGuest: () => void }) {
+  const [signingIn, setSigningIn] = useState(false);
+
+  const handleGoogle = async () => {
+    setSigningIn(true);
+    try {
+      await signIn('google', { callbackUrl: window.location.href });
+    } finally {
+      setSigningIn(false);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[200] flex items-center justify-center px-4"
+      onClick={onClose}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+
+      <motion.div
+        initial={{ scale: 0.92, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.92, opacity: 0, y: 20 }}
+        transition={{ type: 'spring', damping: 22, stiffness: 280 }}
+        className="relative w-full max-w-sm bg-slate-950 border border-purple-500/30 rounded-2xl shadow-2xl shadow-purple-900/40 overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 border-b border-purple-900/20">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full border border-purple-500 flex items-center justify-center">
+                <span className="text-purple-400 text-xs font-bold">N</span>
+              </div>
+              <span className="text-sm font-bold tracking-widest text-purple-300">NEXUS ARCHIVE</span>
+            </div>
+            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 text-slate-500 hover:text-white transition-all">
+              <X size={14} />
+            </button>
+          </div>
+          <p className="text-xs text-slate-500 mt-2">Explore ancient mysteries, hidden connections, and unexplained phenomena.</p>
+        </div>
+
+        {/* Options */}
+        <div className="p-6 flex flex-col gap-3">
+          {/* Google sign in */}
+          <button
+            onClick={handleGoogle}
+            disabled={signingIn}
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-semibold text-sm transition-all shadow-lg disabled:opacity-60"
+          >
+            {signingIn ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.616z" fill="#4285F4"/>
+                <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+                <path d="M3.964 10.706A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.038l3.007-2.332z" fill="#FBBC05"/>
+                <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.962L3.964 7.294C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+              </svg>
+            )}
+            Continue with Google
+          </button>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-white/10" />
+            <span className="text-[10px] text-slate-600 uppercase tracking-wider">or</span>
+            <div className="flex-1 h-px bg-white/10" />
+          </div>
+
+          {/* Guest */}
+          <button
+            onClick={onGuest}
+            className="w-full flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 text-slate-300 font-medium text-sm transition-all"
+          >
+            <Eye size={16} className="text-slate-400" />
+            Browse as Guest
+          </button>
+
+          {/* Permissions */}
+          <div className="mt-1 grid grid-cols-2 gap-2">
+            <div className="px-3 py-2.5 rounded-lg bg-green-900/15 border border-green-500/20">
+              <p className="text-[10px] font-bold text-green-400 mb-1.5 flex items-center gap-1">
+                <UserCheck size={10} /> Signed In
+              </p>
+              <ul className="text-[10px] text-green-300 space-y-0.5">
+                <li>✓ View everything</li>
+                <li>✓ Submit theories</li>
+                <li>✓ Propose connections</li>
+                <li>✓ Track progress</li>
+              </ul>
+            </div>
+            <div className="px-3 py-2.5 rounded-lg bg-slate-800/50 border border-slate-700/30">
+              <p className="text-[10px] font-bold text-slate-400 mb-1.5 flex items-center gap-1">
+                <Eye size={10} /> Guest
+              </p>
+              <ul className="text-[10px] text-slate-500 space-y-0.5">
+                <li>✓ View everything</li>
+                <li>✗ Submit theories</li>
+                <li>✗ Propose connections</li>
+                <li>✗ Track progress</li>
+              </ul>
+            </div>
+          </div>
+
+          <p className="text-[10px] text-slate-600 text-center">
+            By signing in you agree to keep exploration thoughtful and respectful.
+          </p>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ── NavBar ────────────────────────────────────────────────────────────────────
 export default function NavBar() {
-  const { currentView, setCurrentView, audioEnabled, toggleAudio, progress, setPendingRabbitHoleNodeId } = useUserStore();
+  const {
+    currentView, setCurrentView, audioEnabled, toggleAudio,
+    progress, setPendingRabbitHoleNodeId, guestMode, setGuestMode,
+  } = useUserStore();
   const { data: session, status } = useSession();
-  const [mobileOpen, setMobileOpen]     = useState(false);
-  const [searchOpen, setSearchOpen]     = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [toolsOpen, setToolsOpen]       = useState(false);
+  const { mode: perfMode, setMode: setPerfMode } = usePerformanceStore();
+  const effectivePerf = getEffectiveMode(perfMode);
+  const [mobileOpen, setMobileOpen]       = useState(false);
+  const [searchOpen, setSearchOpen]       = useState(false);
+  const [userMenuOpen, setUserMenuOpen]   = useState(false);
+  const [profileOpen, setProfileOpen]     = useState(false);
+  const [showSignIn, setShowSignIn]       = useState(false);
+  const [toolsOpen, setToolsOpen]         = useState(false);
   const toolsRef = useRef<HTMLDivElement>(null);
-  const [query, setQuery]               = useState('');
-  const [results, setResults]           = useState<SearchResult[]>([]);
-  const [searching, setSearching]       = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [query, setQuery]                 = useState('');
+  const [results, setResults]             = useState<SearchResult[]>([]);
+  const [searching, setSearching]         = useState(false);
+  const [dropdownOpen, setDropdownOpen]   = useState(false);
   const debounceRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef     = useRef<HTMLInputElement>(null);
 
-  // Role is set server-side by lib/auth.ts; no client env var needed
   const role    = (session?.user as { role?: string })?.role ?? 'user';
   const isAdmin = role === 'owner' || role === 'admin';
   const navItems = isAdmin ? [...NAV_BASE, NAV_ADMIN] : NAV_BASE;
   const toolsItems = isAdmin ? [...NAV_TOOLS_BASE, NAV_ADMIN] : NAV_TOOLS_BASE;
-
-  // Detect whether Google OAuth is actually configured by checking the
-  // /api/auth/providers endpoint once on mount.
-  const [authAvailable, setAuthAvailable] = useState<boolean | null>(null);
-  useEffect(() => {
-    fetch('/api/auth/providers')
-      .then(r => r.json())
-      .then(d => setAuthAvailable(d && Object.keys(d).length > 0))
-      .catch(() => setAuthAvailable(false));
-  }, []);
 
   const handleNav = (id: string) => {
     setCurrentView(id as Parameters<typeof setCurrentView>[0]);
@@ -144,11 +277,8 @@ export default function NavBar() {
           return;
         }
       }
-    } catch {
-      // DB down — fall through to static
-    }
-    // Static fallback
-    setResults(searchStatic(q));
+    } catch { /* fall through */ }
+    setResults(await searchStatic(q));
     setSearching(false);
   }, []);
 
@@ -169,6 +299,19 @@ export default function NavBar() {
     closeSearch();
   };
 
+  const handleGuest = () => {
+    setGuestMode(true);
+    setShowSignIn(false);
+  };
+
+  const handleSignOut = () => {
+    setUserMenuOpen(false);
+    setGuestMode(false);
+    signOut();
+  };
+
+  const isAuthenticated = status === 'authenticated' && session?.user;
+
   return (
     <>
       <motion.nav
@@ -176,24 +319,26 @@ export default function NavBar() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, delay: 0.5 }}
         className="fixed top-0 left-0 right-0 z-50 glass-dark border-b border-purple-900/30"
+        style={{ maxWidth: '100vw' }}
       >
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+        <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between gap-2">
+
           {/* Logo */}
           <button
             onClick={() => setCurrentView('landing')}
             className="flex items-center gap-2 flex-shrink-0"
           >
-            <div className="w-8 h-8 rounded-full border border-purple-500 flex items-center justify-center relative">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-purple-500 flex items-center justify-center relative">
               <span className="text-purple-400 text-xs font-bold">N</span>
               <div className="absolute inset-0 rounded-full animate-pulse-glow border border-purple-500/30" />
             </div>
-            <span className="font-bold text-sm tracking-widest text-purple-300 hidden sm:block">
+            <span className="font-bold text-xs sm:text-sm tracking-widest text-purple-300 hidden sm:block">
               NEXUS ARCHIVE
             </span>
           </button>
 
-          {/* Desktop Nav — primary views */}
-          <div className="hidden lg:flex items-center gap-1 flex-shrink-0">
+          {/* Desktop Nav — primary views + Tools dropdown */}
+          <div className="hidden lg:flex items-center gap-0.5 xl:gap-1 flex-1 justify-center min-w-0 overflow-hidden">
             {NAV_PRIMARY.map((item) => {
               const Icon = item.icon;
               const active = currentView === item.id;
@@ -201,14 +346,15 @@ export default function NavBar() {
                 <button
                   key={item.id}
                   onClick={() => handleNav(item.id)}
-                  className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap ${
+                  className={`flex items-center gap-1 xl:gap-1.5 px-2 xl:px-3 py-2 rounded-lg text-[11px] xl:text-xs font-medium transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
                     active
                       ? 'bg-purple-900/50 text-purple-300 border border-purple-500/30'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
                   }`}
                 >
-                  <Icon size={13} />
+                  <Icon size={12} />
                   <span className="hidden xl:inline">{item.label}</span>
+                  <span className="inline xl:hidden">{item.label.split(' ')[0]}</span>
                 </button>
               );
             })}
@@ -267,15 +413,16 @@ export default function NavBar() {
           </div>
 
           {/* Right side */}
-          <div className="flex items-center gap-1 sm:gap-2">
-            {/* Search with live dropdown */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+
+            {/* Search */}
             <div ref={containerRef} className="relative flex items-center">
               <AnimatePresence>
                 {searchOpen && (
                   <motion.input
                     ref={inputRef}
                     initial={{ width: 0, opacity: 0 }}
-                    animate={{ width: 'min(200px, 45vw)', opacity: 1 }}
+                    animate={{ width: 'min(180px, 40vw)', opacity: 1 }}
                     exit={{ width: 0, opacity: 0 }}
                     value={query}
                     onChange={handleQueryChange}
@@ -285,20 +432,16 @@ export default function NavBar() {
                   />
                 )}
               </AnimatePresence>
-
-              {/* Spinner inside input */}
               {searchOpen && searching && (
                 <Loader2 size={12} className="absolute right-8 text-purple-400 animate-spin pointer-events-none" />
               )}
-
               <button
                 onClick={searchOpen ? closeSearch : openSearch}
                 className="p-2 rounded-lg text-slate-400 hover:text-purple-400 hover:bg-purple-900/30 transition-all"
               >
-                {searchOpen ? <X size={16} /> : <Search size={16} />}
+                {searchOpen ? <X size={15} /> : <Search size={15} />}
               </button>
 
-              {/* Results dropdown */}
               <AnimatePresence>
                 {dropdownOpen && results.length > 0 && (
                   <motion.div
@@ -343,99 +486,116 @@ export default function NavBar() {
               </AnimatePresence>
             </div>
 
-            {/* XP indicator */}
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-900/20 border border-purple-500/20">
-              <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+            {/* XP — desktop only */}
+            <div className="hidden xl:flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-purple-900/20 border border-purple-500/20">
+              <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
               <span className="text-xs text-purple-300 font-medium">{progress.xp} XP</span>
             </div>
 
-            {/* Audio */}
+            {/* Performance mode — desktop only */}
             <button
-              onClick={toggleAudio}
-              className="p-2 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-cyan-900/30 transition-all"
-              title={audioEnabled ? 'Mute' : 'Enable ambient audio'}
+              onClick={() => {
+                const idx = PERF_CYCLE.indexOf(perfMode);
+                setPerfMode(PERF_CYCLE[(idx + 1) % PERF_CYCLE.length]);
+              }}
+              className="hidden xl:flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium border transition-all border-white/10 hover:border-purple-500/40 hover:bg-purple-900/20"
+              style={{ color: effectivePerf === 'high' ? '#22c55e' : effectivePerf === 'performance' ? '#f59e0b' : '#ef4444' }}
+              title={`Performance: ${PERF_LABELS[perfMode]}`}
             >
-              {audioEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+              <Activity size={12} />
+              <span>{PERF_LABELS[perfMode]}</span>
             </button>
 
-            {/* Auth */}
-            <div className="relative">
-              {status === 'authenticated' && session?.user ? (
-                <>
-                  <button
-                    onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/10 transition-all"
-                  >
-                    {session.user.image ? (
-                      <img src={session.user.image} alt="" className="w-6 h-6 rounded-full border border-purple-500/50" />
-                    ) : (
-                      <div className="w-6 h-6 rounded-full bg-purple-700 flex items-center justify-center">
-                        <span className="text-xs text-white font-bold">
-                          {session.user.name?.[0]?.toUpperCase() ?? 'U'}
-                        </span>
-                      </div>
-                    )}
-                    <span className="text-xs text-slate-300 hidden sm:block max-w-[80px] truncate">
-                      {session.user.name}
-                    </span>
-                  </button>
-                  <AnimatePresence>
-                    {userMenuOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                        className="absolute right-0 top-10 w-44 glass-dark border border-purple-900/40 rounded-xl p-2 shadow-xl z-50"
-                      >
-                        <div className="px-3 py-2 border-b border-purple-900/30 mb-1">
-                          <p className="text-xs text-slate-300 font-medium truncate">{session.user.name}</p>
-                          <p className="text-xs text-slate-500 truncate">{session.user.email}</p>
-                          {role !== 'user' && (
-                            <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-purple-900/50 text-purple-300">
-                              {role}
-                            </span>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => { setUserMenuOpen(false); signOut(); }}
-                          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-red-400 hover:bg-red-900/20 transition-all"
-                        >
-                          <LogOut size={12} />
-                          Sign out
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </>
-              ) : (
-                <div className="relative group">
-                  <button
-                    onClick={() => {
-                      if (authAvailable === false) return;
-                      signIn('google', { callbackUrl: window.location.href });
-                    }}
-                    disabled={status === 'loading' || authAvailable === false}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-700/50 hover:bg-purple-600/60 text-purple-200 border border-purple-500/30 transition-all disabled:opacity-50"
-                  >
-                    <LogIn size={12} />
-                    <span className="hidden sm:block">Sign In</span>
-                  </button>
-                  {authAvailable === false && (
-                    <div className="absolute right-0 top-full mt-1.5 w-52 px-3 py-2 rounded-lg bg-slate-900 border border-red-800/50 text-[10px] text-red-400 shadow-xl z-50 hidden group-hover:block">
-                      Google OAuth not configured.<br />
-                      Set <span className="font-mono">AUTH_GOOGLE_ID</span> and <span className="font-mono">AUTH_GOOGLE_SECRET</span> env vars.
+            {/* Audio — hidden on xs */}
+            <button
+              onClick={toggleAudio}
+              className="hidden sm:flex p-2 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-cyan-900/30 transition-all"
+            >
+              {audioEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
+            </button>
+
+            {/* ── Auth section ── */}
+            {isAuthenticated ? (
+              <div className="relative">
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg hover:bg-white/10 transition-all"
+                >
+                  {session.user.image ? (
+                    <img src={session.user.image} alt="" className="w-6 h-6 rounded-full border border-purple-500/50" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-purple-700 flex items-center justify-center">
+                      <span className="text-xs text-white font-bold">
+                        {session.user.name?.[0]?.toUpperCase() ?? 'U'}
+                      </span>
                     </div>
                   )}
-                </div>
-              )}
-            </div>
+                  <span className="text-xs text-slate-300 hidden sm:block max-w-[70px] truncate">
+                    {session.user.name}
+                  </span>
+                </button>
+                <AnimatePresence>
+                  {userMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                      className="absolute right-0 top-10 w-44 glass-dark border border-purple-900/40 rounded-xl p-2 shadow-xl z-50"
+                    >
+                      <div className="px-3 py-2 border-b border-purple-900/30 mb-1">
+                        <p className="text-xs text-slate-300 font-medium truncate">{session.user.name}</p>
+                        <p className="text-xs text-slate-500 truncate">{session.user.email}</p>
+                        {role !== 'user' && (
+                          <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-purple-900/50 text-purple-300">
+                            {role}
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => { setUserMenuOpen(false); setProfileOpen(true); }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-purple-300 hover:bg-purple-900/20 transition-all"
+                      >
+                        <Trophy size={12} />My Profile
+                      </button>
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-red-400 hover:bg-red-900/20 transition-all"
+                      >
+                        <LogOut size={12} />Sign out
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : guestMode ? (
+              /* Guest indicator */
+              <button
+                onClick={() => setShowSignIn(true)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800/80 hover:bg-slate-700/80 border border-slate-600/50 hover:border-purple-500/50 text-slate-400 hover:text-purple-300 transition-all"
+              >
+                <Eye size={12} />
+                <span className="hidden sm:inline">Guest</span>
+                <span className="text-purple-400 ml-0.5">·</span>
+                <LogIn size={11} className="text-purple-400" />
+              </button>
+            ) : (
+              /* Sign-in CTA — always visible, always labeled */
+              <button
+                onClick={() => setShowSignIn(true)}
+                disabled={status === 'loading'}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white border border-purple-400/40 transition-all shadow-lg shadow-purple-900/40 disabled:opacity-50"
+              >
+                <LogIn size={13} />
+                <span>Sign In</span>
+              </button>
+            )}
 
-            {/* Mobile menu */}
+            {/* Mobile hamburger */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-all"
             >
-              {mobileOpen ? <X size={16} /> : <Menu size={16} />}
+              {mobileOpen ? <X size={15} /> : <Menu size={15} />}
             </button>
           </div>
         </div>
@@ -445,12 +605,12 @@ export default function NavBar() {
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-16 left-0 right-0 z-40 glass-dark border-b border-purple-900/30 lg:hidden"
+            exit={{ opacity: 0, y: -10 }}
+            className="fixed top-14 sm:top-16 left-0 right-0 z-40 glass-dark border-b border-purple-900/30 lg:hidden max-h-[calc(100vh-56px)] overflow-y-auto"
           >
-            <div className="p-4 flex flex-col gap-2">
+            <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-1.5">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const active = currentView === item.id;
@@ -458,21 +618,59 @@ export default function NavBar() {
                   <button
                     key={item.id}
                     onClick={() => handleNav(item.id)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
                       active
-                        ? 'bg-purple-900/50 text-purple-300'
-                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        ? 'bg-purple-900/60 text-purple-300 border border-purple-500/30'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
                     }`}
                   >
-                    <Icon size={16} />
+                    <Icon size={15} />
                     {item.label}
                   </button>
                 );
               })}
             </div>
+
+            {/* Mobile extras */}
+            <div className="px-3 pb-3 flex items-center gap-2 border-t border-purple-900/20 pt-2">
+              <button
+                onClick={toggleAudio}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-cyan-400 bg-white/5 hover:bg-cyan-900/20 transition-all"
+              >
+                {audioEnabled ? <Volume2 size={13} /> : <VolumeX size={13} />}
+                {audioEnabled ? 'Mute' : 'Sound'}
+              </button>
+              <button
+                onClick={() => {
+                  const idx = PERF_CYCLE.indexOf(perfMode);
+                  setPerfMode(PERF_CYCLE[(idx + 1) % PERF_CYCLE.length]);
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs bg-white/5 border border-white/10 transition-all"
+                style={{ color: effectivePerf === 'high' ? '#22c55e' : effectivePerf === 'performance' ? '#f59e0b' : '#ef4444' }}
+              >
+                <Activity size={13} />
+                {PERF_LABELS[perfMode]}
+              </button>
+              <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-purple-900/20 border border-purple-500/20 ml-auto">
+                <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+                <span className="text-xs text-purple-300 font-medium">{progress.xp} XP</span>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Sign-in modal */}
+      <AnimatePresence>
+        {showSignIn && (
+          <SignInModal
+            onClose={() => setShowSignIn(false)}
+            onGuest={handleGuest}
+          />
+        )}
+      </AnimatePresence>
+
+      <UserProfilePanel open={profileOpen} onClose={() => setProfileOpen(false)} />
     </>
   );
 }
