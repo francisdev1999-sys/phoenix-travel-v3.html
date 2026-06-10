@@ -86,7 +86,7 @@ export default function AppShell() {
   }, [setCurrentView]);
 
   return (
-    <div className="min-h-screen bg-[#000005] text-slate-200 overflow-hidden">
+    <div className="min-h-screen bg-[#000005] text-slate-200 overflow-hidden" style={{ maxWidth: '100vw', overflowX: 'hidden' }}>
       {/* Global particle field for non-landing views */}
       {!isLanding && <ParticleField />}
 
@@ -117,7 +117,7 @@ export default function AppShell() {
             <NavBar />
 
             {/* Main content area */}
-            <div className="flex-1 flex overflow-hidden mt-16 relative">
+            <div className="flex-1 flex overflow-hidden mt-14 sm:mt-16 relative">
               {/* Core view */}
               <div className="flex-1 overflow-hidden relative">
                 <Suspense fallback={<LoadingSpinner />}>

@@ -37,7 +37,10 @@ interface UserStore {
   searchQuery: string;
   /** Shared cross-view focus: theory ID that both Timeline and Globe react to */
   focusedTheoryId: string | null;
+  /** Guest mode — browse-only, no contributions. Not persisted. */
+  guestMode: boolean;
 
+  setGuestMode: (v: boolean) => void;
   exploreTheory: (theoryId: string) => void;
   discoverConnection: (fromId: string, toId: string) => void;
   toggleAudio: () => void;
@@ -76,6 +79,7 @@ export const useUserStore = create<UserStore>()(
       selectedTheory: null,
       searchQuery: '',
       focusedTheoryId: null,
+      guestMode: false,
 
       exploreTheory: (theoryId: string) => {
         set((state) => {
@@ -129,6 +133,8 @@ export const useUserStore = create<UserStore>()(
           };
         });
       },
+
+      setGuestMode: (v) => set({ guestMode: v }),
 
       toggleAudio: () => set((state) => ({ audioEnabled: !state.audioEnabled })),
 
