@@ -21,8 +21,9 @@ import PlatformHealthDashboard from '@/components/admin/PlatformHealthDashboard'
 import UserIntelligenceDashboard from '@/components/admin/UserIntelligenceDashboard';
 import ArchiveBiasAudit from '@/components/admin/ArchiveBiasAudit';
 import SimilarityAudit from '@/components/similarity/SimilarityAudit';
+import AiActivityDashboard from '@/components/admin/AiActivityDashboard';
 
-type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports' | 'imports' | 'drafts' | 'suggestions' | 'users' | 'moderation' | 'platform' | 'intelligence' | 'integrity' | 'similarity';
+type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports' | 'imports' | 'drafts' | 'suggestions' | 'users' | 'moderation' | 'platform' | 'intelligence' | 'integrity' | 'similarity' | 'ai-activity';
 
 export default function AdminPanel() {
   const { data: session, status } = useSession();
@@ -112,6 +113,7 @@ export default function AdminPanel() {
     { id: 'reports',      label: 'Reports',       icon: <FileWarning size={13} /> },
     { id: 'platform',     label: 'Platform',      icon: <BarChart3 size={13} />, ownerOnly: true },
     { id: 'intelligence', label: 'User Intel',    icon: <Brain size={13} />,    ownerOnly: true },
+    { id: 'ai-activity',  label: 'AI Activity',   icon: <Sparkles size={13} />, ownerOnly: true },
   ];
   const tabs = allTabs.filter(t => !t.ownerOnly || isOwner);
 
@@ -267,6 +269,7 @@ export default function AdminPanel() {
           {tab === 'platform'     && <PlatformHealthDashboard />}
           {tab === 'reports'      && <AdminReports />}
           {tab === 'intelligence' && isOwner && <UserIntelligenceDashboard />}
+          {tab === 'ai-activity'  && isOwner && <AiActivityDashboard />}
         </motion.div>
       </AnimatePresence>
     </div>
