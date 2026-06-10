@@ -871,3 +871,39 @@ model UserModerationStatus {
   @@index([status])
   @@index([changedAt])
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RESEARCH SIMILARITY  (advisory metadata — never creates graph edges)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ResearchSimilarity {
+  id      String @id @default(cuid())
+  nodeAId String
+  nodeBId String
+
+  // Dimension scores — all 0.0–1.0
+  overallSimilarity      Float @default(0)
+  thematicSimilarity     Float @default(0)
+  timelineSimilarity     Float @default(0)
+  geographicSimilarity   Float @default(0)
+  sourceSimilarity       Float @default(0)
+  evidenceSimilarity     Float @default(0)
+  entitySimilarity       Float @default(0)
+  relationshipSimilarity Float @default(0)
+
+  researchPotentialScore Float @default(0)
+  confidence             Float @default(0)
+
+  explanation    String @default("") @db.Text
+  criticAnalysis Json   @default("[]")
+  breakdown      Json   @default("{}")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([nodeAId, nodeBId])
+  @@index([nodeAId])
+  @@index([nodeBId])
+  @@index([overallSimilarity(sort: Desc)])
+  @@index([researchPotentialScore(sort: Desc)])
+}
