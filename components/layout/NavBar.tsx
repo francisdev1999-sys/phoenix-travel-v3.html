@@ -338,7 +338,7 @@ export default function NavBar() {
           </button>
 
           {/* Desktop Nav — primary views + Tools dropdown */}
-          <div className="hidden lg:flex items-center gap-0.5 xl:gap-1 flex-1 justify-center min-w-0 overflow-hidden">
+          <div className="hidden lg:flex items-center gap-0.5 xl:gap-1 flex-shrink-0">
             {NAV_PRIMARY.map((item) => {
               const Icon = item.icon;
               const active = currentView === item.id;
@@ -346,15 +346,15 @@ export default function NavBar() {
                 <button
                   key={item.id}
                   onClick={() => handleNav(item.id)}
-                  className={`flex items-center gap-1 xl:gap-1.5 px-2 xl:px-3 py-2 rounded-lg text-[11px] xl:text-xs font-medium transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
+                  className={`flex items-center gap-1 xl:gap-1.5 px-2 xl:px-2.5 py-2 rounded-lg text-[11px] xl:text-xs font-medium transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
                     active
                       ? 'bg-purple-900/50 text-purple-300 border border-purple-500/30'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
                   }`}
                 >
-                  <Icon size={12} />
-                  <span className="hidden xl:inline">{item.label}</span>
-                  <span className="inline xl:hidden">{item.label.split(' ')[0]}</span>
+                  <Icon size={13} />
+                  <span className="hidden 2xl:inline">{item.label}</span>
+                  <span className="hidden xl:inline 2xl:hidden">{item.label.split(' ')[0]}</span>
                 </button>
               );
             })}
@@ -363,7 +363,7 @@ export default function NavBar() {
             <div ref={toolsRef} className="relative">
               <button
                 onClick={() => setToolsOpen(!toolsOpen)}
-                className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+                className={`flex items-center gap-1 xl:gap-1.5 px-2 xl:px-2.5 py-2 rounded-lg text-[11px] xl:text-xs font-medium transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
                   toolsItems.some(t => t.id === currentView) || toolsOpen
                     ? 'bg-purple-900/50 text-purple-300 border border-purple-500/30'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
@@ -530,7 +530,7 @@ export default function NavBar() {
                       </span>
                     </div>
                   )}
-                  <span className="text-xs text-slate-300 hidden sm:block max-w-[70px] truncate">
+                  <span className="text-xs text-slate-300 hidden xl:block max-w-[70px] truncate">
                     {session.user.name}
                   </span>
                 </button>
