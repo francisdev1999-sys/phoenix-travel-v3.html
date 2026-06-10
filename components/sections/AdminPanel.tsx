@@ -22,8 +22,9 @@ import UserIntelligenceDashboard from '@/components/admin/UserIntelligenceDashbo
 import ArchiveBiasAudit from '@/components/admin/ArchiveBiasAudit';
 import SimilarityAudit from '@/components/similarity/SimilarityAudit';
 import AiActivityDashboard from '@/components/admin/AiActivityDashboard';
+import ArchiveAuditDashboard from '@/components/admin/ArchiveAuditDashboard';
 
-type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports' | 'imports' | 'drafts' | 'suggestions' | 'users' | 'moderation' | 'platform' | 'intelligence' | 'integrity' | 'similarity' | 'ai-activity';
+type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports' | 'imports' | 'drafts' | 'suggestions' | 'users' | 'moderation' | 'platform' | 'intelligence' | 'integrity' | 'similarity' | 'ai-activity' | 'ai-audit';
 
 export default function AdminPanel() {
   const { data: session, status } = useSession();
@@ -114,6 +115,7 @@ export default function AdminPanel() {
     { id: 'platform',     label: 'Platform',      icon: <BarChart3 size={13} />, ownerOnly: true },
     { id: 'intelligence', label: 'User Intel',    icon: <Brain size={13} />,    ownerOnly: true },
     { id: 'ai-activity',  label: 'AI Activity',   icon: <Sparkles size={13} />, ownerOnly: true },
+    { id: 'ai-audit',     label: 'Archive Audit', icon: <ShieldCheck size={13} /> },
   ];
   const tabs = allTabs.filter(t => !t.ownerOnly || isOwner);
 
@@ -270,6 +272,7 @@ export default function AdminPanel() {
           {tab === 'reports'      && <AdminReports />}
           {tab === 'intelligence' && isOwner && <UserIntelligenceDashboard />}
           {tab === 'ai-activity'  && isOwner && <AiActivityDashboard />}
+          {tab === 'ai-audit'     && <ArchiveAuditDashboard />}
         </motion.div>
       </AnimatePresence>
     </div>

@@ -893,6 +893,56 @@ model UserModerationStatus {
 // RESEARCH SIMILARITY  (advisory metadata — never creates graph edges)
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ARCHIVE AUDIT SYSTEM
+// ─────────────────────────────────────────────────────────────────────────────
+
+model SystemConfig {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}
+
+model ArchiveAuditRun {
+  id          String                @id @default(cuid())
+  status      String                @default("running") // running|complete|failed
+  triggeredBy String
+  startedAt   DateTime              @default(now())
+  completedAt DateTime?
+  summary     Json                  @default("{}")
+  settings    Json                  @default("{}")
+  findings    ArchiveAuditFinding[]
+
+  @@index([status])
+  @@index([startedAt(sort: Desc)])
+}
+
+model ArchiveAuditFinding {
+  id          String          @id @default(cuid())
+  runId       String
+  run         ArchiveAuditRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  type        String          // orphan|stale_edge|weak_edge|missing_fields|duplicate|source_quality|ai_quality|category_mismatch
+  severity    String          // critical|high|medium|low
+  status      String          @default("pending") // pending|approved|denied|applied
+  nodeId      String?
+  edgeId      String?
+  title       String
+  description String          @db.Text
+  beforeState Json            @default("{}")
+  afterState  Json            @default("{}")
+  reasoning   String          @db.Text
+  autoFixable Boolean         @default(false)
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  appliedAt   DateTime?
+  applyError  String?
+
+  @@index([runId, status])
+  @@index([type, severity])
+  @@index([nodeId])
+}
+
 model ResearchSimilarity {
   id      String @id @default(cuid())
   nodeAId String

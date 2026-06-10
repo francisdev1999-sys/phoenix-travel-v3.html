@@ -1,0 +1,499 @@
+'use client';
+
+import { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  Play, RefreshCw, CheckCircle, XCircle, Clock, AlertTriangle,
+  ChevronDown, ChevronUp, Settings, RotateCcw, Eye,
+} from 'lucide-react';
+import type { AuditRun, AuditFinding, AuditSettings, FindingType, FindingSeverity } from '@/lib/audit/types';
+import { FINDING_LABELS, SEVERITY_COLOR, DEFAULT_AUDIT_SETTINGS } from '@/lib/audit/types';
+
+// ─── helpers ─────────────────────────────────────────────────────────────────
+
+const SEV_ORDER: Record<FindingSeverity, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+
+function SeverityBadge({ s }: { s: FindingSeverity }) {
+  const color = SEVERITY_COLOR[s] ?? '#64748b';
+  return (
+    <span
+      className="text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide"
+      style={{ background: color + '22', color, border: `1px solid ${color}55` }}
+    >
+      {s}
+    </span>
+  );
+}
+
+function StatusBadge({ status }: { status: AuditFinding['status'] }) {
+  const map: Record<string, string> = {
+    pending:  'bg-slate-700 text-slate-300',
+    approved: 'bg-blue-900/50 text-blue-300',
+    applied:  'bg-green-900/50 text-green-300',
+    denied:   'bg-red-900/40 text-red-400',
+  };
+  return (
+    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${map[status] ?? 'bg-slate-700 text-slate-400'}`}>
+      {status.toUpperCase()}
+    </span>
+  );
+}
+
+// ─── Finding card ─────────────────────────────────────────────────────────────
+
+function FindingCard({
+  finding,
+  onAction,
+}: {
+  finding: AuditFinding;
+  onAction: (id: string, action: 'approve' | 'deny') => Promise<void>;
+}) {
+  const [open, setOpen]     = useState(false);
+  const [busy, setBusy]     = useState(false);
+
+  const handle = async (action: 'approve' | 'deny') => {
+    setBusy(true);
+    await onAction(finding.id, action);
+    setBusy(false);
+  };
+
+  return (
+    <div className="border border-slate-700 rounded-lg bg-slate-800/60 overflow-hidden">
+      <button
+        className="w-full flex items-start gap-3 p-3 text-left hover:bg-slate-700/40 transition-colors"
+        onClick={() => setOpen(v => !v)}
+      >
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center flex-wrap gap-1.5 mb-1">
+            <SeverityBadge s={finding.severity as FindingSeverity} />
+            <span className="text-[10px] text-slate-400 font-medium bg-slate-700/60 px-1.5 py-0.5 rounded">
+              {FINDING_LABELS[finding.type as FindingType] ?? finding.type}
+            </span>
+            <StatusBadge status={finding.status} />
+            {finding.autoFixable && (
+              <span className="text-[10px] text-cyan-400 bg-cyan-900/30 px-1.5 py-0.5 rounded">AUTO-FIX</span>
+            )}
+          </div>
+          <p className="text-sm font-medium text-slate-100 truncate">{finding.title}</p>
+          <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{finding.description}</p>
+        </div>
+        <div className="flex-shrink-0 mt-0.5">
+          {open ? <ChevronUp size={14} className="text-slate-400" /> : <ChevronDown size={14} className="text-slate-400" />}
+        </div>
+      </button>
+
+      {open && (
+        <div className="border-t border-slate-700 p-3 space-y-3">
+          {/* Before / After */}
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p className="text-[10px] font-semibold text-red-400 uppercase mb-1">Before</p>
+              <pre className="text-[10px] text-slate-300 bg-slate-900/70 rounded p-2 overflow-auto max-h-28 whitespace-pre-wrap break-all">
+                {JSON.stringify(finding.beforeState, null, 2)}
+              </pre>
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold text-green-400 uppercase mb-1">After (proposed)</p>
+              <pre className="text-[10px] text-slate-300 bg-slate-900/70 rounded p-2 overflow-auto max-h-28 whitespace-pre-wrap break-all">
+                {JSON.stringify(finding.afterState, null, 2)}
+              </pre>
+            </div>
+          </div>
+
+          {/* Reasoning */}
+          <div>
+            <p className="text-[10px] font-semibold text-slate-400 uppercase mb-1">Reasoning</p>
+            <p className="text-xs text-slate-300 bg-slate-900/50 rounded p-2">{finding.reasoning}</p>
+          </div>
+
+          {/* Apply error */}
+          {finding.applyError && (
+            <p className="text-xs text-red-400 bg-red-900/20 rounded p-2">Apply error: {finding.applyError}</p>
+          )}
+
+          {/* Actions */}
+          {finding.status === 'pending' && (
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => handle('approve')}
+                disabled={busy}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-green-700/40 hover:bg-green-700/70 text-green-300 text-xs font-semibold rounded transition-colors disabled:opacity-50"
+              >
+                <CheckCircle size={12} />
+                {finding.autoFixable ? 'Approve & Apply' : 'Approve'}
+              </button>
+              <button
+                onClick={() => handle('deny')}
+                disabled={busy}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-800/40 hover:bg-red-800/70 text-red-300 text-xs font-semibold rounded transition-colors disabled:opacity-50"
+              >
+                <XCircle size={12} />
+                Deny
+              </button>
+            </div>
+          )}
+          {finding.reviewedBy && (
+            <p className="text-[10px] text-slate-500">
+              Reviewed by {finding.reviewedBy}
+              {finding.reviewedAt ? ` · ${new Date(finding.reviewedAt).toLocaleString()}` : ''}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Settings panel ───────────────────────────────────────────────────────────
+
+function SettingsPanel({
+  settings,
+  onSave,
+}: {
+  settings: AuditSettings;
+  onSave:   (s: AuditSettings) => Promise<void>;
+}) {
+  const [draft, setDraft]   = useState<AuditSettings>(settings);
+  const [saving, setSaving] = useState(false);
+  const [saved,  setSaved]  = useState(false);
+
+  useEffect(() => { setDraft(settings); }, [settings]);
+
+  const save = async () => {
+    setSaving(true);
+    await onSave(draft);
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const toggle = (key: keyof AuditSettings['checks']) => {
+    setDraft(d => ({ ...d, checks: { ...d.checks, [key]: !d.checks[key] } }));
+  };
+
+  const CHECK_LABELS: Record<keyof AuditSettings['checks'], string> = {
+    orphans:          'Orphan nodes (0 edges)',
+    staleEdges:       'Stale edges (non-published node)',
+    weakEdges:        'Weak edges (low confidence)',
+    missingFields:    'Incomplete nodes',
+    duplicates:       'Possible duplicates',
+    sourceQuality:    'Source quality',
+    aiQuality:        'AI quality flags',
+    categoryMismatch: 'Category mismatch (AI)',
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* Checks toggles */}
+      <div>
+        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Checks to run</p>
+        <div className="grid grid-cols-2 gap-1.5">
+          {(Object.keys(CHECK_LABELS) as (keyof AuditSettings['checks'])[]).map(key => (
+            <label key={key} className="flex items-center gap-2 cursor-pointer group">
+              <div
+                onClick={() => toggle(key)}
+                className={`w-8 h-4 rounded-full relative transition-colors ${draft.checks[key] ? 'bg-cyan-600' : 'bg-slate-600'}`}
+              >
+                <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${draft.checks[key] ? 'left-4' : 'left-0.5'}`} />
+              </div>
+              <span className="text-xs text-slate-300">{CHECK_LABELS[key]}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Numeric settings */}
+      <div className="grid grid-cols-2 gap-3">
+        {([
+          ['weakEdgeThreshold',       'Weak edge threshold',      0.01, 1,   0.01],
+          ['duplicateTitleThreshold', 'Duplicate title threshold', 0.3,  1,   0.01],
+          ['maxNodesPerAiRun',        'Max nodes per AI run',      10,   500, 10  ],
+          ['maxFindingsPerRun',       'Max findings per run',      10,   1000,10  ],
+        ] as [keyof AuditSettings, string, number, number, number][]).map(([k, label, min, max, step]) => (
+          <label key={String(k)} className="space-y-1">
+            <span className="text-[10px] text-slate-400 uppercase tracking-wide">{label}</span>
+            <input
+              type="number"
+              min={min} max={max} step={step}
+              value={draft[k] as number}
+              onChange={e => setDraft(d => ({ ...d, [k]: Number(e.target.value) }))}
+              className="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
+            />
+          </label>
+        ))}
+      </div>
+
+      {/* Auto-approve toggles */}
+      <div>
+        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Auto-approve on run</p>
+        <div className="space-y-1.5">
+          {([
+            ['autoApproveOrphans',    'Orphan nodes'],
+            ['autoApproveStaleEdges', 'Stale edges'],
+            ['autoApproveWeakEdges',  'Weak edges (very low < 15%)'],
+          ] as [keyof AuditSettings, string][]).map(([k, label]) => (
+            <label key={String(k)} className="flex items-center gap-2 cursor-pointer">
+              <div
+                onClick={() => setDraft(d => ({ ...d, [k]: !d[k] }))}
+                className={`w-8 h-4 rounded-full relative transition-colors ${draft[k] ? 'bg-amber-600' : 'bg-slate-600'}`}
+              >
+                <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${draft[k] ? 'left-4' : 'left-0.5'}`} />
+              </div>
+              <span className="text-xs text-slate-300">{label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <button
+        onClick={save}
+        disabled={saving}
+        className="px-4 py-1.5 bg-cyan-700/50 hover:bg-cyan-700/80 text-cyan-300 text-xs font-semibold rounded transition-colors disabled:opacity-50"
+      >
+        {saved ? '✓ Saved' : saving ? 'Saving…' : 'Save settings'}
+      </button>
+    </div>
+  );
+}
+
+// ─── Main dashboard ───────────────────────────────────────────────────────────
+
+export default function ArchiveAuditDashboard() {
+  const [runs,       setRuns]      = useState<AuditRun[]>([]);
+  const [activeRun,  setActiveRun] = useState<AuditRun | null>(null);
+  const [settings,   setSettings]  = useState<AuditSettings>(DEFAULT_AUDIT_SETTINGS);
+  const [tab,        setTab]       = useState<'findings' | 'settings'>('findings');
+  const [running,    setRunning]   = useState(false);
+  const [filter,     setFilter]    = useState<string>('all');
+  const [filterSev,  setFilterSev] = useState<string>('all');
+  const pollRef  = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Load settings + run list on mount
+  useEffect(() => {
+    fetch('/api/admin/archive-audit/settings')
+      .then(r => r.json()).then(setSettings).catch(() => {});
+    loadRuns();
+  }, []);
+
+  const loadRuns = async () => {
+    const r = await fetch('/api/admin/archive-audit/runs');
+    if (r.ok) setRuns(await r.json());
+  };
+
+  const loadRun = useCallback(async (runId: string) => {
+    const r = await fetch(`/api/admin/archive-audit/${runId}`);
+    if (r.ok) {
+      const data = await r.json() as AuditRun;
+      setActiveRun(data);
+      if (data.status !== 'running') {
+        if (pollRef.current) clearInterval(pollRef.current);
+        pollRef.current = null;
+        setRunning(false);
+        loadRuns();
+      }
+    }
+  }, []);
+
+  useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
+
+  const startAudit = async () => {
+    setRunning(true);
+    setActiveRun(null);
+    const r = await fetch('/api/admin/archive-audit/run', { method: 'POST' });
+    if (!r.ok) {
+      const j = await r.json().catch(() => ({})) as { error?: string; runId?: string };
+      if (r.status === 409 && j.runId) {
+        // Already running — just follow it
+        pollRef.current = setInterval(() => loadRun(j.runId!), 3000);
+      } else {
+        alert(j.error ?? 'Failed to start audit');
+        setRunning(false);
+      }
+      return;
+    }
+    const { runId } = await r.json() as { runId: string };
+    pollRef.current = setInterval(() => loadRun(runId), 3000);
+  };
+
+  const handleAction = async (id: string, action: 'approve' | 'deny') => {
+    await fetch(`/api/admin/archive-audit/findings/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action }),
+    });
+    if (activeRun) await loadRun(activeRun.id);
+  };
+
+  const saveSettings = async (s: AuditSettings) => {
+    await fetch('/api/admin/archive-audit/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(s),
+    });
+    setSettings(s);
+  };
+
+  // Filtered findings
+  const findings = (activeRun?.findings ?? [])
+    .filter(f => filter === 'all' || f.type === filter)
+    .filter(f => filterSev === 'all' || f.severity === filterSev)
+    .sort((a, b) =>
+      SEV_ORDER[a.severity as FindingSeverity] - SEV_ORDER[b.severity as FindingSeverity]
+    );
+
+  const summary = activeRun?.summary as {
+    total?: number; byType?: Record<string, number>;
+    bySeverity?: Record<string, number>; autoFixable?: number;
+  } | undefined;
+
+  const allTypes: FindingType[] = ['orphan', 'stale_edge', 'weak_edge', 'missing_fields', 'duplicate', 'source_quality', 'ai_quality', 'category_mismatch'];
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-sm font-semibold text-white">Archive Audit</h2>
+          <p className="text-xs text-slate-400 mt-0.5">AI-powered consistency and quality analysis</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={loadRuns}
+            className="p-1.5 hover:bg-slate-700 rounded transition-colors"
+            title="Refresh run list"
+          >
+            <RefreshCw size={13} className="text-slate-400" />
+          </button>
+          <button
+            onClick={startAudit}
+            disabled={running}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-700/50 hover:bg-cyan-700/80 text-cyan-300 text-xs font-semibold rounded transition-colors disabled:opacity-60"
+          >
+            {running ? <RotateCcw size={13} className="animate-spin" /> : <Play size={13} />}
+            {running ? 'Running…' : 'Run Audit'}
+          </button>
+        </div>
+      </div>
+
+      {/* Tab selector */}
+      <div className="flex gap-1 border-b border-slate-700 pb-0">
+        {(['findings', 'settings'] as const).map(t => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-3 py-1.5 text-xs font-medium capitalize transition-colors border-b-2 -mb-px ${
+              tab === t
+                ? 'border-cyan-500 text-cyan-300'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            {t === 'findings' ? <><Eye size={11} className="inline mr-1" />Findings</> : <><Settings size={11} className="inline mr-1" />Settings</>}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'settings' && (
+        <SettingsPanel settings={settings} onSave={saveSettings} />
+      )}
+
+      {tab === 'findings' && (
+        <div className="space-y-4">
+          {/* Past runs picker */}
+          {runs.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] text-slate-500 uppercase font-semibold">Past runs:</span>
+              {runs.slice(0, 6).map(run => (
+                <button
+                  key={run.id}
+                  onClick={() => loadRun(run.id)}
+                  className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
+                    activeRun?.id === run.id
+                      ? 'border-cyan-500 text-cyan-300 bg-cyan-900/30'
+                      : 'border-slate-700 text-slate-400 hover:border-slate-500'
+                  }`}
+                >
+                  {new Date(run.startedAt).toLocaleDateString()} &nbsp;
+                  {run.status === 'running' && <span className="text-amber-400">●</span>}
+                  {run.status === 'complete' && <span className="text-green-400">●</span>}
+                  {run.status === 'failed'   && <span className="text-red-400">●</span>}
+                  &nbsp;{(run._count as { findings?: number })?.findings ?? 0} findings
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Running indicator */}
+          {running && !activeRun && (
+            <div className="flex items-center gap-2 p-3 bg-amber-900/20 border border-amber-700/40 rounded-lg">
+              <RotateCcw size={14} className="text-amber-400 animate-spin flex-shrink-0" />
+              <p className="text-xs text-amber-300">Audit running… results will appear automatically.</p>
+            </div>
+          )}
+
+          {/* Summary */}
+          {activeRun && (
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { label: 'Total',      value: summary?.total       ?? 0, color: 'text-slate-200' },
+                { label: 'High/Crit',  value: (summary?.bySeverity?.high ?? 0) + (summary?.bySeverity?.critical ?? 0), color: 'text-orange-400' },
+                { label: 'Auto-fix',   value: summary?.autoFixable ?? 0, color: 'text-cyan-400' },
+                { label: 'Status',     value: activeRun.status,          color: activeRun.status === 'complete' ? 'text-green-400' : activeRun.status === 'failed' ? 'text-red-400' : 'text-amber-400' },
+              ].map(item => (
+                <div key={item.label} className="bg-slate-800/60 border border-slate-700 rounded-lg p-2 text-center">
+                  <p className={`text-sm font-bold ${item.color}`}>{item.value}</p>
+                  <p className="text-[9px] text-slate-500 uppercase font-semibold mt-0.5">{item.label}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Filters */}
+          {activeRun && findings.length > 0 && (
+            <div className="flex gap-2 flex-wrap">
+              <select
+                value={filter}
+                onChange={e => setFilter(e.target.value)}
+                className="bg-slate-800 border border-slate-600 text-xs text-slate-300 rounded px-2 py-1 focus:outline-none focus:border-cyan-500"
+              >
+                <option value="all">All types</option>
+                {allTypes.map(t => <option key={t} value={t}>{FINDING_LABELS[t]}</option>)}
+              </select>
+              <select
+                value={filterSev}
+                onChange={e => setFilterSev(e.target.value)}
+                className="bg-slate-800 border border-slate-600 text-xs text-slate-300 rounded px-2 py-1 focus:outline-none focus:border-cyan-500"
+              >
+                <option value="all">All severities</option>
+                {(['critical','high','medium','low'] as FindingSeverity[]).map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Findings list */}
+          {activeRun && findings.length === 0 && activeRun.status === 'complete' && (
+            <div className="flex items-center gap-2 p-3 bg-green-900/20 border border-green-700/40 rounded-lg">
+              <CheckCircle size={14} className="text-green-400 flex-shrink-0" />
+              <p className="text-xs text-green-300">No issues found matching the current filter.</p>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            {findings.map(f => (
+              <FindingCard key={f.id} finding={f} onAction={handleAction} />
+            ))}
+          </div>
+
+          {/* No run yet */}
+          {!activeRun && !running && (
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <AlertTriangle size={28} className="text-slate-600 mb-3" />
+              <p className="text-sm text-slate-400">No audit run selected.</p>
+              <p className="text-xs text-slate-500 mt-1">Click <strong className="text-slate-300">Run Audit</strong> to analyse the archive.</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
