@@ -8,8 +8,18 @@ import {
 } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { nodes as staticNodes } from '@/lib/graph';
-import { CATEGORY_COLORS, EVIDENCE_COLORS } from '@/lib/graph';
+import { CATEGORY_COLORS } from '@/lib/graph/colors';
+
+// Static nodes loaded lazily — only when API search fails and user is searching.
+// Keeps 178 KB of graph data out of the main bundle.
+type LightNode = { id: string; title: string; category: string; description?: string; tags?: string[]; icon?: string; evidence_level?: string };
+let _staticNodes: LightNode[] | null = null;
+async function lazyStaticNodes(): Promise<LightNode[]> {
+  if (_staticNodes) return _staticNodes;
+  const mod = await import('@/lib/graph/nodes');
+  _staticNodes = mod.nodes as unknown as LightNode[];
+  return _staticNodes;
+}
 
 const NAV_BASE = [
   { id: 'graph',          label: 'Knowledge Graph', icon: Grid3X3 },
@@ -43,9 +53,10 @@ function normaliseDbNode(n: Record<string, unknown>): SearchResult {
   };
 }
 
-function searchStatic(q: string): SearchResult[] {
+async function searchStatic(q: string): Promise<SearchResult[]> {
   const lq = q.toLowerCase();
-  return staticNodes
+  const nodes = await lazyStaticNodes();
+  return nodes
     .filter(n =>
       n.title.toLowerCase().includes(lq) ||
       n.description?.toLowerCase().includes(lq) ||
@@ -137,7 +148,7 @@ export default function NavBar() {
       // DB down — fall through to static
     }
     // Static fallback
-    setResults(searchStatic(q));
+    setResults(await searchStatic(q));
     setSearching(false);
   }, []);
 

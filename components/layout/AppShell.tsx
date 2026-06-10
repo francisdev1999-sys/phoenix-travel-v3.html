@@ -5,7 +5,7 @@ import { MessageSquare, Rabbit, X } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import NavBar from '@/components/layout/NavBar';
 import LandingPage from '@/components/sections/LandingPage';
-import ParticleField from '@/components/effects/ParticleField';
+const ParticleField = lazy(() => import('@/components/effects/ParticleField'));
 
 const KnowledgeGraph = lazy(() => import('@/components/sections/KnowledgeGraph'));
 const UniverseView = lazy(() => import('@/components/sections/UniverseView'));
@@ -57,7 +57,7 @@ export default function AppShell() {
   return (
     <div className="min-h-screen bg-[#000005] text-slate-200 overflow-hidden">
       {/* Global particle field for non-landing views */}
-      {!isLanding && <ParticleField />}
+      {!isLanding && <Suspense fallback={null}><ParticleField /></Suspense>}
 
       {/* Landing Page */}
       <AnimatePresence mode="wait">

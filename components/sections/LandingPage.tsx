@@ -1,10 +1,13 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 import { ChevronDown, Compass, Zap } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
-import TunnelEffect from '@/components/effects/TunnelEffect';
-import ParticleField from '@/components/effects/ParticleField';
+
+// Canvas effects loaded after first paint — keeps them out of the main bundle
+// and lets the text content render immediately.
+const TunnelEffect  = lazy(() => import('@/components/effects/TunnelEffect'));
+const ParticleField = lazy(() => import('@/components/effects/ParticleField'));
 
 const GLYPHS = ['⬡', '◈', '⊕', '△', '◇', '✦', '⟁', '⬟', '✧', '⊗', '⌬', '⎔'];
 
@@ -58,9 +61,11 @@ export default function LandingPage() {
 
   return (
     <div ref={containerRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#000005]">
-      {/* Background layers */}
-      <TunnelEffect />
-      <ParticleField />
+      {/* Background layers — loaded after first paint */}
+      <Suspense fallback={null}>
+        <TunnelEffect />
+        <ParticleField />
+      </Suspense>
 
       {/* Vignette */}
       <div className="fixed inset-0 pointer-events-none z-10"
