@@ -53,24 +53,58 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  // Role hierarchy: owner > admin > reviewer > contributor > user
+  // Role hierarchy: owner > admin > moderation_admin > reviewer > source_verifier > verified_contributor > contributor > user | banned
   role          String    @default("user")
   createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastActiveAt  DateTime?
 
-  accounts            Account[]
-  sessions            Session[]
-  progress            UserProgress?
-  submitted           Source[]             @relation("SubmittedSources")
-  reviewed            Source[]             @relation("ReviewedSources")
-  submittedNodes      ProposedNode[]       @relation("SubmittedNodes")
-  reviewedNodes       ProposedNode[]       @relation("ReviewedNodes")
-  submittedEdges      ProposedEdge[]       @relation("SubmittedEdges")
-  reviewedEdges       ProposedEdge[]       @relation("ReviewedEdges")
-  nodeExplorations    NodeExploration[]
+  // Trust & activity
+  trustScore      Float   @default(50)
+  activityScore   Float   @default(0)
+  rank            String  @default("New Seeker")
+
+  // Moderation state
+  isBanned        Boolean  @default(false)
+  banReason       String?  @db.Text
+  banExpiresAt    DateTime?
+  warningCount    Int      @default(0)
+
+  // Submission counters (denormalized for performance)
+  submissionCount Int      @default(0)
+  approvedCount   Int      @default(0)
+  rejectedCount   Int      @default(0)
+
+  accounts              Account[]
+  sessions              Session[]
+  progress              UserProgress?
+  permissions           UserPermission?
+  trustEvents           UserTrustEvent[]
+  activityLogs          UserActivityLog[]
+  earnedBadges          UserBadge[]
+  submitted             Source[]               @relation("SubmittedSources")
+  reviewed              Source[]               @relation("ReviewedSources")
+  submittedNodes        ProposedNode[]         @relation("SubmittedNodes")
+  reviewedNodes         ProposedNode[]         @relation("ReviewedNodes")
+  submittedEdges        ProposedEdge[]         @relation("SubmittedEdges")
+  reviewedEdges         ProposedEdge[]         @relation("ReviewedEdges")
+  nodeExplorations      NodeExploration[]
   connectionDiscoveries ConnectionDiscovery[]
-  achievements        UserAchievement[]
+  achievements          UserAchievement[]
+  aiReviews             AiResearchReview[]     @relation("AiReviewCreator")
+  reportsSubmitted      Report[]               @relation("ReportSubmitter")
+  reportsAgainst        Report[]               @relation("ReportedUser")
+  modActions            ModerationAction[]     @relation("ModeratedUser")
+  modByMe               ModerationAction[]     @relation("ModeratorUser")
+  riskProfile           UserRiskProfile?
+  activityEvents        UserActivityEvent[]
+  moderationStatus      UserModerationStatus?
 
   @@index([role])
+  @@index([trustScore])
+  @@index([isBanned])
+  @@index([lastActiveAt])
+  @@index([createdAt])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -207,8 +241,10 @@ model Node {
   versions          NodeVersion[]
   embedding         NodeEmbedding?
   adjacencyCache    AdjacencyCache?
+  narrative         NodeNarrative?
   suggestionsFrom   RelationshipSuggestion[] @relation("SuggestionFrom")
   suggestionsTo     RelationshipSuggestion[] @relation("SuggestionTo")
+  aiReviews         AiResearchReview[]       @relation("NodeAiReviews")
 
   @@index([categoryId])
   @@index([status])
@@ -392,10 +428,17 @@ model Source {
   isbn            String?
   abstract        String?  @db.Text
   notes           String?  @db.Text
+  // Why the submitter believes this source is credible — required for AI review context
+  sourceTrustExplanation String? @db.Text
   language        String   @default("en")
 
   credibilityScore   Float @default(0.5)
   credibilityFactors Json?
+
+  // Admin can override the auto-computed score; overriddenBy is a User.id
+  credibilityOverride Float?
+  overriddenBy        String?
+  overrideReason      String? @db.Text
 
   status      String    @default("pending")
   reviewNotes String?   @db.Text
@@ -442,9 +485,10 @@ model SourceLink {
   claimId     String?
   criticismId String?
 
-  linkType    String  @default("supports") // supports | contradicts | references
-  notes       String?
-  createdAt   DateTime @default(now())
+  linkType      String  @default("supports") // supports | contradicts | context | primary | references
+  relevanceScore Float  @default(0.5)       // 0–1: how relevant is this source to this specific target
+  notes         String?
+  createdAt     DateTime @default(now())
 
   source      Source     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
   node        Node?      @relation(fields: [nodeId],      references: [id], onDelete: Cascade)
@@ -490,6 +534,13 @@ model ProposedNode {
   reviewedBy  String?
   submitter   User?     @relation("SubmittedNodes", fields: [submittedBy], references: [id], onDelete: SetNull)
   reviewer    User?     @relation("ReviewedNodes",  fields: [reviewedBy],  references: [id], onDelete: SetNull)
+
+  // AI quality audit (Claude Haiku, fire-and-forget on submission)
+  aiAuditResult     Json?
+  aiAuditedAt       DateTime?
+
+  // Similarity against existing archive nodes (fire-and-forget on submission)
+  proposalSimilarity Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -552,6 +603,20 @@ model ImportBatch {
 
   @@index([status])
   @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI RABBIT-HOLE NARRATIVES  (cached per-node exploration context)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model NodeNarrative {
+  nodeId        String   @id
+  narrative     String   @db.Text
+  model         String
+  promptVersion String   @default("1.0")
+  cachedAt      DateTime @default(now())
+
+  node Node @relation(fields: [nodeId], references: [id], onDelete: Cascade)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -620,4 +685,242 @@ model AuditLog {
   @@index([userId])
   @@index([createdAt])
   @@index([action])
+}
+
+model AiResearchReview {
+  id            String   @id @default(cuid())
+  nodeId        String
+  model         String
+  promptVersion String
+  reviewJson    Json
+  inputTokens   Int      @default(0)
+  outputTokens  Int      @default(0)
+  estimatedCost Float    @default(0)
+  createdAt     DateTime @default(now())
+  createdBy     String?
+
+  node    Node  @relation("NodeAiReviews",  fields: [nodeId],    references: [id], onDelete: Cascade)
+  creator User? @relation("AiReviewCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@index([nodeId])
+  @@index([createdAt])
+  @@index([createdBy])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GOVERNANCE — PERMISSIONS, TRUST, ACTIVITY, BADGES, MODERATION
+// ─────────────────────────────────────────────────────────────────────────────
+
+model UserPermission {
+  userId                  String   @id
+  canApproveSources       Boolean  @default(false)
+  canApproveRelationships Boolean  @default(false)
+  canApproveNodes         Boolean  @default(false)
+  canPublishNodes         Boolean  @default(false)
+  canAssignRoles          Boolean  @default(false)
+  canBanUsers             Boolean  @default(false)
+  canRunAiReview          Boolean  @default(false)
+  canViewPlatformHealth   Boolean  @default(false)
+  canViewTraffic          Boolean  @default(false)
+  canViewCosts            Boolean  @default(false)
+  canViewSecurityLogs     Boolean  @default(false)
+  updatedAt               DateTime @updatedAt
+  updatedBy               String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserTrustEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  delta     Float
+  reason    String
+  detail    String?  @db.Text
+  createdBy String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model UserActivityLog {
+  id         String   @id @default(cuid())
+  userId     String
+  actionType String
+  detail     Json?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([actionType])
+  @@index([createdAt])
+}
+
+model Badge {
+  id          String @id
+  name        String
+  description String
+  icon        String
+  category    String
+
+  holders UserBadge[]
+}
+
+model UserBadge {
+  userId    String
+  badgeId   String
+  awardedAt DateTime @default(now())
+  awardedBy String?
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, badgeId])
+  @@index([userId])
+  @@index([badgeId])
+}
+
+model Report {
+  id             String    @id @default(cuid())
+  submittedBy    String
+  reportedUserId String?
+  entityType     String
+  entityId       String
+  reason         String
+  detail         String?   @db.Text
+  status         String    @default("open")
+  resolvedBy     String?
+  resolvedAt     DateTime?
+  resolveNote    String?   @db.Text
+  createdAt      DateTime  @default(now())
+
+  submitter    User  @relation("ReportSubmitter", fields: [submittedBy],    references: [id], onDelete: Cascade)
+  reportedUser User? @relation("ReportedUser",    fields: [reportedUserId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([submittedBy])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model ModerationAction {
+  id          String    @id @default(cuid())
+  userId      String
+  moderatorId String
+  actionType  String
+  reason      String    @db.Text
+  detail      Json?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  user      User @relation("ModeratedUser", fields: [userId],      references: [id], onDelete: Cascade)
+  moderator User @relation("ModeratorUser", fields: [moderatorId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([moderatorId])
+  @@index([actionType])
+  @@index([createdAt])
+}
+
+model PlatformMetric {
+  id          String   @id @default(cuid())
+  date        DateTime
+  metricName  String
+  metricValue Float
+  metricMeta  Json?
+
+  @@unique([date, metricName])
+  @@index([date])
+  @@index([metricName])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// USER RISK & ACTIVITY INTELLIGENCE
+// ─────────────────────────────────────────────────────────────────────────────
+
+model UserRiskProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  riskScore        Float    @default(0)
+  riskLevel        String   @default("low")
+  spamScore        Float    @default(0)
+  botScore         Float    @default(0)
+  lastCalculatedAt DateTime @default(now())
+  reasons          Json     @default("[]")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([riskScore])
+  @@index([riskLevel])
+  @@index([lastCalculatedAt])
+}
+
+model UserActivityEvent {
+  id            String   @id @default(cuid())
+  userId        String
+  eventType     String
+  path          String?
+  metadata      Json     @default("{}")
+  ipHash        String?
+  userAgentHash String?
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([ipHash, createdAt])
+  @@index([eventType, createdAt])
+}
+
+model UserModerationStatus {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  status    String   @default("active")
+  reason    String?
+  changedBy String?
+  changedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([changedAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RESEARCH SIMILARITY  (advisory metadata — never creates graph edges)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ResearchSimilarity {
+  id      String @id @default(cuid())
+  nodeAId String
+  nodeBId String
+
+  // Dimension scores — all 0.0–1.0
+  overallSimilarity      Float @default(0)
+  thematicSimilarity     Float @default(0)
+  timelineSimilarity     Float @default(0)
+  geographicSimilarity   Float @default(0)
+  sourceSimilarity       Float @default(0)
+  evidenceSimilarity     Float @default(0)
+  entitySimilarity       Float @default(0)
+  relationshipSimilarity Float @default(0)
+
+  researchPotentialScore Float @default(0)
+  confidence             Float @default(0)
+
+  explanation    String @default("") @db.Text
+  criticAnalysis Json   @default("[]")
+  breakdown      Json   @default("{}")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([nodeAId, nodeBId])
+  @@index([nodeAId])
+  @@index([nodeBId])
+  @@index([overallSimilarity(sort: Desc)])
+  @@index([researchPotentialScore(sort: Desc)])
 }

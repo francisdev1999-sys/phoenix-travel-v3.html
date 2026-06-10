@@ -9,6 +9,13 @@
  *   geo proximity    10 %  – distance between coordinates
  *   evidence compat  10 %  – compatible evidence levels
  *
+ * Feedback loop:
+ *   After MIN_FEEDBACK_SAMPLES reviewer decisions accumulate per relationship
+ *   type, a multiplier derived from the approval rate adjusts future confidence
+ *   scores for that type. 0% approval → 0.7×, 50% → 1.0×, 100% → 1.2× (capped
+ *   at 1.0 so scores never exceed 1). This improves accuracy over time without
+ *   changing the underlying signal weights.
+ *
  * Guarantees:
  *   - Never publishes anything — all suggestions land in status='pending'
  *   - Every suggestion carries reason, evidenceBasis, confidence, risk, type
@@ -22,36 +29,38 @@ import { prisma } from '@/lib/db';
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface NodeSlice {
-  id:             string;
-  title:          string;
-  categoryId:     string;
-  evidenceLevel:  string;
+  id:              string;
+  title:           string;
+  categoryId:      string;
+  evidenceLevel:   string;
   confidenceScore: number;
-  lat:            number | null;
-  lon:            number | null;
-  dateStart:      number | null;
-  dateEnd:        number | null;
-  year:           number | null;
-  tags:           { tag: string }[];
-  sourceLinks:    { sourceId: string }[];
+  lat:             number | null;
+  lon:             number | null;
+  dateStart:       number | null;
+  dateEnd:         number | null;
+  year:            number | null;
+  tags:            { tag: string }[];
+  sourceLinks:     { sourceId: string }[];
 }
 
 interface SignalBreakdown {
-  tagScore:      number;
-  categoryScore: number;
-  dateScore:     number;
-  geoScore:      number;
-  sourceScore:   number;
-  evidenceScore: number;
-  total:         number;
+  tagScore:         number;
+  categoryScore:    number;
+  dateScore:        number;
+  geoScore:         number;
+  sourceScore:      number;
+  evidenceScore:    number;
+  feedbackMultiplier: number;
+  total:            number;
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const W = { tag: 0.30, date: 0.20, source: 0.15, category: 0.15, geo: 0.10, evidence: 0.10 };
-const MIN_SCORE     = 0.25;
-const MAX_PER_NODE  = 15;
-const MAX_POOL      = 500;
+const MIN_SCORE             = 0.25;
+const MAX_PER_NODE          = 15;
+const MAX_POOL              = 500;
+const MIN_FEEDBACK_SAMPLES  = 5; // min decisions before feedback multiplier activates
 
 const EVIDENCE_RANK: Record<string, number> = {
   verified: 5, strong_evidence: 4, debated: 3, speculative: 2, mythological: 1,
@@ -71,12 +80,12 @@ function dateScore(a: NodeSlice, b: NodeSlice): number {
   const yb = b.year ?? b.dateStart ?? b.dateEnd;
   if (ya == null || yb == null) return 0;
   const d = Math.abs(ya - yb);
-  if (d === 0)     return 1.0;
-  if (d <= 50)     return 0.9;
-  if (d <= 200)    return 0.7;
-  if (d <= 500)    return 0.5;
-  if (d <= 1000)   return 0.3;
-  if (d <= 5000)   return 0.1;
+  if (d === 0)   return 1.0;
+  if (d <= 50)   return 0.9;
+  if (d <= 200)  return 0.7;
+  if (d <= 500)  return 0.5;
+  if (d <= 1000) return 0.3;
+  if (d <= 5000) return 0.1;
   return 0;
 }
 
@@ -85,7 +94,8 @@ function geoScore(a: NodeSlice, b: NodeSlice): number {
   const R  = 6371;
   const dL = ((b.lat - a.lat) * Math.PI) / 180;
   const dO = ((b.lon - a.lon) * Math.PI) / 180;
-  const s  = Math.sin(dL / 2) ** 2 +
+  const s  =
+    Math.sin(dL / 2) ** 2 +
     Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dO / 2) ** 2;
   const km = R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
   if (km <= 10)   return 1.0;
@@ -115,7 +125,52 @@ function evidenceScore(a: NodeSlice, b: NodeSlice): number {
   return 0.1;
 }
 
-function computeSignals(a: NodeSlice, b: NodeSlice): SignalBreakdown {
+// ── Feedback multiplier ───────────────────────────────────────────────────────
+
+// Approval rate per relationship type, derived from past reviewer decisions.
+// 0% approval → 0.7×, 50% → 1.0×, 100% → 1.2×, capped at 1.0 output.
+function feedbackMultiplier(type: string, approvalRates: Record<string, number>): number {
+  const rate = approvalRates[type];
+  if (rate === undefined) return 1.0; // no data yet — neutral
+  return 0.7 + rate * 0.5;           // linear interpolation
+}
+
+async function loadApprovalRates(): Promise<Record<string, number>> {
+  const [totalRows, approvedRows] = await Promise.all([
+    prisma.relationshipSuggestion.groupBy({
+      by:    ['relationshipType'],
+      where: { status: { in: ['approved', 'revised', 'rejected'] } },
+      _count: { id: true },
+    }),
+    prisma.relationshipSuggestion.groupBy({
+      by:    ['relationshipType'],
+      where: { status: { in: ['approved', 'revised'] } },
+      _count: { id: true },
+    }),
+  ]);
+
+  const totals:   Record<string, number> = {};
+  const approved: Record<string, number> = {};
+  for (const r of totalRows)   totals[r.relationshipType]   = r._count.id;
+  for (const r of approvedRows) approved[r.relationshipType] = r._count.id;
+
+  const rates: Record<string, number> = {};
+  for (const [type, total] of Object.entries(totals)) {
+    if (total >= MIN_FEEDBACK_SAMPLES) {
+      rates[type] = (approved[type] ?? 0) / total;
+    }
+  }
+  return rates;
+}
+
+// ── Scoring ───────────────────────────────────────────────────────────────────
+
+function computeSignals(
+  a: NodeSlice,
+  b: NodeSlice,
+  approvalRates: Record<string, number>,
+  type: string,
+): SignalBreakdown {
   const tagsA = a.tags.map(t => t.tag.toLowerCase());
   const tagsB = b.tags.map(t => t.tag.toLowerCase());
 
@@ -125,8 +180,9 @@ function computeSignals(a: NodeSlice, b: NodeSlice): SignalBreakdown {
   const gs            = geoScore(a, b);
   const ss            = sourceScore(a, b);
   const es            = evidenceScore(a, b);
+  const fm            = feedbackMultiplier(type, approvalRates);
 
-  const total =
+  const rawTotal =
     tagScore      * W.tag      +
     categoryScore * W.category +
     ds            * W.date     +
@@ -134,48 +190,58 @@ function computeSignals(a: NodeSlice, b: NodeSlice): SignalBreakdown {
     ss            * W.source   +
     es            * W.evidence;
 
-  return { tagScore, categoryScore, dateScore: ds, geoScore: gs, sourceScore: ss, evidenceScore: es, total };
+  const total = Math.min(1.0, rawTotal * fm);
+
+  return {
+    tagScore, categoryScore,
+    dateScore: ds, geoScore: gs, sourceScore: ss, evidenceScore: es,
+    feedbackMultiplier: fm,
+    total,
+  };
 }
 
 // ── Relationship type classifier ──────────────────────────────────────────────
 
-function classifyType(a: NodeSlice, b: NodeSlice, sig: SignalBreakdown): string {
+function classifyType(a: NodeSlice, b: NodeSlice, sig: Omit<SignalBreakdown, 'feedbackMultiplier' | 'total'>): string {
   const la = EVIDENCE_RANK[a.evidenceLevel] ?? 3;
   const lb = EVIDENCE_RANK[b.evidenceLevel] ?? 3;
 
-  if (sig.tagScore > 0.3 && Math.abs(la - lb) >= 3) return 'contradiction';
-  if (sig.sourceScore > 0.3)                         return 'source_relationship';
-  if (sig.geoScore > 0.5 && a.lat != null)           return 'geographical';
+  if (sig.tagScore > 0.3 && Math.abs(la - lb) >= 3)  return 'contradiction';
+  if (sig.sourceScore > 0.3)                          return 'source_relationship';
+  if (sig.geoScore > 0.5 && a.lat != null)            return 'geographical';
   if (sig.dateScore > 0.5 && sig.evidenceScore > 0.5) return 'historical';
-  if (sig.tagScore > 0.4 && sig.categoryScore > 0)   return 'thematic';
+  if (sig.tagScore > 0.4 && sig.categoryScore > 0)    return 'thematic';
   if (sig.tagScore > 0.2)                             return 'textual';
   return 'speculative';
 }
 
-// Maps suggestion types to Edge.relationshipType values
+// Maps suggestion types to Edge.relationshipType values.
+// 'speculative' is now a first-class Edge type — no silent conversion to 'thematic'.
 export const SUGGESTION_TO_EDGE_TYPE: Record<string, string> = {
-  factual:              'historical',
-  source_relationship:  'textual',
-  geographical:         'geographical',
-  historical:           'historical',
-  thematic:             'thematic',
-  textual:              'textual',
-  speculative:          'thematic',
-  contradiction:        'contradictory',
+  factual:             'historical',
+  source_relationship: 'textual',
+  geographical:        'geographical',
+  historical:          'historical',
+  thematic:            'thematic',
+  textual:             'textual',
+  speculative:         'speculative',   // preserved — distinct from thematic
+  contradiction:       'contradictory',
 };
+
+// ── Text builders ─────────────────────────────────────────────────────────────
 
 function buildReason(a: NodeSlice, b: NodeSlice, sig: SignalBreakdown, type: string): string {
   const parts: string[] = [];
-  const tagsA = new Set(a.tags.map(t => t.tag.toLowerCase()));
-  const tagsB = new Set(b.tags.map(t => t.tag.toLowerCase()));
+  const tagsA     = new Set(a.tags.map(t => t.tag.toLowerCase()));
+  const tagsB     = new Set(b.tags.map(t => t.tag.toLowerCase()));
   const sharedTags = [...tagsA].filter(t => tagsB.has(t));
-  if (sharedTags.length) parts.push(`Shared tags: ${sharedTags.slice(0, 3).join(', ')}`);
-  if (sig.categoryScore)  parts.push('Same category');
+  if (sharedTags.length)   parts.push(`Shared tags: ${sharedTags.slice(0, 3).join(', ')}`);
+  if (sig.categoryScore)   parts.push('Same category');
   if (sig.dateScore > 0.5) parts.push('Overlapping time period');
   if (sig.geoScore > 0.5)  parts.push('Geographic proximity');
-  const sharedSources = [...new Set(a.sourceLinks.map(s => s.sourceId))]
+  const sharedSrc = [...new Set(a.sourceLinks.map(s => s.sourceId))]
     .filter(id => b.sourceLinks.some(s => s.sourceId === id)).length;
-  if (sharedSources) parts.push(`${sharedSources} shared source${sharedSources > 1 ? 's' : ''}`);
+  if (sharedSrc) parts.push(`${sharedSrc} shared source${sharedSrc > 1 ? 's' : ''}`);
 
   const label: Record<string, string> = {
     contradiction:       'Potentially contradictory',
@@ -186,7 +252,10 @@ function buildReason(a: NodeSlice, b: NodeSlice, sig: SignalBreakdown, type: str
     textual:             'Textually related',
     speculative:         'Speculatively connected',
   };
-  return `${label[type] ?? 'Connected'}. ${parts.join('. ')}`.replace(/\. $/, '.');
+  const fm = sig.feedbackMultiplier !== 1.0
+    ? ` (feedback-adjusted ×${sig.feedbackMultiplier.toFixed(2)})`
+    : '';
+  return `${label[type] ?? 'Connected'}${fm}. ${parts.join('. ')}`.replace(/\. $/, '.');
 }
 
 function buildEvidenceBasis(a: NodeSlice, b: NodeSlice, sig: SignalBreakdown): string {
@@ -196,15 +265,18 @@ function buildEvidenceBasis(a: NodeSlice, b: NodeSlice, sig: SignalBreakdown): s
     sig.sourceScore > 0 ? 'Shared research sources detected.' : null,
     sig.dateScore   > 0 ? 'Temporal proximity confirmed.'     : null,
     sig.geoScore    > 0 ? 'Geographic coordinates within range.' : null,
+    sig.feedbackMultiplier !== 1.0
+      ? `Reviewer feedback applied (×${sig.feedbackMultiplier.toFixed(2)}).`
+      : null,
     'System-generated — requires human review before publishing.',
   ].filter(Boolean).join(' ');
 }
 
 function toRiskLevel(score: number, type: string): string {
-  if (type === 'contradiction')  return 'high';
-  if (type === 'speculative')    return score < 0.4 ? 'high' : 'medium';
-  if (score >= 0.65)             return 'low';
-  if (score >= 0.40)             return 'medium';
+  if (type === 'contradiction') return 'high';
+  if (type === 'speculative')   return score < 0.4 ? 'high' : 'medium';
+  if (score >= 0.65)            return 'low';
+  if (score >= 0.40)            return 'medium';
   return 'high';
 }
 
@@ -217,13 +289,15 @@ export async function generateSuggestionsForNode(nodeId: string): Promise<number
   });
   if (!newNode) return 0;
 
+  // Load reviewer feedback rates before scoring — feeds the multiplier
+  const approvalRates = await loadApprovalRates();
+
   const pool = await prisma.node.findMany({
     where:   { status: 'published', id: { not: nodeId } },
     include: { tags: true, sourceLinks: { select: { sourceId: true } } },
     take:    MAX_POOL,
   });
 
-  // Pre-fetch existing edges and suggestions to skip duplicates
   const [existingEdges, existingSuggestions] = await Promise.all([
     prisma.edge.findMany({
       where:  { OR: [{ fromId: nodeId }, { toId: nodeId }] },
@@ -243,8 +317,20 @@ export async function generateSuggestionsForNode(nodeId: string): Promise<number
   const scored = pool
     .filter(c => !skip.has(`${nodeId}:${c.id}`) && !skip.has(`${c.id}:${nodeId}`))
     .map(c => {
-      const sig  = computeSignals(newNode as NodeSlice, c as NodeSlice);
-      const type = classifyType(newNode as NodeSlice, c as NodeSlice, sig);
+      // Classify type first (without feedback) so the multiplier can be type-specific
+      const rawSig = {
+        tagScore:      jaccard(
+          newNode.tags.map(t => t.tag.toLowerCase()),
+          (c as NodeSlice).tags.map(t => t.tag.toLowerCase()),
+        ),
+        categoryScore: newNode.categoryId === c.categoryId ? 1.0 : 0.0,
+        dateScore:     dateScore(newNode as NodeSlice, c as NodeSlice),
+        geoScore:      geoScore(newNode as NodeSlice, c as NodeSlice),
+        sourceScore:   sourceScore(newNode as NodeSlice, c as NodeSlice),
+        evidenceScore: evidenceScore(newNode as NodeSlice, c as NodeSlice),
+      };
+      const type = classifyType(newNode as NodeSlice, c as NodeSlice, rawSig);
+      const sig  = computeSignals(newNode as NodeSlice, c as NodeSlice, approvalRates, type);
       return { candidate: c, sig, type };
     })
     .filter(({ sig }) => sig.total >= MIN_SCORE)
