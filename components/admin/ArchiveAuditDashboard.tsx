@@ -263,6 +263,7 @@ export default function ArchiveAuditDashboard() {
   const [settings,   setSettings]  = useState<AuditSettings>(DEFAULT_AUDIT_SETTINGS);
   const [tab,        setTab]       = useState<'findings' | 'settings'>('findings');
   const [running,    setRunning]   = useState(false);
+  const [runError,   setRunError]  = useState<string | null>(null);
   const [filter,     setFilter]    = useState<string>('all');
   const [filterSev,  setFilterSev] = useState<string>('all');
   const pollRef  = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -298,6 +299,7 @@ export default function ArchiveAuditDashboard() {
   const startAudit = async () => {
     setRunning(true);
     setActiveRun(null);
+    setRunError(null);
     const r = await fetch('/api/admin/archive-audit/run', { method: 'POST' });
     if (!r.ok) {
       const j = await r.json().catch(() => ({})) as { error?: string; runId?: string };
@@ -305,7 +307,7 @@ export default function ArchiveAuditDashboard() {
         // Already running — just follow it
         pollRef.current = setInterval(() => loadRun(j.runId!), 3000);
       } else {
-        alert(j.error ?? 'Failed to start audit');
+        setRunError(j.error ?? `Server error ${r.status}`);
         setRunning(false);
       }
       return;
@@ -418,6 +420,20 @@ export default function ArchiveAuditDashboard() {
                   &nbsp;{(run._count as { findings?: number })?.findings ?? 0} findings
                 </button>
               ))}
+            </div>
+          )}
+
+          {/* Error banner */}
+          {runError && (
+            <div className="flex items-start gap-2 p-3 bg-red-900/20 border border-red-700/40 rounded-lg">
+              <XCircle size={14} className="text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-red-300 font-medium">Audit failed to start</p>
+                <p className="text-[11px] text-red-400 mt-0.5 break-words">{runError}</p>
+              </div>
+              <button onClick={() => setRunError(null)} className="text-red-500 hover:text-red-300 flex-shrink-0">
+                <XCircle size={12} />
+              </button>
             </div>
           )}
 
