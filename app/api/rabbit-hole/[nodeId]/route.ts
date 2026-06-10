@@ -1,5 +1,5 @@
 export const dynamic = 'force-dynamic';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { computeRabbitHoleFromDB } from '@/lib/retrieval/rabbit-hole';
 import { nodes as staticNodes, edges as staticEdges } from '@/lib/graph';
 import { computeRabbitHole } from '@/lib/rabbit-hole';
@@ -154,10 +154,8 @@ export async function GET(_req: NextRequest, { params }: Params) {
     }
     const enriched = enrichResponse({ ...memData, sources, sourceCountMap }, nodeMap);
     const staticNode = nodeMap.get(nodeId);
-    const narrative = staticNode
-      ? await buildNarrative(nodeId, staticNode, enriched)
-      : null;
-    return NextResponse.json({ ...(enriched as object), narrative });
+    if (staticNode) after(() => void buildNarrative(nodeId, staticNode, enriched));
+    return NextResponse.json(enriched as object);
   }
 
   // Node is not in the static graph — try DB (DB-only nodes, future additions)
@@ -169,10 +167,10 @@ export async function GET(_req: NextRequest, { params }: Params) {
   }
 
   if (dbData) {
-    const enriched  = enrichResponse(dbData, nodeMap);
-    const nodeData  = (enriched as Record<string, unknown>).node as GraphNode | undefined;
-    const narrative = nodeData ? await buildNarrative(nodeId, nodeData, enriched) : null;
-    return NextResponse.json({ ...(enriched as object), narrative });
+    const enriched = enrichResponse(dbData, nodeMap);
+    const nodeData = (enriched as Record<string, unknown>).node as GraphNode | undefined;
+    if (nodeData) after(() => void buildNarrative(nodeId, nodeData, enriched));
+    return NextResponse.json(enriched as object);
   }
 
   return NextResponse.json({ error: 'Node not found' }, { status: 404 });
