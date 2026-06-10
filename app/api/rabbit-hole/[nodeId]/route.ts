@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { computeRabbitHoleFromDB } from '@/lib/retrieval/rabbit-hole';
 import { nodes as staticNodes, edges as staticEdges } from '@/lib/graph';
 import { computeRabbitHole } from '@/lib/rabbit-hole';
+import { getOrGenerateNarrative } from '@/lib/ai/rabbit-hole-narrative';
 import type { GraphNode, NodeCategory, EvidenceLevel, DatePrecision } from '@/lib/graph/types';
 
 type Params = { params: Promise<{ nodeId: string }> };
@@ -93,6 +94,40 @@ function enrichResponse(data: unknown, map: Map<string, GraphNode>): unknown {
   return result;
 }
 
+async function buildNarrative(
+  nodeId: string,
+  nodeData: GraphNode,
+  rawData: unknown,
+): Promise<string | null> {
+  try {
+    const d = rawData as Record<string, unknown>;
+    const connections: Array<{ title: string; relationshipType: string; explanation: string }> = [];
+
+    if (Array.isArray(d.connections)) {
+      for (const c of d.connections as Array<Record<string, unknown>>) {
+        const n = c.node as Record<string, unknown> | undefined;
+        if (n?.title && c.relationship_type) {
+          connections.push({
+            title:            String(n.title),
+            relationshipType: String(c.relationship_type),
+            explanation:      String(c.explanation ?? '').slice(0, 150),
+          });
+        }
+      }
+    }
+
+    return await getOrGenerateNarrative({
+      nodeId,
+      title:         nodeData.title,
+      description:   nodeData.description,
+      evidenceLevel: nodeData.evidence_level,
+      connections,
+    });
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(_req: NextRequest, { params }: Params) {
   const { nodeId } = await params;
   const nodeMap = makeNodeMap();
@@ -117,9 +152,12 @@ export async function GET(_req: NextRequest, { params }: Params) {
     } catch {
       // DB unavailable — serve static without sources
     }
-    return NextResponse.json(
-      enrichResponse({ ...memData, sources, sourceCountMap }, nodeMap)
-    );
+    const enriched = enrichResponse({ ...memData, sources, sourceCountMap }, nodeMap);
+    const staticNode = nodeMap.get(nodeId);
+    const narrative = staticNode
+      ? await buildNarrative(nodeId, staticNode, enriched)
+      : null;
+    return NextResponse.json({ ...(enriched as object), narrative });
   }
 
   // Node is not in the static graph — try DB (DB-only nodes, future additions)
@@ -130,7 +168,12 @@ export async function GET(_req: NextRequest, { params }: Params) {
     console.warn('[rabbit-hole] DB unavailable, falling back to 404:', err);
   }
 
-  if (dbData) return NextResponse.json(enrichResponse(dbData, nodeMap));
+  if (dbData) {
+    const enriched  = enrichResponse(dbData, nodeMap);
+    const nodeData  = (enriched as Record<string, unknown>).node as GraphNode | undefined;
+    const narrative = nodeData ? await buildNarrative(nodeId, nodeData, enriched) : null;
+    return NextResponse.json({ ...(enriched as object), narrative });
+  }
 
   return NextResponse.json({ error: 'Node not found' }, { status: 404 });
 }

@@ -15,6 +15,7 @@ import { enqueue } from '@/lib/jobs/queue';
 import { writeAuditLog } from '@/lib/audit';
 import { generateSuggestionsForNode } from '@/lib/suggestion-engine';
 import { computeNodeSourceQuality } from '@/lib/source-quality';
+import { generateAiSemanticSuggestions } from '@/lib/ai/semantic-suggestions';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -112,6 +113,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
     enqueue('embed-node',        { nodeId: id }, 60),
     enqueue('rebuild-adjacency', { nodeId: id }, 60),
     generateSuggestionsForNode(id),
+    generateAiSemanticSuggestions(id),
   ]);
 
   return NextResponse.json({

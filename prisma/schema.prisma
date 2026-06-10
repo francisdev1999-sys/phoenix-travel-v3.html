@@ -241,6 +241,7 @@ model Node {
   versions          NodeVersion[]
   embedding         NodeEmbedding?
   adjacencyCache    AdjacencyCache?
+  narrative         NodeNarrative?
   suggestionsFrom   RelationshipSuggestion[] @relation("SuggestionFrom")
   suggestionsTo     RelationshipSuggestion[] @relation("SuggestionTo")
   aiReviews         AiResearchReview[]       @relation("NodeAiReviews")
@@ -602,6 +603,20 @@ model ImportBatch {
 
   @@index([status])
   @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI RABBIT-HOLE NARRATIVES  (cached per-node exploration context)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model NodeNarrative {
+  nodeId        String   @id
+  narrative     String   @db.Text
+  model         String
+  promptVersion String   @default("1.0")
+  cachedAt      DateTime @default(now())
+
+  node Node @relation(fields: [nodeId], references: [id], onDelete: Cascade)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
