@@ -35,6 +35,8 @@ interface UserStore {
   currentView: 'landing' | 'graph' | 'theory' | 'universe' | 'timeline' | 'evidence-board' | 'globe' | 'dashboard' | 'diagnostics' | 'sources' | 'admin' | 'rabbit-hole';
   selectedTheory: string | null;
   searchQuery: string;
+  /** Shared cross-view focus: theory ID that both Timeline and Globe react to */
+  focusedTheoryId: string | null;
 
   exploreTheory: (theoryId: string) => void;
   discoverConnection: (fromId: string, toId: string) => void;
@@ -44,6 +46,7 @@ interface UserStore {
   setRabbitHoleChain: (chain: string[]) => void;
   setSelectedTheory: (id: string | null) => void;
   setSearchQuery: (query: string) => void;
+  setFocusedTheoryId: (id: string | null) => void;
   setPendingRabbitHoleNodeId: (id: string | null) => void;
   startRabbitHole: (theoryId: string) => void;
   extendRabbitHole: (theoryId: string) => void;
@@ -72,6 +75,7 @@ export const useUserStore = create<UserStore>()(
       currentView: 'landing',
       selectedTheory: null,
       searchQuery: '',
+      focusedTheoryId: null,
 
       exploreTheory: (theoryId: string) => {
         set((state) => {
@@ -139,6 +143,8 @@ export const useUserStore = create<UserStore>()(
       setSelectedTheory: (id) => set({ selectedTheory: id }),
 
       setSearchQuery: (query) => set({ searchQuery: query }),
+
+      setFocusedTheoryId: (id) => set({ focusedTheoryId: id }),
 
       startRabbitHole: (theoryId: string) => {
         set({ rabbitHoleChain: [theoryId], rabbitHoleNodeId: theoryId });
