@@ -14,6 +14,8 @@ import { prisma } from '@/lib/db';
 import { enqueue } from '@/lib/jobs/queue';
 import { writeAuditLog } from '@/lib/audit';
 import { generateSuggestionsForNode } from '@/lib/suggestion-engine';
+import { computeNodeSourceQuality } from '@/lib/source-quality';
+import { generateAiSemanticSuggestions } from '@/lib/ai/semantic-suggestions';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -103,16 +105,29 @@ export async function POST(_req: NextRequest, { params }: Params) {
     detail: { previousStatus: node.status },
   });
 
+  // Source quality check — informational, never blocks the publish
+  const sourceQuality = await computeNodeSourceQuality(id).catch(() => null);
+
   // Non-blocking background work — failures don't roll back the publish
   await Promise.allSettled([
     enqueue('embed-node',        { nodeId: id }, 60),
     enqueue('rebuild-adjacency', { nodeId: id }, 60),
     generateSuggestionsForNode(id),
+    generateAiSemanticSuggestions(id),
   ]);
 
   return NextResponse.json({
     message:     `Node '${id}' published successfully.`,
     node:        { id, status: 'published', publishedAt: now },
     jobsEnqueued: ['embed-node', 'rebuild-adjacency'],
+    sourceQuality: sourceQuality
+      ? {
+          recommendation: sourceQuality.publicationRecommendation,
+          score:          sourceQuality.sourceQualityScore,
+          approvedSources: sourceQuality.approvedCount,
+          flags:          sourceQuality.reviewFlags,
+          reasons:        sourceQuality.publicationReasons,
+        }
+      : null,
   });
 }

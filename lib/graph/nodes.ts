@@ -9,7 +9,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'gobekli-tepe',
     title: 'Göbekli Tepe',
-    category: 'Ancient Civilizations',
+    category: 'Ancient Civilization',
     description: 'A Neolithic sanctuary in southeastern Turkey dated to approximately 9600–8200 BCE, making it the oldest known monumental stone structure in the world — predating Stonehenge by 6,000 years and the Egyptian pyramids by 7,000 years. Discovered by Klaus Schmidt in 1994, the site consists of T-shaped limestone pillars up to 5.5 meters tall arranged in circular enclosures, decorated with sophisticated bas-relief carvings of animals and abstract symbols. It was deliberately buried around 8000 BCE.',
     claims: [
       'Challenges the accepted model that agriculture preceded monumental architecture — the reverse may be true.',
@@ -23,6 +23,12 @@ export const nodes: GraphNode[] = [
       'The deliberate burial may have served ritual purposes rather than encoding information for the future.',
     ],
     mainstream_view: 'Mainstream archaeology views Göbekli Tepe as a revolutionary but explicable discovery. It demonstrates that Neolithic hunter-gatherers were capable of sustained organized effort for ritual purposes, pushing back the timeline for complex social behavior. It does not require a prior advanced civilization as an explanatory framework.',
+    open_questions: [
+      'What social mechanism motivated multiple generations to invest labour in monument construction before the emergence of agriculture or settled hierarchy?',
+      'Did Göbekli Tepe function as a pilgrimage centre drawing distant populations, and if so, what was its catchment area?',
+      'The deliberate backfilling of the enclosures (c. 8000 BCE) is unexplained: was it ritual site closure, an artificial tell-building programme, or protection of sacred space?',
+      'Whether Göbekli Tepe\'s pillar iconography represents a coherent cosmological narrative, individual clan totems, or something else remains unresolved.',
+    ],
     tags: ['Neolithic', 'Turkey', 'monumental architecture', 'hunter-gatherer', 'ritual', 'Klaus Schmidt', 'UNESCO'],
     evidence_level: 'verified',
     confidence_score: 0.98,
@@ -35,7 +41,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'atlantis',
     title: 'Atlantis',
-    category: 'Ancient Civilizations',
+    category: 'Ancient Civilization',
     description: 'A legendary island civilization first described by the Greek philosopher Plato in his dialogues Timaeus and Critias (c. 360 BCE). Plato portrayed Atlantis as a powerful naval empire located "beyond the Pillars of Hercules" that sank into the Atlantic Ocean roughly 9,000 years before Solon\'s time following divine punishment for moral corruption. The story has generated centuries of scholarly debate about whether it represents allegory, philosophical invention, or a memory of real events.',
     claims: [
       'Plato claimed the story originated from Egyptian priests who told Solon of a historical event.',
@@ -50,6 +56,11 @@ export const nodes: GraphNode[] = [
       'Dozens of incompatible proposed locations undermine geographic literalism.',
     ],
     mainstream_view: 'Scholars of classical antiquity regard Atlantis as Plato\'s literary device, constructed to explore themes of hubris, divine retribution, and the decline of ideal states. It serves clear philosophical functions in Plato\'s writing and bears the hallmarks of literary invention rather than historical record.',
+    open_questions: [
+      'Whether Plato\'s Atlantis account was entirely literary invention, a distorted folk memory of a real event, or a deliberate philosophical allegory remains debated by classicists.',
+      'The Black Sea flood hypothesis (Ryan & Pitman, 1997) and the Santorini/Thera eruption hypothesis each match some elements of the account but neither matches all of them.',
+      'If Plato drew on Egyptian oral traditions, the transmission chain and degree of distortion over several millennia cannot be assessed.',
+    ],
     tags: ['Plato', 'mythology', 'Atlantic Ocean', 'lost civilization', 'Greek philosophy', 'catastrophe'],
     evidence_level: 'speculative',
     confidence_score: 0.12,
@@ -61,7 +72,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'sumerian-civilization',
     title: 'Sumerian Civilization',
-    category: 'Ancient Civilizations',
+    category: 'Ancient Civilization',
     description: 'One of the earliest known complex civilizations, emerging in Mesopotamia (modern southern Iraq) around 4500–4000 BCE. The Sumerians developed cuneiform writing, monumental ziggurats, sophisticated legal systems (including the Code of Ur-Nammu), astronomy, mathematics including a base-60 system still used for time and angles, and elaborate mythological traditions recorded in texts such as the Enuma Elish and the Epic of Gilgamesh. Sumerian culture profoundly influenced Babylonian, Assyrian, and later civilizations.',
     claims: [
       'Sumerian astronomical records show sophisticated observation of planetary cycles centuries before Greek astronomy.',
@@ -73,6 +84,11 @@ export const nodes: GraphNode[] = [
       'Sumerian civilization developed from traceable earlier cultures including the Ubaid period.',
     ],
     mainstream_view: 'Sumer is one of the best-documented early civilizations in archaeology. Its development from agricultural villages through urban centers is traceable in the archaeological record. It represents independent development of civilization rather than any external origin.',
+    open_questions: [
+      'The origin of the Sumerian language — a language isolate with no demonstrated relatives — and the ethnic identity of its speakers remain unresolved.',
+      'The relationship between Uruk-period expansion (4000–3100 BCE) and the emergence of writing is debated: did administrative necessity drive literacy, or did ritual and symbolic needs?',
+      'The degree of continuity between Sumerian civilisation and the subsequent Akkadian, Babylonian, and Assyrian cultures in terms of institutional and technological transmission is incompletely understood.',
+    ],
     tags: ['Mesopotamia', 'cuneiform', 'ziggurat', 'Gilgamesh', 'mathematics', 'astronomy', 'writing', 'Iraq'],
     evidence_level: 'verified',
     confidence_score: 0.97,
@@ -85,7 +101,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'indus-valley',
     title: 'Indus Valley Civilization',
-    category: 'Ancient Civilizations',
+    category: 'Ancient Civilization',
     description: 'A Bronze Age civilization (c. 3300–1300 BCE) centered in the northwestern regions of South Asia, comprising the modern countries of Pakistan and northwest India. At its peak, it encompassed over 1 million square kilometres — larger than ancient Egypt or Mesopotamia. Cities like Mohenjo-daro and Harappa featured planned street grids, sophisticated drainage systems, standardized weights and measures, and evidence of long-distance trade. The Indus script remains undeciphered.',
     claims: [
       'The undeciphered Indus script may represent a sophisticated language system encoding unknown knowledge.',
@@ -97,6 +113,11 @@ export const nodes: GraphNode[] = [
       'Decline is best explained by climate change and river abandonment rather than any catastrophic or mysterious event.',
     ],
     mainstream_view: 'The Indus Valley Civilization is a well-documented archaeological culture distinguished by urban planning, craft specialization, and long-distance trade. Its decline is attributed to climate change (aridification) and the shifting of the Ghaggar-Hakra river system.',
+    open_questions: [
+      'The Indus script remains undeciphered, meaning the language, political structure, and religious ideology of the civilisation are entirely unknown from textual sources.',
+      'Whether the Harappan collapse (c. 1900 BCE) was caused primarily by climate-driven agricultural failure, tectonic disruption of river systems, epidemic disease, or internal social factors is unresolved.',
+      'The degree of continuity between Harappan culture and later Vedic civilisation — in material culture, religious symbolism, and population genetics — is actively debated.',
+    ],
     tags: ['Bronze Age', 'Pakistan', 'India', 'Harappa', 'Mohenjo-daro', 'undeciphered script', 'urban planning'],
     evidence_level: 'verified',
     confidence_score: 0.95,
@@ -109,7 +130,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'easter-island',
     title: 'Easter Island (Rapa Nui)',
-    category: 'Ancient Civilizations',
+    category: 'Ancient Civilization',
     description: 'A remote Polynesian island in the southeastern Pacific Ocean, home to the Rapa Nui people who erected approximately 900 massive stone statues called moai between roughly 1200 and 1500 CE. The moai average 4 meters in height and 12.5 tons in weight, with the largest standing 10 meters and weighing 74 tons. How the relatively small island population transported and erected these statues — and the role of internal conflict and deforestation in the civilization\'s decline — are subjects of ongoing research.',
     claims: [
       'The logistics of moai transport without wheels or draft animals represents an organizational and engineering achievement that continues to be debated.',
@@ -121,6 +142,11 @@ export const nodes: GraphNode[] = [
       'The collapse narrative is contested; recent research suggests significant European contact disease mortality contributed.',
     ],
     mainstream_view: 'Archaeologists have extensively documented moai construction and transport methods through experimental archaeology. The civilization\'s decline involved a complex mix of resource depletion, social conflict, and devastating contact with European diseases and slave raids.',
+    open_questions: [
+      'The relative weight of introduced European diseases, rat-driven deforestation, and socio-political conflict in the pre-contact and contact-period population collapse is still debated.',
+      'The function of the ahu-moai complexes — ancestor veneration platforms, territorial markers, astronomical observatories, or some combination — has not been definitively established.',
+      'The Rongorongo script has not been deciphered and may or may not constitute a genuine writing system; its relationship to the oral traditions of the island is unknown.',
+    ],
     tags: ['Polynesia', 'moai', 'Pacific', 'statues', 'Rapa Nui', 'deforestation', 'collapse'],
     evidence_level: 'verified',
     confidence_score: 0.93,
@@ -133,7 +159,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'younger-dryas',
     title: 'Younger Dryas Event',
-    category: 'Ancient Civilizations',
+    category: 'Ancient Civilization',
     description: 'A rapid and severe climatic cooling period approximately 12,900–11,700 years ago that interrupted the warming trend following the Last Glacial Maximum. Temperatures in Greenland dropped by approximately 10°C within decades. The Younger Dryas Boundary (YDB) is marked globally by a distinctive layer of platinum, nano-diamonds, and microspherules. An ongoing scientific debate concerns whether a cosmic impact or airburst event triggered the cooling, which may have caused widespread megafauna extinction, human population decline, and the conditions that spurred the Agricultural Revolution.',
     claims: [
       'The Younger Dryas Impact Hypothesis proposes that a fragmented comet struck or exploded above North America, triggering cooling, massive fires, and megafauna extinction.',
@@ -146,6 +172,11 @@ export const nodes: GraphNode[] = [
       'Climate modeling shows the observed cooling can be explained by disruption of Atlantic Ocean circulation patterns without requiring an impact.',
     ],
     mainstream_view: 'The Younger Dryas is a well-established climatic event. The impact hypothesis is actively debated in peer-reviewed literature — it is neither confirmed nor dismissed. Most paleoclimatologists currently attribute the cooling primarily to disruption of Atlantic Meridional Overturning Circulation, possibly triggered by massive freshwater influx from melting ice sheets.',
+    open_questions: [
+      'The primary trigger for Younger Dryas onset remains debated: meltwater pulse disrupting the AMOC (Lake Agassiz routing), a cosmic impact, or a combination of factors.',
+      'The precise mechanism of rapid re-warming at Younger Dryas termination (~11,700 BP) is not fully explained by current thermohaline circulation models.',
+      'The degree to which the Younger Dryas disrupted human migration patterns out of Africa and into the Americas is incompletely understood.',
+    ],
     tags: ['paleoclimatology', 'cosmic impact', 'megafauna extinction', 'ice age', 'climate', 'geological', 'bottleneck'],
     evidence_level: 'debated',
     confidence_score: 0.55,
@@ -157,7 +188,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'nabta-playa',
     title: 'Nabta Playa',
-    category: 'Ancient Civilizations',
+    category: 'Ancient Civilization',
     description: 'An ancient basin in the Nubian Desert of Egypt containing one of the world\'s earliest known astronomical alignments, dated to approximately 6700–5000 BCE — predating Stonehenge by at least 1,000 years. The site includes a stone circle with alignment to the summer solstice sunrise and five megalithic structures that may correspond to bright stars. It was occupied by cattle-herding peoples during a wetter climatic period in the Sahara.',
     claims: [
       'The Nabta Playa stone circle represents the earliest confirmed astronomical alignment in Africa.',
@@ -169,6 +200,11 @@ export const nodes: GraphNode[] = [
       'The connection to later Egyptian religion is speculative without direct evidence of cultural continuity.',
     ],
     mainstream_view: 'Nabta Playa is an accepted significant prehistoric site. The summer solstice solar alignment is broadly agreed upon. More specific stellar alignment claims remain contested in archaeoastronomy.',
+    open_questions: [
+      'Whether the stone circle alignments at Nabta Playa were intentionally designed for astronomical observation or result from post-depositional movement and reinterpretation remains debated.',
+      'The cultural group responsible for Nabta Playa and their relationship to subsequent Nilotic cultures (pre-dynastic Egypt, Nubian A-Group) is not established.',
+      'The function of the large buried megalithic structures beneath the site has not been definitively determined.',
+    ],
     tags: ['Egypt', 'Neolithic', 'astronomy', 'stone circle', 'Sahara', 'solstice', 'cattle'],
     evidence_level: 'debated',
     confidence_score: 0.72,
@@ -181,7 +217,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'ancient-megalithic-sites',
     title: 'Ancient Megalithic Architecture',
-    category: 'Ancient Civilizations',
+    category: 'Ancient Civilization',
     description: 'A global pattern of monumental stone construction spanning from the British Isles to Southeast Asia, dating from approximately 4500 BCE through 1500 CE. Key examples include Stonehenge (UK), Carnac (France), Avebury (UK), Newgrange (Ireland), Puma Punku (Bolivia), and hundreds of sites across Europe, the Mediterranean, and the Pacific. The movement and precision placement of stones weighing tens to hundreds of tons, often aligned to astronomical events, represents a consistent engineering tradition across cultures with no known direct contact.',
     claims: [
       'The global distribution of megalithic construction traditions suggests either diffusion of knowledge or independent convergent development of similar solutions.',
@@ -194,11 +230,17 @@ export const nodes: GraphNode[] = [
       'Experimental archaeology has demonstrated that all documented megalithic construction techniques are achievable with period-appropriate tools and organized labor.',
     ],
     mainstream_view: 'Megalithic traditions developed independently in multiple regions as cultures with settled agriculture developed surplus resources, organized labor, and religious traditions requiring permanent sacred spaces. Astronomical alignments reflect the practical importance of seasonal calendars for agricultural societies.',
+    open_questions: [
+      'Whether megalithic traditions in Europe, the Near East, and East Asia developed independently or share a common origin through cultural diffusion is a major unresolved question in prehistoric archaeology.',
+      'The purpose of most megalithic monuments remains incompletely understood: proposed functions include ancestor veneration, territorial demarcation, astronomical calendars, and communal feasting sites.',
+      'The social organisation required to quarry, transport, and erect multi-tonne stones without metal tools or wheeled vehicles is not fully reconstructed for most sites.',
+    ],
     tags: ['Stonehenge', 'Carnac', 'Newgrange', 'megalith', 'astronomy', 'prehistoric', 'construction'],
     evidence_level: 'verified',
     confidence_score: 0.94,
     color: '#57534e',
     icon: '🪨',
+    coordinates: [51.1789, -1.8262],
     year: -4000,
   },
 
@@ -209,7 +251,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'great-pyramid',
     title: 'Great Pyramid of Giza',
-    category: 'Egypt & Ancient Engineering',
+    category: 'Ancient Site',
     description: 'The largest of the Giza pyramids, constructed c. 2560 BCE under Pharaoh Khufu of the Fourth Dynasty. It originally stood 146.5 meters tall and contains approximately 2.3 million stone blocks averaging 2.5 tons each, with some granite blocks exceeding 80 tons. The pyramid aligns to true north within 3/60 of a degree. For 3,800 years it was the tallest human-made structure on Earth. The Khufu graffiti — cartouches identifying work gangs — found in relieving chambers provides direct historical attribution.',
     claims: [
       'Mathematical relationships between the pyramid\'s dimensions encode Pi and the Golden Ratio — though debate continues about whether these were intentional or emergent from construction methods.',
@@ -224,6 +266,11 @@ export const nodes: GraphNode[] = [
       'The Khufu graffiti, papyri found at Wadi al-Jarf documenting pyramid construction logistics, and the workers\' village at Heit el-Ghurab provide robust evidence for conventional construction.',
     ],
     mainstream_view: 'Egyptologists and archaeologists view the Great Pyramid as a remarkable achievement of organized human labor and Egyptian state-level engineering. Recent discoveries including logistics papyri and a harbor system have substantially filled in the construction picture. The pyramid was built as a royal tomb.',
+    open_questions: [
+      'The internal logistics of the Great Pyramid construction — specifically the mechanism by which the upper courses and the Grand Gallery ceiling blocks were positioned — has not been demonstrated by experimental archaeology.',
+      'The Wadi al-Jarf papyri describe one construction phase; whether the entire project was managed by a single unified administration or evolved over successive reigns is unclear.',
+      'The precise astronomical alignments of the pyramid\'s shafts and their functional or symbolic significance remain debated among Egyptologists and archaeoastronomers.',
+    ],
     tags: ['Egypt', 'Khufu', 'Fourth Dynasty', 'Giza', 'tomb', 'engineering', 'Old Kingdom', 'UNESCO'],
     evidence_level: 'verified',
     confidence_score: 0.99,
@@ -236,7 +283,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'sphinx',
     title: 'Great Sphinx of Giza',
-    category: 'Egypt & Ancient Engineering',
+    category: 'Ancient Site',
     description: 'A monolithic limestone statue depicting a recumbent lion with a human head, located on the Giza plateau in Egypt. Mainstream Egyptology dates it to the reign of Pharaoh Khafre (c. 2558–2532 BCE). The Sphinx faces due east and aligns with the rising sun at the spring and autumn equinoxes. It is the largest surviving monolithic statue in the world, approximately 73 meters long and 20 meters tall.',
     claims: [
       'Geologist Robert Schoch argues that erosion patterns on the Sphinx enclosure walls show characteristics of water weathering rather than wind erosion, implying a date predating 5000 BCE when Egypt last experienced significant rainfall.',
@@ -249,6 +296,11 @@ export const nodes: GraphNode[] = [
       'Khafre\'s face is generally considered a match with the Sphinx\'s proportions.',
     ],
     mainstream_view: 'Mainstream Egyptology attributes the Sphinx to Khafre (c. 2530 BCE) based on contextual archaeological evidence. The water erosion hypothesis, while stimulating debate, has not displaced the conventional dating.',
+    open_questions: [
+      'The date of initial construction of the Sphinx body is disputed: the conventional date (c. 2530 BCE, Khafre) is challenged by geologists who argue the weathering profile indicates greater antiquity.',
+      'The original face of the Sphinx — if it was recarved in the Fourth Dynasty — and the identity of the original subject (if not Khafre) has not been established.',
+      'The reported existence of chambers beneath the Sphinx has not been investigated by systematic excavation; ground-penetrating radar surveys have produced ambiguous results.',
+    ],
     tags: ['Egypt', 'Khafre', 'Giza', 'limestone', 'erosion', 'water', 'Old Kingdom', 'monolith'],
     evidence_level: 'debated',
     confidence_score: 0.78,
@@ -261,7 +313,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'pyramid-construction-debate',
     title: 'Pyramid Construction Methods',
-    category: 'Egypt & Ancient Engineering',
+    category: 'Ancient Site',
     description: 'The engineering methods used to construct the Egyptian pyramids remain an active area of research. While the conventional framework — organized state labor, copper tools, wooden sledges, and ramp systems — is supported by extensive archaeological evidence, specific logistical details continue to be debated. Key questions include the exact ramp configuration, how granite beams were moved from Aswan to Giza, and the organization of the approximately 20,000-strong workforce.',
     claims: [
       'The Wadi al-Jarf papyri (discovered 2013) are the oldest papyri ever found and document the transport of limestone for the Great Pyramid under inspector Merer.',
@@ -273,12 +325,16 @@ export const nodes: GraphNode[] = [
       'Granite transport from Aswan (900 km) using known period technology remains logistically complex.',
     ],
     mainstream_view: 'Archaeologists have extensive documentation of pyramid construction through the Wadi al-Jarf papyri, the Heit el-Ghurab workers\' village, and experimental archaeology. The broad framework is well-established; specific technical details continue to be refined.',
+    open_questions: [
+      'No complete experimental demonstration of the internal ramp system or any alternative delivery mechanism for the upper-course blocks has been achieved at scale.',
+      'The Wadi al-Jarf papyri document Khufu-era logistics for one inspector\'s crew; generalising this to the whole project involves assumptions about workforce organisation that cannot be confirmed.',
+      'Whether the precision of the Great Pyramid\'s casing stones and interior chambers required specialised surveying instruments beyond what is attested in the Egyptian archaeological record is unresolved.',
+    ],
     tags: ['Egypt', 'engineering', 'ramps', 'papyri', 'workforce', 'copper tools', 'logistics'],
     evidence_level: 'strong_evidence',
     confidence_score: 0.88,
     color: '#f59e0b',
     icon: '⚙️',
-    coordinates: [29.9792, 31.1342],
     year: -2560,
   },
 
@@ -289,7 +345,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'book-of-enoch',
     title: 'Book of Enoch (1 Enoch)',
-    category: 'Religious Texts & Mythology',
+    category: 'Religion',
     description: 'An ancient Jewish religious text attributed to Enoch, the great-grandfather of Noah, composed primarily between the 3rd century BCE and 1st century CE. It describes the Watchers — a class of angels who descended to Earth, took human wives, and taught forbidden knowledge — and their offspring the Nephilim. Multiple copies were found among the Dead Sea Scrolls, confirming its circulation in Second Temple Judaism. The Ethiopian Orthodox Church includes it in its biblical canon. The Epistle of Jude in the New Testament quotes directly from 1 Enoch.',
     claims: [
       'The Watchers narrative provides a detailed account of divine-human interbreeding and the transmission of advanced knowledge to humanity.',
@@ -302,18 +358,24 @@ export const nodes: GraphNode[] = [
       'Its exclusion from most canons reflects rabbinic and early Christian debates about canonicity based on apostolic origin, not suppression.',
     ],
     mainstream_view: 'Biblical scholars regard 1 Enoch as an important and genuine window into Second Temple Judaism, apocalyptic traditions, and early Jewish cosmology. It has significant historical and theological value as a primary source, regardless of its canonical status.',
+    open_questions: [
+      'The compositional history of 1 Enoch — whether the Astronomical Book (1 En 72–82) or the Book of Watchers (1 En 1–36) is the oldest section, and the precise dating of each — remains debated.',
+      'The relationship between the Enochic tradition and the emergence of apocalyptic literature in Second Temple Judaism, and whether Enoch texts were authoritative at Qumran, is contested.',
+      'Whether 1 Enoch\'s astronomical sections reflect a functioning calendrical system used by a real sect or a literary-theological construct is unresolved.',
+    ],
     tags: ['Second Temple Judaism', 'apocalyptic', 'Dead Sea Scrolls', 'Watchers', 'Nephilim', 'Ethiopia', 'canon'],
     evidence_level: 'verified',
     confidence_score: 0.95,
     color: '#f59e0b',
     icon: '📜',
+    coordinates: [31.7444, 35.4594],
     year: -200,
   },
 
   {
     id: 'watchers',
     title: 'The Watchers (Grigori)',
-    category: 'Religious Texts & Mythology',
+    category: 'Religion',
     description: 'A class of angels described in the Book of Enoch who are assigned to observe humanity but instead descend to Mount Hermon, take human wives, and teach forbidden knowledge. The text names 200 Watchers who made a binding oath on the mountain. Their leader Samyaza, alongside named angels including Azazel, is said to have taught metalworking, cosmetics, sorcery, astrology, and weapons manufacture. The resulting corruption of humanity is presented as a cause of the biblical flood.',
     claims: [
       'The Watcher narrative is the most detailed account in Jewish literature of divine beings directly intervening in human civilization and transmitting knowledge.',
@@ -326,18 +388,24 @@ export const nodes: GraphNode[] = [
       'Mesopotamian Apkallu parallels suggest literary borrowing rather than independent documentation of real events.',
     ],
     mainstream_view: 'The Watchers serve as theological and narrative agents in Jewish apocalyptic literature, explaining the origin of evil, forbidden knowledge, and divine-human boundaries. The narrative is understood in the context of Second Temple religious thought.',
+    open_questions: [
+      'The relationship between the Watcher tradition in 1 Enoch and the Mesopotamian apkallu (antediluvian sages) is substantive but the direction and mechanism of influence is debated.',
+      'Whether the Watcher myth was composed as political allegory (critiquing priestly or royal marriages), as a theodicy explaining the origin of evil, or as genuine cosmological speculation is unresolved.',
+      'The degree to which Watcher traditions shaped Christian angelology and demonology through early apocalyptic literature has been studied but not definitively mapped.',
+    ],
     tags: ['angels', 'forbidden knowledge', 'Mount Hermon', 'metallurgy', 'Nephilim', 'flood', 'Azazel'],
     evidence_level: 'mythological',
     confidence_score: 0.18,
     color: '#7c3aed',
     icon: '👁',
+    coordinates: [31.7444, 35.4594],
     year: -200,
   },
 
   {
     id: 'nephilim',
     title: 'Nephilim',
-    category: 'Religious Texts & Mythology',
+    category: 'Religion',
     description: 'Beings described in Genesis 6:4 and Numbers 13:33 as arising from the union of the "sons of God" and "daughters of men." The term has been translated as "giants," "fallen ones," or "those who cause others to fall." The Book of Enoch elaborates them as the offspring of the Watchers. In Numbers, Israelite spies describe the inhabitants of Canaan as Nephilim, causing the Israelites to see themselves as grasshoppers by comparison. The Rephaim and Anakim in the Hebrew Bible are sometimes connected to post-flood Nephilim traditions.',
     claims: [
       'The Nephilim narrative reflects widespread ancient traditions of semi-divine heroic beings predating recorded civilization.',
@@ -350,6 +418,11 @@ export const nodes: GraphNode[] = [
       'Giant traditions across cultures are better explained as mythological amplification of real human scale differences or metaphors for power.',
     ],
     mainstream_view: 'Biblical scholars understand Nephilim as mythological beings serving narrative purposes in the Hebrew Bible, connected to traditions about the boundaries between divine and human. They are not supported by physical anthropological evidence.',
+    open_questions: [
+      'The Hebrew etymology of \'nephilim\' is contested: it may derive from naphal (to fall), suggesting fallen beings, or from a root meaning \'mighty ones\'; neither derivation is philologically certain.',
+      'The relationship between the nephilim passage (Genesis 6:1–4) and the broader Watcher tradition in 1 Enoch, and whether Genesis is dependent on, independent of, or a source for the Enochic version, is debated.',
+      'The Dead Sea Scrolls Book of Giants (4Q530–532) expands the nephilim narrative considerably; whether this represents authentic early tradition or Second Temple theological elaboration is unresolved.',
+    ],
     tags: ['Genesis', 'giants', 'Hebrew Bible', 'divine-human', 'mythology', 'Rephaim', 'Anakim'],
     evidence_level: 'mythological',
     confidence_score: 0.12,
@@ -361,7 +434,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'dead-sea-scrolls',
     title: 'Dead Sea Scrolls',
-    category: 'Religious Texts & Mythology',
+    category: 'Religion',
     description: 'A collection of approximately 900 manuscripts discovered between 1947 and 1956 in caves near Qumran on the northwestern shore of the Dead Sea. Dated to between 150 BCE and 70 CE, they include the oldest known surviving copies of books later included in the Hebrew Bible, apocryphal texts including multiple copies of 1 Enoch and the Book of Jubilees, sectarian texts believed to originate from the Essene community at Qumran, and the enigmatic Copper Scroll describing hidden treasures. They fundamentally advanced understanding of Second Temple Judaism and early Christianity.',
     claims: [
       'The scrolls provide evidence that Jewish textual diversity in the Second Temple period was far greater than previously understood.',
@@ -370,6 +443,11 @@ export const nodes: GraphNode[] = [
     ],
     criticisms: [],
     mainstream_view: 'The Dead Sea Scrolls are universally recognized as among the most significant archaeological discoveries of the 20th century. They have transformed the study of the Hebrew Bible, early Judaism, and the origins of Christianity. Their content is extensively researched and published.',
+    open_questions: [
+      'The identification of the Qumran community as Essenes — long the dominant hypothesis — is contested by some scholars who argue the site was a villa, a pottery factory, or a scribal centre unrelated to any sect.',
+      'The circumstances under which the scrolls were deposited in the caves — community library, emergency concealment, or a scriptorium archive — are debated.',
+      'The theological relationship between the Qumran community and the Jerusalem Temple establishment, and whether the sect considered itself the true Israel in opposition to a corrupt priesthood, is argued from ambiguous internal evidence.',
+    ],
     tags: ['Qumran', 'Essenes', 'manuscripts', 'Hebrew Bible', 'Second Temple', 'Jordan', 'archaeology', 'UNESCO'],
     evidence_level: 'verified',
     confidence_score: 0.99,
@@ -382,7 +460,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'epic-of-gilgamesh',
     title: 'Epic of Gilgamesh',
-    category: 'Religious Texts & Mythology',
+    category: 'Religion',
     description: 'Among the oldest known works of literature, the Epic of Gilgamesh is a Babylonian poem originating from Sumerian sources around 2100 BCE and compiled into a standard version by the scholar Sîn-lēqi-unninni around 1200 BCE. It follows the legendary king Gilgamesh of Uruk and his companion Enkidu through adventures, the death of Enkidu, and Gilgamesh\'s subsequent quest for immortality. Tablet XI contains a detailed flood narrative that predates and closely parallels the biblical account of Noah, including a divinely-chosen hero, a boat containing animals, a dove and raven sent to find land, and the vessel coming to rest on a mountain.',
     claims: [
       'The flood narrative in Gilgamesh (and the older Atra-Hasis epic) is sufficiently similar to the Genesis flood account to suggest a shared Mesopotamian literary tradition or common historical memory.',
@@ -394,18 +472,24 @@ export const nodes: GraphNode[] = [
       'Flood narratives are widespread in world literature and may independently reflect genuine memories of localized but catastrophic flooding events.',
     ],
     mainstream_view: 'The Epic of Gilgamesh is recognized as a foundational work of world literature and an invaluable primary source for Mesopotamian civilization and religion. The flood narrative parallels with Genesis are well-established and form part of the academic discussion of biblical source traditions.',
+    open_questions: [
+      'The relationship between the Standard Babylonian version of the Epic (c. 1200 BCE) and the earlier Old Babylonian tablets is not fully understood; the degree to which the Sin-leqi-unninni redaction constitutes original composition versus compilation is debated.',
+      'Whether the Gilgamesh flood account (Tablet XI) and the Genesis flood narrative share a common literary source, represent parallel development from a shared oral tradition, or reflect direct Mesopotamian-Israelite textual borrowing is unresolved.',
+      'The historical Gilgamesh, if he existed (the Sumerian King List assigns him a 126-year reign), left no contemporary inscriptions; his historical reality cannot be assessed from currently available evidence.',
+    ],
     tags: ['Sumerian', 'Babylonian', 'literature', 'flood narrative', 'immortality', 'Uruk', 'mythology', 'cuneiform'],
     evidence_level: 'verified',
     confidence_score: 0.99,
     color: '#d97706',
     icon: '⚔️',
+    coordinates: [31.3225, 45.6396],
     year: -2100,
   },
 
   {
     id: 'flood-narratives',
     title: 'Global Flood Traditions',
-    category: 'Religious Texts & Mythology',
+    category: 'Religion',
     description: 'Flood mythology appears in an estimated 200+ independent cultural traditions worldwide, including in Mesopotamia (Gilgamesh, Atra-Hasis), the Hebrew Bible (Noah), Hindu texts (Manu), ancient Greece (Deucalion), Mesoamerica (Popol Vuh), the American Pacific Northwest, Aboriginal Australia, and China. The consistency of core elements — a divinely-ordered catastrophe, a chosen survivor, a boat containing animals or seeds, and post-flood world renewal — has generated sustained debate about whether these reflect shared historical memory of real catastrophic flooding events.',
     claims: [
       'The global distribution of structurally similar flood myths suggests a common cultural memory of real events, potentially including Black Sea flooding (~5600 BCE per Ryan and Pitman) or Younger Dryas sea level rise.',
@@ -418,18 +502,24 @@ export const nodes: GraphNode[] = [
       'Flood myths may independently arise from universal human experience of localized catastrophic floods rather than a single global event.',
     ],
     mainstream_view: 'Historians of religion and folklorists recognize flood myths as one of the most widespread mythological motifs. The relationship between these traditions is studied through comparative mythology. Some connection to real flooding events is plausible; a single universal flood is not supported by geology.',
+    open_questions: [
+      'The degree to which flood narratives in geographically separated cultures reflect independent geological events versus diffusion from a shared source tradition cannot be determined from the textual record alone.',
+      'The Ryan-Pitman Black Sea flood hypothesis (1997) — that a catastrophic inundation c. 5600 BCE could have generated flood traditions in Near Eastern cultures — remains debated by geologists and archaeologists.',
+      'Whether a single catastrophic flood event (end-of-Younger-Dryas sea level rise, Mesopotamian river floods, Black Sea inundation) or a general human tendency to mythologise extreme flooding is the primary driver of the global distribution of flood myths is unresolved.',
+    ],
     tags: ['mythology', 'Noah', 'Gilgamesh', 'comparative mythology', 'Black Sea', 'sea level', 'catastrophe'],
     evidence_level: 'debated',
     confidence_score: 0.6,
     color: '#1d4ed8',
     icon: '🌊',
+    coordinates: [31.5667, 45.5000],
     year: -5000,
   },
 
   {
     id: 'comparative-mythology',
     title: 'Comparative Mythology',
-    category: 'Religious Texts & Mythology',
+    category: 'Religion',
     description: 'The academic field studying relationships between mythologies of different cultures. Key figures include Max Müller, James Frazer, Carl Jung, Joseph Campbell, and Georges Dumézil. Central findings include recurring mythological structures (Campbell\'s monomyth/Hero\'s Journey), shared Indo-European mythological inheritance documented through linguistic and textual analysis, and consistent archetypes across unrelated cultures. The field bridges folklore, linguistics, psychology, anthropology, and religious studies.',
     claims: [
       'The consistency of mythological archetypes across unrelated cultures — dying and rising gods, trickster figures, world trees, primordial floods — may reflect universal features of human cognition (Jung\'s collective unconscious) or shared very ancient cultural heritage.',
@@ -440,6 +530,11 @@ export const nodes: GraphNode[] = [
       'The universality of some motifs may reflect universal human developmental experiences rather than shared history.',
     ],
     mainstream_view: 'Comparative mythology is a well-established academic field. Its findings on Indo-European mythological inheritance are well-supported. Campbell\'s monomyth is influential but contested in its universality. Jungian interpretations are treated with more skepticism in academic contexts.',
+    open_questions: [
+      'The methodology for distinguishing genuine cross-cultural mythological parallels (indicating shared origin or diffusion) from convergent independent development (indicating shared cognitive architecture) lacks agreed-upon standards.',
+      'The relationship between structuralism (Lévi-Strauss\'s approach) and proto-mythology reconstruction approaches (Dumézil\'s trifunctional hypothesis) in synthesising a unified theory of myth remains unresolved.',
+      'The degree to which proto-mythological reconstructions (comparable to the comparative-linguistics approach of proto-language reconstruction) can yield reliable information about prehistoric belief systems is contested.',
+    ],
     tags: ['mythology', 'Campbell', 'Jung', 'Indo-European', 'archetypes', 'folklore', 'anthropology'],
     evidence_level: 'verified',
     confidence_score: 0.88,
@@ -468,6 +563,11 @@ export const nodes: GraphNode[] = [
       'No physical evidence authenticated as non-terrestrial has been presented in any verifiable form.',
     ],
     mainstream_view: 'The scientific and government consensus attributes the Roswell incident to Project Mogul balloon debris. The perception of a cover-up reflects real military secrecy around the classified balloon program rather than concealment of extraterrestrial material.',
+    open_questions: [
+      'The material recovered from the Foster Ranch near Roswell in July 1947 has never been subjected to independent forensic examination; all descriptions come from interested parties and are irreconcilable.',
+      'The extent of witness testimony change over the decades — from weather balloon, to Mogul balloon project, to craft with bodies — and whether these shifts reflect recovered memory, deliberate fabrication, or genuine delayed disclosure is assessed differently by researchers.',
+      'Whether Project Mogul (classified balloon surveillance programme) fully accounts for all documented features of the debris recovery, or whether anomalous elements remain unexplained, is contested.',
+    ],
     tags: ['New Mexico', '1947', 'military', 'UFO', 'Project Mogul', 'Jesse Marcel', 'cover-up', 'Cold War'],
     evidence_level: 'debated',
     confidence_score: 0.35,
@@ -493,11 +593,17 @@ export const nodes: GraphNode[] = [
       'Official acknowledgment of unexplained phenomena does not confirm extraterrestrial origin.',
     ],
     mainstream_view: 'The U.S. government\'s formal acknowledgment of UAP investigation programs is significant. Scientific bodies including the National Academies of Sciences have called for rigorous investigation. Most scientists consider extraordinary claims about non-human origin to require extraordinary evidence not yet provided.',
+    open_questions: [
+      'The 2021 ODNI UAP preliminary assessment acknowledged 143 unexplained incidents but could not attribute them; subsequent AARO reports have not resolved the origin of the most anomalous cases.',
+      'Whether UAP sensor data anomalies (e.g., the Nimitz \'Tic Tac\') are best explained by sensor artefacts, atmospheric phenomena, adversarial drones, or genuinely anomalous physics remains unresolved in the unclassified record.',
+      'The degree to which classification and compartmentalisation within US government programmes has withheld material information from public UAP assessments is unknown by definition.',
+    ],
     tags: ['AATIP', 'AARO', 'military', 'Senate', 'disclosure', 'radar', 'FLIR', 'Grusch', 'Congress'],
     evidence_level: 'debated',
     confidence_score: 0.45,
     color: '#16a34a',
     icon: '🛸',
+    coordinates: [38.8719, -77.0563],
     year: 2017,
   },
 
@@ -517,6 +623,11 @@ export const nodes: GraphNode[] = [
       'Some witness accounts have evolved or been embellished over the decades.',
     ],
     mainstream_view: 'The Rendlesham incident is one of the best-documented UFO cases in terms of official military documentation. Skeptics attribute the phenomena to the Orfordness lighthouse, re-entry debris, and psychological factors. No consensus explanation has been established.',
+    open_questions: [
+      'Lt. Col. Halt\'s audio recording and memo are the primary contemporaneous records; whether the original radar data from RAF Watton and Bentwaters has been retained or destroyed has not been confirmed.',
+      'The degree to which witness accounts evolved over subsequent decades — adding hieroglyphic symbols, craft dimensions, and occupants not in the original statements — reflects normal memory drift, deliberate embellishment, or recovered detail is assessed differently.',
+      'Whether AARO\'s 2024 UAP historical review examined the Rendlesham case and what conclusions (if any) were reached has not been disclosed in unclassified summaries.',
+    ],
     tags: ['UK', '1980', 'RAF', 'US Air Force', 'Suffolk', 'official documentation', 'Cold War', 'military'],
     evidence_level: 'debated',
     confidence_score: 0.4,
@@ -543,6 +654,11 @@ export const nodes: GraphNode[] = [
       'Proposed evidence is routinely shown to have conventional archaeological and historical explanations.',
     ],
     mainstream_view: 'The ancient astronaut hypothesis is rejected by mainstream archaeology, anthropology, history, and linguistics. It is classified as pseudoscience. It has been criticized for cultural bias in assuming ancient peoples of certain regions required outside help.',
+    open_questions: [
+      'The ancient astronaut hypothesis relies on the assumption that ancient peoples lacked the cognitive or organisational capability to produce their own monumental architecture and religious cosmology; whether this assumption is consistent with the archaeological record is a legitimate methodological question in the sociology of archaeology.',
+      'Whether fringe reinterpretations of ancient texts (Sitchin\'s Sumerian readings, Von Däniken\'s Egyptian readings) have been comprehensively refuted by credentialed specialists or merely ignored is a question about the sociology of knowledge.',
+      'The hypothesis has no falsifiability criterion: it treats any absence of evidence as either misidentified technology or suppressed disclosure, making it unfalsifiable by design.',
+    ],
     tags: ['von Däniken', 'Sitchin', 'Anunnaki', 'pseudoscience', 'ancient architecture', 'extraterrestrial', 'popular culture'],
     evidence_level: 'speculative',
     confidence_score: 0.05,
@@ -558,7 +674,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'human-evolution',
     title: 'Human Evolution',
-    category: 'Human Origins',
+    category: 'Forbidden Archaeology',
     description: 'The evolutionary history of Homo sapiens, tracing the lineage from common ancestors with other great apes through australopithecines and various Homo species to anatomically modern humans (c. 300,000 years ago in Africa). Supported by convergent evidence from paleontology, comparative anatomy, genetics, and genomics. Key milestones include bipedalism (c. 4+ million years ago), stone tool use (Oldowan c. 3.3 million years ago), controlled fire use (c. 1 million years ago), and behavioral modernity (c. 70,000–50,000 years ago).',
     claims: [
       'Genomic analysis has revealed that modern humans carry 1–4% Neanderthal DNA (non-African populations) and some populations carry Denisovan DNA, documenting interbreeding events.',
@@ -567,18 +683,24 @@ export const nodes: GraphNode[] = [
     ],
     criticisms: [],
     mainstream_view: 'Human evolution through natural selection is one of the most robustly supported theories in science, with convergent evidence from multiple independent fields. Ongoing research continues to refine the timeline, geography, and specific evolutionary events.',
+    open_questions: [
+      'The branching point and relationship between Homo sapiens and archaic humans (Neanderthals, Denisovans, Homo heidelbergensis) remains actively revised as ancient DNA evidence expands.',
+      'The causes of the apparent \'behavioural modernity explosion\' (symbolic art, long-distance trade, hafted tools) seen in the archaeological record around 50,000 BP — whether it represents a biological threshold, demographic shift, or taphonomic artefact — is debated.',
+      'The degree to which adaptive introgression from archaic hominin populations (Neanderthal, Denisovan genes) contributed meaningfully to modern human immune function, altitude adaptation, and other traits is an active research question.',
+    ],
     tags: ['paleoanthropology', 'genetics', 'Homo sapiens', 'Africa', 'bipedalism', 'brain', 'out of Africa'],
     evidence_level: 'verified',
     confidence_score: 0.99,
     color: '#10b981',
     icon: '🧬',
+    coordinates: [-2.9876, 35.3544],
     year: -300000,
   },
 
   {
     id: 'neanderthals',
     title: 'Neanderthals',
-    category: 'Human Origins',
+    category: 'Forbidden Archaeology',
     description: 'An archaic human species (Homo neanderthalensis) that inhabited Europe and western Asia from approximately 400,000 to 40,000 years ago, overlapping with the arrival of Homo sapiens in Europe. Neanderthals had larger brains than modern humans (on average), made sophisticated Mousterian tools, buried their dead, used pigments and feathers for adornment, and may have produced rudimentary symbolic art. Ancient DNA analysis has confirmed interbreeding with Homo sapiens — non-African modern humans carry approximately 1–4% Neanderthal DNA.',
     claims: [
       'The presence of Neanderthal DNA in modern non-African human populations is definitively established through ancient DNA analysis.',
@@ -587,18 +709,24 @@ export const nodes: GraphNode[] = [
     ],
     criticisms: [],
     mainstream_view: 'Neanderthals are well-documented through a rich fossil and archaeological record. Ancient DNA has transformed our understanding of their relationship with modern humans from a simple replacement model to one of complex interaction and interbreeding.',
+    open_questions: [
+      'Whether Neanderthal extinction was caused primarily by competition with modern humans, climate deterioration, disease transmission, or admixture into the modern human lineage is unresolved.',
+      'The extent of Neanderthal symbolic and cognitive behaviour — ochre use, feather ornaments, possible burial practices — is contested: each claimed instance is disputed as to whether it predates modern human contact.',
+      'The significance of the 1–4% Neanderthal genomic component in non-African modern humans for phenotypic traits beyond the immune system is incompletely characterised.',
+    ],
     tags: ['paleoanthropology', 'Europe', 'ancient DNA', 'Mousterian', 'extinction', 'interbreeding', 'fossil'],
     evidence_level: 'verified',
     confidence_score: 0.99,
     color: '#0891b2',
     icon: '🦴',
+    coordinates: [51.2303, 6.9961],
     year: -200000,
   },
 
   {
     id: 'denisovans',
     title: 'Denisovans',
-    category: 'Human Origins',
+    category: 'Forbidden Archaeology',
     description: 'An archaic human population or species known almost entirely from ancient DNA analysis of fragmentary remains found in Denisova Cave, Siberia, dated to approximately 30,000–200,000 years ago. Denisovans are genetically distinct from both Neanderthals and Homo sapiens. Modern Melanesian, Aboriginal Australian, and some East Asian and Pacific Islander populations carry up to 5% Denisovan DNA, suggesting interbreeding. A jawbone from Tibet (Xiahe mandible) suggests Denisovans were adapted to high altitude environments.',
     claims: [
       'Denisovans represent a major human lineage previously completely unknown until ancient DNA analysis in 2010.',
@@ -607,18 +735,24 @@ export const nodes: GraphNode[] = [
     ],
     criticisms: [],
     mainstream_view: 'Denisovans are one of the most significant recent discoveries in paleoanthropology, demonstrating the power of ancient DNA analysis. They are a confirmed archaic human population with documented genetic legacy in modern human populations.',
+    open_questions: [
+      'The Denisovan fossil record consists of a finger bone, teeth, and a partial jaw from a single cave; the full morphological and geographic range of Denisovans is essentially unknown.',
+      'The high frequency of Denisovan genomic introgression in Melanesian and Aboriginal Australian populations but not East Asian populations, despite Denisovans being found in Siberia, suggests a complex population structure that is not yet resolved.',
+      'Whether the Xiahe mandible from Tibet represents a Denisovan population adapted to high altitude, and whether this altitude adaptation was transferred to Tibetan modern humans via introgression, is a current research question.',
+    ],
     tags: ['ancient DNA', 'Siberia', 'Melanesia', 'interbreeding', 'paleoanthropology', 'Tibet', 'genome'],
     evidence_level: 'verified',
     confidence_score: 0.97,
     color: '#0e7490',
     icon: '🧬',
+    coordinates: [51.3933, 84.6769],
     year: -50000,
   },
 
   {
     id: 'stoned-ape-theory',
     title: 'Stoned Ape Theory',
-    category: 'Human Origins',
+    category: 'Forbidden Archaeology',
     description: 'A hypothesis proposed by ethnobotanist Terence McKenna in his 1992 book "Food of the Gods," suggesting that the consumption of psilocybin-containing mushrooms by early hominids in sub-Saharan Africa played a role in the rapid expansion of human cognitive capabilities, contributing to the development of language, art, and consciousness.',
     claims: [
       'Psilocybe cubensis grows naturally in the dung of African cattle — a food source that expanding hominid groups following herds would have encountered.',
@@ -631,6 +765,11 @@ export const nodes: GraphNode[] = [
       'Evolutionary biologists have proposed more parsimonious explanations including dietary changes, social complexity, and sexual selection.',
     ],
     mainstream_view: 'The Stoned Ape Theory is not accepted by mainstream evolutionary biology or paleoanthropology. It is considered untestable in its current form. Modern psilocybin research confirms neurological effects but does not support the specific evolutionary claims McKenna made.',
+    open_questions: [
+      'The stoned ape hypothesis is scientifically unfalsifiable as stated: no archaeological method can detect psilocybin consumption in deep prehistory, making the specific claim untestable.',
+      'Whether psilocybin mushrooms were available in the African savanna environments occupied by early Homo sapiens and their predecessors during the relevant period is an empirical question not addressed by McKenna.',
+      'The neurological mechanisms by which psilocybin might increase synaptic plasticity and long-term language or symbolic-thought acquisition, if any, have not been proposed in mechanistically specific terms.',
+    ],
     tags: ['McKenna', 'psilocybin', 'evolution', 'consciousness', 'neuroplasticity', 'Africa', 'speculative'],
     evidence_level: 'speculative',
     confidence_score: 0.15,
@@ -642,7 +781,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'human-migration',
     title: 'Human Migration Out of Africa',
-    category: 'Human Origins',
+    category: 'Forbidden Archaeology',
     description: 'The "Out of Africa" model, supported by extensive genetic, archaeological, and paleontological evidence, proposes that anatomically modern Homo sapiens evolved in Africa and dispersed across the globe beginning approximately 60,000–70,000 years ago. By 45,000 years ago, humans had reached Australia; by 15,000–25,000 years ago, the Americas.',
     claims: [
       'The genetic evidence for a recent African origin of all modern humans is robust and supported by multiple independent analyses.',
@@ -651,11 +790,17 @@ export const nodes: GraphNode[] = [
     ],
     criticisms: [],
     mainstream_view: 'The African origin of modern Homo sapiens and their subsequent global dispersal is one of the best-supported conclusions in human evolutionary biology. Details of timing, route, and number of migration events continue to be refined by ongoing genetic and archaeological research.',
+    open_questions: [
+      'Whether there were one or multiple successful Out-of-Africa dispersal events for anatomically modern humans, and the genetic and demographic relationship between any earlier dispersal and the main c. 65,000 BP event, is debated.',
+      'The route or routes of the initial peopling of the Americas — coastal kelp highway, interior ice-free corridor, or both — and the timing and number of founding populations remain contested despite growing ancient DNA evidence.',
+      'The relationship between modern human arrival and megafaunal extinction in Australia (c. 44,000 BP), the Americas (c. 13,000 BP), and Madagascar (c. 2,000 BP) — specifically the relative weight of hunting versus climate change — is actively debated.',
+    ],
     tags: ['genetics', 'Africa', 'migration', 'Homo sapiens', 'bottleneck', 'Americas', 'Australia'],
     evidence_level: 'verified',
     confidence_score: 0.97,
     color: '#059669',
     icon: '🌍',
+    coordinates: [-34.4119, 21.2105],
     year: -65000,
   },
 
@@ -666,7 +811,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'simulation-hypothesis',
     title: 'Simulation Hypothesis',
-    category: 'Consciousness & Reality',
+    category: 'Unexplained Phenomenon',
     description: 'A philosophical proposition formalized by Nick Bostrom in his 2003 paper "Are You Living in a Computer Simulation?" arguing that at least one of three scenarios must be true: (1) nearly all civilizations go extinct before developing simulation technology; (2) advanced civilizations choose not to run such simulations; or (3) we are almost certainly living in a computer simulation.',
     claims: [
       'The mathematical precision of physical laws is consistent with computational design.',
@@ -679,6 +824,11 @@ export const nodes: GraphNode[] = [
       'The presence of mathematical structure in physics may reflect the nature of reality rather than its computational substrate.',
     ],
     mainstream_view: 'The simulation hypothesis is treated by physicists and philosophers as a legitimate philosophical thought experiment but not a scientific theory. It cannot currently be tested.',
+    open_questions: [
+      'Bostrom\'s trilemma assumes that a sufficiently advanced civilisation would both want to and be able to run ancestor simulations; both assumptions are contestable and affect the probability calculation.',
+      'No proposed empirical test for simulation has been demonstrated: Beane et al.\'s (2012) lattice regularisation hypothesis requires assumptions about the simulation\'s architecture that cannot be independently verified.',
+      'Whether quantum indeterminacy, the observed fine-tuning of physical constants, or the computational complexity of the observable universe constitute meaningful evidence for or against simulation is philosophically contested.',
+    ],
     tags: ['Bostrom', 'philosophy', 'consciousness', 'quantum mechanics', 'physics', 'computation', 'reality'],
     evidence_level: 'speculative',
     confidence_score: 0.15,
@@ -690,7 +840,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'hard-problem-consciousness',
     title: 'Hard Problem of Consciousness',
-    category: 'Consciousness & Reality',
+    category: 'Unexplained Phenomenon',
     description: 'Philosopher David Chalmers coined the phrase "hard problem of consciousness" in 1995 to describe the explanatory gap between objective physical brain processes and subjective experience (qualia). The hard problem asks: why is there subjective experience at all? Why does brain activity feel like something from the inside? This problem remains one of the deepest unsolved questions in philosophy of mind.',
     claims: [
       'No current physical theory explains why any physical process should give rise to subjective experience.',
@@ -702,6 +852,11 @@ export const nodes: GraphNode[] = [
       'IIT is criticized for implying that certain simple systems would be more conscious than complex brains.',
     ],
     mainstream_view: 'The hard problem of consciousness is recognized as a genuine and unsolved philosophical problem by most philosophers of mind and many neuroscientists. Multiple competing frameworks exist.',
+    open_questions: [
+      'Whether the hard problem is genuinely distinct from the \'easy problems\' of functional explanation, or whether solving the easy problems would dissolve rather than solve the hard problem, is Chalmers\'s central dispute with Dennett and other eliminativists.',
+      'Illusionism (Frankish) — the position that qualia are a cognitive illusion and the hard problem is therefore not a real problem — has gained ground but faces the objection that the illusion itself requires explanation.',
+      'Whether any physical theory (quantum mechanics, integrated information theory, higher-order theories) can in principle bridge the explanatory gap between third-person physical description and first-person experience is unresolved.',
+    ],
     tags: ['Chalmers', 'philosophy of mind', 'qualia', 'panpsychism', 'neuroscience', 'IIT', 'Tononi'],
     evidence_level: 'debated',
     confidence_score: 0.5,
@@ -713,7 +868,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'quantum-consciousness',
     title: 'Quantum Consciousness (Orch-OR)',
-    category: 'Consciousness & Reality',
+    category: 'Unexplained Phenomenon',
     description: 'The Orchestrated Objective Reduction (Orch-OR) theory proposed by physicist Roger Penrose and anesthesiologist Stuart Hameroff proposes that consciousness arises from quantum computations in microtubules within neurons, and that consciousness is connected to fundamental features of spacetime geometry.',
     claims: [
       'Microtubules in neurons may maintain quantum coherence long enough for quantum computation to play a role in neural information processing.',
@@ -726,6 +881,11 @@ export const nodes: GraphNode[] = [
       'Penrose\'s Gödel argument has been extensively critiqued by philosophers and logicians.',
     ],
     mainstream_view: 'Orch-OR is a minority position in neuroscience and physics. Most researchers consider quantum effects unlikely to play a significant role in neural computation at the relevant scales and temperatures.',
+    open_questions: [
+      'Warm, wet neural tissue maintains quantum coherence for the timescales (microseconds) proposed by Orch-OR only under conditions that would need to be demonstrated in vivo; direct experimental evidence for tubulin quantum coherence in functioning neurons has not been produced.',
+      'The Penrose-Lucas argument (from Gödel\'s incompleteness theorem) that human mathematical insight transcends formal computation has been contested by multiple logicians who argue the argument contains invalid steps.',
+      'Whether quantum effects in microtubules, ion channels, or other neural structures are merely incidental to cognition or constitutive of conscious experience is an open empirical question with no current resolution strategy.',
+    ],
     tags: ['Penrose', 'Hameroff', 'microtubules', 'quantum mechanics', 'neuroscience', 'anesthesia'],
     evidence_level: 'speculative',
     confidence_score: 0.2,
@@ -737,7 +897,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'collective-unconscious',
     title: 'Collective Unconscious',
-    category: 'Consciousness & Reality',
+    category: 'Unexplained Phenomenon',
     description: 'Carl Jung\'s concept of a part of the unconscious mind shared among beings of the same species, containing archetypes — universal, archaic patterns and images that derive from the accumulated experience of humanity. Jung proposed that the collective unconscious explains why myths and symbols from unrelated cultures share structural similarities.',
     claims: [
       'The consistent appearance of structurally similar mythological figures and themes across unrelated cultures supports the existence of shared unconscious structures.',
@@ -748,6 +908,11 @@ export const nodes: GraphNode[] = [
       'Cross-cultural mythological similarities can be explained through shared human developmental experiences or common cognitive features without positing a collective unconscious.',
     ],
     mainstream_view: 'Jung\'s collective unconscious is influential in depth psychology and humanities but is not part of mainstream cognitive science or neuroscience.',
+    open_questions: [
+      'The empirical basis for the collective unconscious is entirely clinical and introspective; no neurological substrate or evolutionary mechanism has been identified that would account for inherited universal psychological contents.',
+      'Whether the cross-cultural mythological parallels Jung cited as evidence for archetypes reflect shared psychology, cultural diffusion, or shared ecological responses to universal human experiences is debated in both psychology and comparative mythology.',
+      'The relationship between Jungian archetypes and evolutionary psychology\'s domain-specific cognitive modules — which offer a mechanistic alternative explanation for universal psychological patterns — has not been systematically examined.',
+    ],
     tags: ['Jung', 'archetypes', 'depth psychology', 'mythology', 'dreams', 'symbols', 'unconscious'],
     evidence_level: 'speculative',
     confidence_score: 0.35,
@@ -763,7 +928,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'freemasonry',
     title: 'Freemasonry',
-    category: 'Secret Societies & Esoteric',
+    category: 'Esoterica',
     description: 'A fraternal organization tracing its formal origins to the founding of the Grand Lodge of England in 1717. Its initiatory structure involves three craft degrees (Entered Apprentice, Fellow Craft, Master Mason) plus additional rites. Notable Freemasons have included George Washington, Benjamin Franklin, and Wolfgang Amadeus Mozart.',
     claims: [
       'The physical layout of Washington D.C. incorporates Masonic symbols and geometric relationships.',
@@ -776,18 +941,24 @@ export const nodes: GraphNode[] = [
       'Claims of secret world domination conflict with the well-documented public history and declining membership.',
     ],
     mainstream_view: 'Freemasonry is a well-documented historical organization. Historians acknowledge its influence in specific contexts without supporting claims of global secret governance.',
+    open_questions: [
+      'The transition from operative (working stone masons) to speculative (philosophical/symbolic) Freemasonry — whether it was gradual, sudden, or invented by a distinct intellectual movement adopting mason symbolism — is historically debated.',
+      'The degree to which Freemasonry influenced the ideological content of the American and French Revolutions beyond the personal membership of some participants is contested by historians.',
+      'Whether pre-1717 lodge manuscripts (the Old Charges) reflect a continuous operative tradition or a constructed antiquarian narrative is an open question in lodge history.',
+    ],
     tags: ['fraternal', 'ritual', 'Washington DC', 'Solomon', 'esoteric', 'craft degrees', 'charitable'],
     evidence_level: 'verified',
     confidence_score: 0.92,
     color: '#1e40af',
     icon: '📐',
+    coordinates: [51.5124, -0.1441],
     year: 1717,
   },
 
   {
     id: 'rosicrucianism',
     title: 'Rosicrucianism',
-    category: 'Secret Societies & Esoteric',
+    category: 'Esoterica',
     description: 'A philosophical and esoteric tradition that emerged in early 17th-century Europe with the anonymous publication of the Rosicrucian manifestos: the Fama Fraternitatis (1614), the Confessio Fraternitatis (1615), and The Chymical Wedding of Christian Rosenkreuz (1616). Whether an actual Rosicrucian brotherhood existed at the time or the manifestos were a literary hoax remains debated.',
     claims: [
       'The Rosicrucian manifestos influenced early modern natural philosophy and arguably contributed to the intellectual environment from which the Royal Society emerged.',
@@ -798,6 +969,11 @@ export const nodes: GraphNode[] = [
       'No original Rosicrucian brotherhood has been historically documented despite extensive searches.',
     ],
     mainstream_view: 'Historians of early modern thought regard Rosicrucianism as an important intellectual current that influenced hermeticism, natural philosophy, and early modern science.',
+    open_questions: [
+      'Whether the Rosicrucian manifestos (Fama Fraternitatis, Confessio, Chemical Wedding, 1614–1616) describe a real secret society, a literary-philosophical fiction, or a deliberate social experiment by their authors (likely Johann Valentin Andreae) is debated by historians of esotericism.',
+      'The relationship between Rosicrucianism and the broader Paracelsian alchemical tradition, Hermeticism, and nascent Freemasonry is substantive but the direction and mechanism of influence is contested.',
+      'Whether any continuous institutional lineage exists between the early 17th-century manifesto movement and any modern Rosicrucian organisation (AMORC, Lectorium Rosicrucianum) cannot be established from the available historical record.',
+    ],
     tags: ['hermetic', 'alchemy', '17th century', 'manifestos', 'esoteric', 'Europe', 'natural philosophy'],
     evidence_level: 'debated',
     confidence_score: 0.65,
@@ -809,7 +985,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'hermeticism',
     title: 'Hermeticism',
-    category: 'Secret Societies & Esoteric',
+    category: 'Esoterica',
     description: 'A philosophical, religious, and esoteric tradition based primarily on writings attributed to Hermes Trismegistus, a legendary figure representing a synthesis of the Greek god Hermes and the Egyptian god Thoth. The Hermetic corpus, compiled in Alexandria between the 1st and 3rd centuries CE, covers theology, astrology, alchemy, and theurgy. Core Hermetic principles include "As above, so below."',
     claims: [
       'The Hermetic texts preserve ancient Egyptian and Neoplatonic wisdom transmitted through a tradition of initiated scholars.',
@@ -820,18 +996,24 @@ export const nodes: GraphNode[] = [
       'The texts are a product of Hellenistic syncretism rather than transmission of primordial Egyptian wisdom.',
     ],
     mainstream_view: 'Hermeticism is studied as a significant philosophical tradition with documented influence on Renaissance thought, early modern science, and esoteric traditions.',
+    open_questions: [
+      'The date and origin of the Hermetica: Yates\'s Renaissance dating error (assuming ancient Egyptian authorship for what are Greco-Egyptian 2nd–3rd century CE texts) had major intellectual history consequences; the full implications of the Casaubon revision for understanding Renaissance natural philosophy are still worked out.',
+      'Whether Hermeticism represents a unified philosophical tradition or a loose collection of texts with divergent aims (theurgical, astrological, philosophical, alchemical) is debated by scholars of late antique religion.',
+      'The degree to which Hermetic ideas (particularly concerning the operator\'s ability to act on nature through knowledge of sympathies) contributed to the development of early modern experimental science is contested.',
+    ],
     tags: ['Alexandria', 'Hermes Trismegistus', 'alchemy', 'Renaissance', 'Neoplatonism', 'Thoth', 'esoteric'],
     evidence_level: 'verified',
     confidence_score: 0.9,
     color: '#b45309',
     icon: '☿',
+    coordinates: [31.2156, 29.9553],
     year: 200,
   },
 
   {
     id: 'illuminati-history',
     title: 'Illuminati (Historical)',
-    category: 'Secret Societies & Esoteric',
+    category: 'Esoterica',
     description: 'The Order of the Illuminati was founded by Adam Weishaupt on May 1, 1776, in Bavaria. Its goals were the opposition to superstition, religious influence over public life, and abuses of state power. At its peak it had approximately 2,000 members drawn from Enlightenment intellectuals. It was infiltrated by the Bavarian government and formally dissolved in 1785.',
     claims: [
       'The Illuminati\'s documented membership included significant Enlightenment intellectuals.',
@@ -842,18 +1024,24 @@ export const nodes: GraphNode[] = [
       'Modern "Illuminati" conspiracy narratives emerged primarily from 19th-century anti-Masonic pamphlet literature.',
     ],
     mainstream_view: 'Historians have thoroughly documented the historical Illuminati as a genuine Enlightenment organization that was successfully suppressed. The contemporary conspiracy use of the term has no historical grounding.',
+    open_questions: [
+      'The degree to which the Bavarian Illuminati penetrated Freemasonic lodges across Europe before its suppression in 1785 — and what proportion of its claimed 2,000 members were active rather than nominal — cannot be determined from surviving records.',
+      'Whether the Illuminati\'s influence on the intellectual culture of late 18th-century German Idealism (through members like Knigge) was substantive or incidental is argued among historians of German philosophy.',
+      'The construction of elaborate post-1785 Illuminati conspiracy narratives (Barruel, Robison) has been thoroughly documented as polemical fabrication; the process by which such discredited narratives achieved modern popular revival is a question in the sociology of conspiracy belief.',
+    ],
     tags: ['Weishaupt', 'Bavaria', '1776', 'Enlightenment', 'conspiracy', 'suppressed', 'historical'],
     evidence_level: 'verified',
     confidence_score: 0.95,
     color: '#7c3aed',
     icon: '🔺',
+    coordinates: [48.7665, 11.4258],
     year: 1776,
   },
 
   {
     id: 'mystery-schools',
     title: 'Ancient Mystery Schools',
-    category: 'Secret Societies & Esoteric',
+    category: 'Esoterica',
     description: 'Initiatory religious institutions of ancient Greece and Rome offering initiates direct experience of divine mysteries through rituals, altered states, and symbolic dramas. The Eleusinian Mysteries were celebrated for nearly 2,000 years and attracted initiates including Plato, Aristotle, and Marcus Aurelius.',
     claims: [
       'The Eleusinian kykeon, likely containing ergot alkaloids with psychedelic properties, may have produced genuine visionary experiences as the core of the initiatory ritual.',
@@ -864,11 +1052,17 @@ export const nodes: GraphNode[] = [
       'Mystery schools were public religious institutions with known locations and widespread participation.',
     ],
     mainstream_view: 'Ancient mystery schools are extensively documented in classical literature and archaeology. They were recognized civic and religious institutions. The content of the initiatory rituals remains unknown by design.',
+    open_questions: [
+      'The specific content of the Eleusinian Mysteries\' central revelation — what was shown, spoken, or enacted at the climax of initiation — remains unknown because the oath of secrecy was maintained by initiates throughout antiquity.',
+      'The pharmacological hypothesis (Wasson, Hofmann, Ruck) that the kykeon drink at Eleusis contained an ergot-derived psychedelic has gained recent support from chemical analysis of a cup from the Mas Castellar site in Spain, but its applicability to the Eleusinian rite specifically is not proven.',
+      'The relationship between Greek mystery school traditions and earlier Egyptian, Anatolian (Cybele), and Levantine (Adonis) cult practices — specifically the direction of influence — is debated.',
+    ],
     tags: ['Eleusis', 'Greek religion', 'initiation', 'Plato', 'Mithras', 'ritual', 'psychedelic', 'Dionysus'],
     evidence_level: 'verified',
     confidence_score: 0.9,
     color: '#7c2d12',
     icon: '🏛️',
+    coordinates: [38.0426, 23.5427],
     year: -500,
   },
 
@@ -879,7 +1073,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'bronze-age-collapse',
     title: 'Bronze Age Collapse',
-    category: 'Global Mysteries',
+    category: 'Modern Mystery',
     description: 'One of history\'s most dramatic civilizational collapses, occurring approximately 1200–1150 BCE. Within a few decades, virtually every major palace civilization of the eastern Mediterranean — the Mycenaeans, the Hittites, the Kassite Babylonians, Ugarit — collapsed. The cause remains debated among historians.',
     claims: [
       'The "Sea Peoples" mentioned in Egyptian records have traditionally been blamed for the collapse, but the cause of their own movement is unclear.',
@@ -891,18 +1085,24 @@ export const nodes: GraphNode[] = [
       'The relative weight of each proposed cause remains actively contested.',
     ],
     mainstream_view: 'The Bronze Age Collapse is a well-documented historical event studied through archaeology, texts, and paleoclimatology. Most current historians favor a multi-causal explanation emphasizing climate change, disrupted trade networks, and cascading systemic failure.',
+    open_questions: [
+      'The relative weight of the Sea Peoples migrations, climate-driven drought, internal rebellion, earthquake swarms, and disrupted long-distance trade networks in causing the collapse is debated; current consensus favours a multicausal \'perfect storm\' model but specific weights are assigned differently by different researchers.',
+      'The origin and ethnic identity of the Sea Peoples — whether they were Aegean refugees displaced by their own disruptions, Anatolian migrants, or a mixed group — is not resolved from the available textual and iconographic evidence.',
+      'Why Egypt survived the collapse while Mycenaean Greece, Hittite Anatolia, and the Levantine city-states did not — despite Egypt also experiencing severe disruption — is not fully explained.',
+    ],
     tags: ['Mycenaeans', 'Hittites', 'Sea Peoples', '1200 BCE', 'collapse', 'drought', 'systems', 'Mediterranean'],
     evidence_level: 'verified',
     confidence_score: 0.88,
     color: '#7c3aed',
     icon: '⚔️',
+    coordinates: [35.6033, 35.7861],
     year: -1200,
   },
 
   {
     id: 'antikythera-mechanism',
     title: 'Antikythera Mechanism',
-    category: 'Global Mysteries',
+    category: 'Modern Mystery',
     description: 'An ancient Greek analogue computer recovered from a shipwreck near the island of Antikythera, dated to approximately 87–60 BCE. It is the most sophisticated mechanical device known from antiquity — a hand-powered orrery capable of predicting astronomical positions and eclipses decades in advance. CT scanning has revealed approximately 30 interlocking bronze gears. Nothing of comparable mechanical complexity appears in the historical record for over 1,400 years after its manufacture.',
     claims: [
       'The Mechanism demonstrates that ancient Greek engineering capabilities substantially exceeded what scholars had assumed before its discovery.',
@@ -914,18 +1114,24 @@ export const nodes: GraphNode[] = [
       'Its apparent singularity may reflect preservation bias rather than actual historical singularity.',
     ],
     mainstream_view: 'The Antikythera Mechanism is universally accepted as genuine and as one of the most remarkable archaeological artifacts ever found. It has substantially revised scholarly understanding of ancient Greek technological capability.',
+    open_questions: [
+      'The maker and place of manufacture of the Antikythera mechanism has not been established; proposed origins include Corinth, Syracuse, and Rhodes, based on the Corinthian calendar inscriptions and textual references to Rhodian astronomical instruments.',
+      'Whether the mechanism\'s full functional scope has been reconstructed — the 2021 UCL model proposes a front cosmological display that is substantially new — is still debated by mechanism researchers.',
+      'Whether a tradition of comparable geared astronomical instruments existed before or after the Antikythera mechanism, and why no other examples have survived, is an unresolved question in the history of technology.',
+    ],
     tags: ['Greece', 'astronomy', 'bronze', 'shipwreck', 'eclipse', 'Hellenistic', 'orrery', 'UNESCO'],
     evidence_level: 'verified',
     confidence_score: 0.99,
     color: '#374151',
     icon: '⚙️',
+    coordinates: [36.2029, 23.3012],
     year: -87,
   },
 
   {
     id: 'younger-dryas-impact',
     title: 'Younger Dryas Impact Hypothesis',
-    category: 'Global Mysteries',
+    category: 'Modern Mystery',
     description: 'A scientific hypothesis proposing that a fragmented comet or asteroid struck or exploded above North America approximately 12,900 years ago, triggering the Younger Dryas cooling period, contributing to North American megafauna extinction, and potentially devastating human populations. The hypothesis was first formally proposed in 2007 by Firestone et al. and remains actively debated in peer-reviewed literature.',
     claims: [
       'The YDB platinum anomaly appears at multiple sites on multiple continents, suggesting a simultaneous global event.',
@@ -938,18 +1144,24 @@ export const nodes: GraphNode[] = [
       'Climate models can produce Younger Dryas-scale cooling through disruption of ocean circulation without requiring an impact.',
     ],
     mainstream_view: 'The Younger Dryas Impact Hypothesis is an active scientific debate, published in major peer-reviewed journals on both sides. It is neither confirmed nor dismissed by the scientific community.',
+    open_questions: [
+      'The proposed cosmic impact markers (nano-diamonds, spherules, platinum-group anomalies) have been independently replicated at some sites but not others, and the replication inconsistency has not been resolved to the satisfaction of all reviewers.',
+      'If a cosmic airburst or impact event occurred at 12,900 BP, no crater or ablation field has been identified that accounts for the proposed energy delivery required to trigger a hemispheric climate event.',
+      'The correlation between the proposed impact layer and the Clovis archaeological horizon in North America — a key empirical prediction of the hypothesis — is contested in the stratigraphic literature.',
+    ],
     tags: ['comet', 'asteroid', 'impact', 'paleoclimatology', 'Clovis', 'megafauna', 'platinum', 'nano-diamond'],
     evidence_level: 'debated',
     confidence_score: 0.45,
     color: '#dc2626',
     icon: '☄️',
+    coordinates: [36.0417, 38.4083],
     year: -10900,
   },
 
   {
     id: 'silk-road',
     title: 'Silk Road Knowledge Transfer',
-    category: 'Global Mysteries',
+    category: 'Modern Mystery',
     description: 'The Silk Road — a network of trade routes connecting China, Central Asia, India, the Middle East, and Europe — facilitated not only commerce but the transfer of technologies, religions, diseases, and ideas across Eurasia from approximately the 2nd century BCE to the 15th century CE.',
     claims: [
       'Technological and intellectual transfers along the Silk Road may explain apparent simultaneous developments in geographically distant civilizations.',
@@ -957,18 +1169,24 @@ export const nodes: GraphNode[] = [
     ],
     criticisms: [],
     mainstream_view: 'The Silk Road\'s role in facilitating cultural, technological, and intellectual exchange is well-documented and accepted by historians. It is one of the most significant mechanisms of pre-modern globalization.',
+    open_questions: [
+      'The relative importance of overland Central Asian routes versus maritime Indian Ocean and Persian Gulf routes in Silk Road-era exchange — and how this balance shifted over different centuries — is an ongoing research question.',
+      'The role of Sogdian merchants as primary intermediaries in Central Asian exchange between the 4th and 8th centuries CE is well-documented; the degree to which their diasporic trade network constituted a structurally distinct system from Han Chinese or Roman state trade is debated.',
+      'The mechanisms by which technological and ideological diffusion (sericulture, papermaking, Buddhism, Christianity, Islam) moved along trade routes — attached to specific merchant groups, transmitted through intermediary cultures, or independently adopted — are difficult to trace and remain contested.',
+    ],
     tags: ['China', 'Rome', 'trade', 'Buddhism', 'technology transfer', 'Islam', 'Central Asia', 'medieval'],
     evidence_level: 'verified',
     confidence_score: 0.97,
     color: '#b45309',
     icon: '🛤️',
+    coordinates: [34.3416, 108.9398],
     year: -200,
   },
 
   {
     id: 'ancient-stargate-hypothesis',
     title: 'Ancient Stargate Hypothesis',
-    category: 'Global Mysteries',
+    category: 'Modern Mystery',
     description: 'The Ancient Stargate Hypothesis proposes that certain ancient structures, monuments, and texts constitute evidence that past civilizations — or non-human entities operating in the ancient world — possessed functional dimensional portals capable of traversing space, time, or interdimensional boundaries. The hypothesis draws primarily on Sumerian and Akkadian textual traditions (particularly the Anunnaki narratives and the cosmological concept of the \'abzu\'), Egyptian temple architecture at the Fifth Dynasty solar complex of Abu Ghurab near Abusir, and the Puerta de Hayu Marca, a pre-Columbian carved stone face at Lake Titicaca, Peru. It has been developed largely outside mainstream academic institutions, most prominently by Nashville-based author and self-described investigative mythologist William Henry, a consulting producer on the History Channel\'s Ancient Aliens series. The hypothesis overlaps with but is distinct from the broader ancient astronaut hypothesis: where the latter proposes extraterrestrial visitation, the stargate hypothesis proposes a specific technological mechanism — dimensional portals — for how non-human or advanced entities traversed between realms. It has not been published in any peer-reviewed journal or endorsed by any accredited archaeologist, Egyptologist, or Assyriologist.',
     claims: [
       'Sumerian and Akkadian texts describe the Anunnaki using a cosmological passage — the \'abzu\' and related \'gates of heaven\' — to move between a non-terrestrial point of origin and Earth; proponents interpret this as describing dimensional technology, while mainstream Assyriology treats the same language as standard Mesopotamian religious cosmology.',
@@ -997,6 +1215,8 @@ export const nodes: GraphNode[] = [
     confidence_score: 0.06,
     color: '#7c3aed',
     icon: '🌀',
+    coordinates: [29.8867, 31.2036],
+    year: -2500,
   },
 
   // ═══════════════════════════════════════════
@@ -1006,7 +1226,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'giants-ancient-texts',
     title: 'Giants in Ancient Texts',
-    category: 'Legends & Folklore',
+    category: 'Mythology',
     description: 'References to beings of extraordinary physical stature appear across the ancient world\'s literature and mythology: the Nephilim and Rephaim of the Hebrew Bible; the Titans and Gigantes of Greek mythology; the Jötnar of Norse mythology; the Asuras of Hindu epics; and giant traditions in Mesoamerican, Native American, and Aboriginal Australian oral traditions.',
     claims: [
       'The global distribution of giant traditions may preserve collective memory of real genetic or physical diversity in ancient human populations.',
@@ -1017,6 +1237,11 @@ export const nodes: GraphNode[] = [
       'No anatomically modern human skeletal remains exhibiting truly extraordinary size have been authenticated.',
     ],
     mainstream_view: 'Giant traditions are studied as mythological motifs reflecting universal human concerns about scale, power, and the relationship between humans and the forces of the natural world.',
+    open_questions: [
+      'The Hebrew term \'rephaim\' refers to both giant warriors and the dead/shades in different biblical contexts; whether these are two distinct concepts with the same word or a single concept of powerful beings straddling life and death is a philological debate.',
+      'Whether giant traditions in geographically distant cultures (Norse, Mesoamerican, South Asian) represent independent convergent development or indicate diffusion of a shared mythological complex is unresolved.',
+      'The fossil hypothesis — that ancient peoples encountering large mammal or dinosaur bones without paleontological context interpreted them as giant human remains — has been proposed but not systematically tested against specific traditions.',
+    ],
     tags: ['mythology', 'Nephilim', 'Titans', 'Jotnar', 'Norse', 'Greek', 'Hebrew', 'fossil', 'folklore'],
     evidence_level: 'verified',
     confidence_score: 0.85,
@@ -1028,7 +1253,7 @@ export const nodes: GraphNode[] = [
   {
     id: 'dragon-traditions',
     title: 'Dragon Traditions',
-    category: 'Legends & Folklore',
+    category: 'Mythology',
     description: 'Large, powerful, reptilian or serpentine beings appear in the mythological traditions of cultures on every inhabited continent: the fire-breathing winged dragons of European medieval tradition; the benevolent Lóng of Chinese mythology; the feathered Quetzalcoatl of Mesoamerica; the Nāga of South and Southeast Asia; the Norse Jörmungandr; the Aboriginal Australian Rainbow Serpent.',
     claims: [
       'The near-universal presence of dragon/serpent beings in ancient mythology may reflect an innate human fear response to large snakes, predatory birds, and other predators — a composite predator archetype.',
@@ -1039,12 +1264,961 @@ export const nodes: GraphNode[] = [
       'The "living fossil" hypothesis has no paleontological support for survival of large reptiles into the human era in the relevant regions.',
     ],
     mainstream_view: 'Folklorists and comparative mythologists study dragon traditions as one of the most widespread mythological motifs. The composite predator hypothesis is a leading naturalistic explanation for their cross-cultural prevalence.',
+    open_questions: [
+      'The composite predator hypothesis (Shuker, Tryon) — that dragon imagery combines features of the principal predators of early humans (snake, large cat, bird of prey) into a universal fear-response archetype — is plausible but lacks a falsification criterion.',
+      'The divergence between Chinese \'lóng\' (largely benevolent water/rain deity) and European dragons (malevolent hoarders) is so substantial that either a common origin requires explaining the divergence, or convergent development requires explaining the shared elements.',
+      'The proposed connection between dragon traditions and preserved cultural memory of encounters with surviving large reptiles (Mokele-mbembe hypotheses) has no paleontological or zoological support but persists in cryptozoological literature.',
+    ],
     tags: ['mythology', 'serpent', 'China', 'Europe', 'Quetzalcoatl', 'Rainbow Serpent', 'Naga', 'folklore'],
     evidence_level: 'verified',
     confidence_score: 0.85,
     color: '#15803d',
     icon: '🐉',
     year: -3000,
+  },
+
+  // ═══════════════════════════════════════════
+  // STAGE 2 — 2026-06-09
+  // 10 nodes from 50-Node Seed Pack
+  // ═══════════════════════════════════════════
+
+  {
+    id: 'nazca-lines',
+    title: 'Nazca Lines',
+    category: 'Ancient Site',
+    description: 'Large geoglyphs etched into the Nazca Desert plateau of southern Peru, created by the Nazca culture and related peoples between approximately 500 BCE and 500 CE. The lines depict geometric shapes, straight lines extending for kilometres, and animal figures including a condor, hummingbird, spider, and monkey. They were made by removing the dark iron-oxide-coated surface stones to expose the lighter ground beneath — a technique that has survived for centuries in the hyper-arid desert environment. The Lines and Geoglyphs of Nasca and Palpa are a UNESCO World Heritage Site.',
+    claims: [
+      'The lines likely had ritual, social, processional, or water-related functions connected to Andean cosmology and the importance of water in a desert environment.',
+      'Some lines may align with astronomical events or relate to underground water sources — hypotheses supported by regional archaeological context.',
+      'Alternative authors, particularly Erich von Däniken, have proposed extraterrestrial or aerial-observation explanations; these are rejected by archaeologists.',
+    ],
+    criticisms: [
+      'Ancient astronaut and extraterrestrial interpretations are unsupported by any archaeological evidence and implicitly underestimate Nazca cultural capabilities.',
+      'Many figures are clearly visible from nearby hills and elevated ground, not only from the air — negating claims that aerial viewability was their exclusive purpose.',
+      'Ritual landscape explanations that embed the lines in regional Andean cosmology and water cult practices better fit the cultural context.',
+    ],
+    mainstream_view: 'The Nazca Lines are accepted as pre-Columbian geoglyphs created by Nazca and related cultures for ritual, social, cosmological, or landscape purposes. Archaeologists study them as part of a broader pattern of Andean sacred geography rather than as an anomaly requiring exotic explanation.',
+    open_questions: [
+      'Which specific ritual or ceremonial practices used the lines as processional routes or focal points?',
+      'How did the meanings and uses of geometric lines differ from those of animal and plant figures?',
+      'What is the precise relationship between line orientations and either astronomical events or underground water systems?',
+    ],
+    tags: ['Peru', 'geoglyphs', 'Nazca culture', 'UNESCO', 'desert', 'Andean', 'ritual landscape', 'pre-Columbian', 'condor'],
+    evidence_level: 'verified',
+    confidence_score: 0.94,
+    color: '#ca8a04',
+    icon: '🦅',
+    coordinates: [-14.739, -75.130],
+    date_start: -500,
+    date_end: 500,
+    year: -500,
+  },
+
+  {
+    id: 'library-of-alexandria',
+    title: 'Library of Alexandria',
+    category: 'Lost Knowledge',
+    description: 'A major institution of learning in Hellenistic Alexandria, Egypt, associated with the Mouseion (Temple of the Muses) and the patronage of the Ptolemaic dynasty, particularly Ptolemy I and Ptolemy II in the 3rd century BCE. The Library aimed to collect all written works in the known world and became the intellectual centre of the Hellenistic Mediterranean. It attracted scholars including Euclid, Archimedes, Eratosthenes, and Hypatia. Its decline was gradual, occurring through multiple phases over centuries rather than a single catastrophic event.',
+    claims: [
+      'The Library at its peak may have held hundreds of thousands of scrolls — representing a significant proportion of ancient Mediterranean literary and scientific knowledge.',
+      'Its decline and eventual disappearance represents a real loss of ancient scholarship, though the scale and circumstances are contested.',
+      'Multiple destructive events across centuries — including Julius Caesar\'s accidental fire (48 BCE), later imperial neglect, and the late antique period — each contributed to the Library\'s deterioration.',
+    ],
+    criticisms: [
+      'The popular narrative of a single catastrophic burning is historically inaccurate; the Library\'s decline was gradual and multi-causal.',
+      'The exact scale of the collection is unknown and ancient claims may be exaggerated.',
+      'Knowledge loss occurred through many processes across the ancient Mediterranean and cannot be attributed exclusively to Alexandria\'s decline.',
+    ],
+    mainstream_view: 'Historians treat the Library of Alexandria as a real and historically significant Hellenistic scholarly institution whose decline was complex and gradual. It is a genuine chapter in the history of knowledge preservation, not a single dramatic catastrophe.',
+    open_questions: [
+      'How large was the collection at its peak, and how should ancient numerical claims be evaluated?',
+      'Which specific bodies of ancient knowledge were preserved or lost through Alexandria specifically versus other channels?',
+      'How did the relationship between the Library and the Mouseion change over time?',
+    ],
+    tags: ['Alexandria', 'Egypt', 'Hellenistic', 'Ptolemaic', 'scrolls', 'scholarship', 'Eratosthenes', 'lost knowledge', 'Mouseion'],
+    evidence_level: 'verified',
+    confidence_score: 0.82,
+    color: '#b45309',
+    icon: '📚',
+    coordinates: [31.2001, 29.9187],
+    year: -280,
+  },
+
+  {
+    id: 'abzu',
+    title: 'Abzu',
+    category: 'Religion',
+    description: 'A primordial cosmological concept in Sumerian and Akkadian religion, also spelled Apsu in Akkadian. The Abzu represents the subterranean freshwater deep — the cosmic domain beneath the earth associated with the deity Enki (Sumerian) / Ea (Akkadian), the god of wisdom, magic, and crafts. In Mesopotamian temple symbolism, ritual water basins within temple complexes were designated as representations of the Abzu. The Abzu appears centrally in the Enuma Elish creation epic and in Sumerian myths about Enki\'s domain at Eridu.',
+    claims: [
+      'The Abzu represents a cosmological and theological concept linking primordial water, divine wisdom, creation, and the underground domain of Enki/Ea.',
+      'Physical ritual basins and water features in Mesopotamian temples served as symbolic representations of the Abzu\'s sacred cosmological dimension.',
+      'Some alternative researchers treat the Abzu as a dimensional portal or non-terrestrial domain — readings rejected by Assyriology.',
+    ],
+    criticisms: [
+      'Portal and interdimensional interpretations of the Abzu are not supported by any standard Assyriological reading of Sumerian or Akkadian texts.',
+      'The Abzu concept is fully explicable within Mesopotamian religious cosmology and water theology without requiring dimensional or technological interpretations.',
+      'Non-standard translations that recast Abzu as a portal rely on decontextualized readings rather than philological analysis.',
+    ],
+    mainstream_view: 'Abzu is a well-documented core concept in Mesopotamian cosmology — the subterranean freshwater deep associated with Enki/Ea and with divine wisdom and creation. It is studied as religious cosmology, not as literal dimensional technology.',
+    open_questions: [
+      'How did Abzu symbolism manifest in actual Mesopotamian temple architecture, particularly at the city of Eridu where the earliest known temple layers exist?',
+      'How did the concept of Abzu evolve between Sumerian and Akkadian religious traditions?',
+      'What is the relationship between the Abzu as cosmic concept and the physical underground freshwater springs that temple basins may have been designed to invoke?',
+    ],
+    tags: ['Mesopotamia', 'Sumerian', 'Akkadian', 'Enki', 'Ea', 'cosmology', 'primordial water', 'Enuma Elish', 'Eridu'],
+    evidence_level: 'verified',
+    confidence_score: 0.88,
+    color: '#dc2626',
+    icon: '💧',
+    coordinates: [30.8138, 45.9953],
+    year: -2500,
+  },
+
+  {
+    id: 'church-committee',
+    title: 'Church Committee',
+    category: 'Government Program',
+    description: 'The Senate Select Committee to Study Governmental Operations with Respect to Intelligence Activities, chaired by Senator Frank Church (D-Idaho) and operating from 1975 to 1976. The committee investigated abuses by U.S. intelligence agencies including the CIA, FBI, NSA, and IRS. Its findings documented assassination plots against foreign leaders, domestic surveillance of civil rights activists and politicians (COINTELPRO), mail-opening programs, and programs of human experimentation. The Church Committee produced fourteen reports that led to major intelligence oversight reforms including the creation of permanent Senate and House intelligence committees.',
+    claims: [
+      'The Church Committee proved that real, documented government conspiracies and abuses had occurred within the U.S. intelligence community — establishing an evidentiary standard for distinguishing documented abuse from speculation.',
+      'Its investigations directly exposed MKUltra, COINTELPRO, and CIA assassination plots against foreign leaders as verified historical facts.',
+      'The committee\'s findings shaped modern intelligence oversight architecture, including FISA courts and congressional intelligence committees.',
+    ],
+    criticisms: [
+      'The committee did not reveal every intelligence program — classified and compartmented operations remained outside its scope.',
+      'Some intelligence officials argued that the committee\'s disclosures damaged ongoing operations and U.S. security interests.',
+      'The oversight reforms it generated were later weakened or circumvented in subsequent decades.',
+    ],
+    mainstream_view: 'The Church Committee is a historically verified landmark legislative investigation whose documented findings represent a major chapter in U.S. intelligence history and constitutional oversight. Its reports remain primary source documents for the study of Cold War intelligence abuses.',
+    open_questions: [
+      'How effective are current intelligence oversight mechanisms compared with the reforms the Church Committee recommended?',
+      'What programs and operations were never brought before the committee due to classification or compartmentation?',
+      'How should democratic societies design oversight mechanisms that remain effective against intelligence agencies with national security justifications for secrecy?',
+    ],
+    tags: ['U.S. Senate', 'CIA', 'FBI', 'NSA', 'COINTELPRO', 'intelligence oversight', 'Frank Church', '1975', 'Cold War'],
+    evidence_level: 'verified',
+    confidence_score: 0.99,
+    color: '#0284c7',
+    icon: '⚖️',
+    coordinates: [38.8921, -77.0041],
+    date_start: 1975,
+    date_end: 1976,
+    year: 1975,
+  },
+
+  {
+    id: 'operation-paperclip',
+    title: 'Operation Paperclip',
+    category: 'Intelligence Operation',
+    description: 'A U.S. government program, primarily operated by the Joint Intelligence Objectives Agency (JIOA) under the Office of Strategic Services (OSS) and later the CIA, that recruited German scientists, engineers, and technical specialists — including former Nazi Party members and SS officers — for employment in the United States after World War II. Approximately 1,600 German specialists were brought to the U.S. under Paperclip and related programs, contributing to rocket development (Wernher von Braun), aerospace research, and other scientific programs. The operation involved falsifying or concealing participants\' Nazi affiliations to enable security clearances.',
+    claims: [
+      'Operation Paperclip directly contributed to U.S. Cold War aerospace and military technology programs, including the development of the Saturn V rocket used in the Apollo program.',
+      'The program required deliberate concealment of Nazi affiliations and war crimes records — a documented case of institutional moral compromise in strategic intelligence work.',
+      'It established a postwar precedent for subordinating ethical accountability to strategic scientific gain that influenced subsequent Cold War intelligence programs.',
+    ],
+    criticisms: [
+      'Verified Paperclip history should not be used to support broader conspiracy claims that go beyond the documented record.',
+      'Individual participants varied significantly in their degree of Nazi involvement and culpability.',
+      'The Cold War strategic context does not eliminate the ethical concerns raised by recruiting individuals with war crimes records.',
+    ],
+    mainstream_view: 'Operation Paperclip is a documented U.S. government program, central to postwar aerospace development and to the history of Cold War intelligence ethics. It is studied as a verified historical case of strategic pragmatism overriding legal and ethical accountability.',
+    open_questions: [
+      'To what extent did U.S. officials deliberately obstruct Justice Department war crimes investigations to protect Paperclip recruits?',
+      'How should the scientific contributions of Paperclip participants be evaluated in the context of their wartime records?',
+      'How did Paperclip influence the culture and ethical norms of early CIA and NSA programs?',
+    ],
+    tags: ['CIA', 'JIOA', 'Wernher von Braun', 'NASA', 'rocket program', 'Nazi scientists', 'Cold War', 'postwar', 'aerospace'],
+    evidence_level: 'verified',
+    confidence_score: 0.96,
+    color: '#1d4ed8',
+    icon: '📎',
+    coordinates: [31.8024, -106.4207],
+    year: 1945,
+  },
+
+  {
+    id: 'ark-of-covenant',
+    title: 'Ark of the Covenant',
+    category: 'Religion',
+    description: 'A sacred chest described in the Hebrew Bible, primarily in Exodus, as constructed under Moses to contain the tablets of the Law inscribed at Sinai. According to the biblical narrative it accompanied the Israelites through the wilderness, was housed at Shiloh, and was eventually brought to Jerusalem by David before being placed in Solomon\'s Temple. The Ark disappears from the biblical record before the Babylonian destruction of Jerusalem (587 BCE). No confirmed archaeological discovery of the Ark has been made. Its fate has generated centuries of tradition, speculation, and claimed discoveries.',
+    claims: [
+      'The Ark may reflect a real ancient cultic object — perhaps a portable throne or divine presence symbol — used in early Israelite religion that underlies the elaborate biblical descriptions.',
+      'Traditions place the Ark in Ethiopia (Aksum), hidden beneath the Temple Mount, taken to Egypt, or preserved in other locations — none of which have been archaeologically confirmed.',
+      'Alternative theories interpret the Ark\'s described properties (radiating power, deadly to those who touch it incorrectly) as evidence of advanced technology — a reading rejected by biblical archaeology.',
+    ],
+    criticisms: [
+      'No authenticated physical Ark has been recovered from any proposed location despite claims and searches.',
+      'The elaborate ritual and miraculous descriptions of the Ark\'s power serve clear theological functions in the biblical narrative — they do not require a literal technological interpretation.',
+      'Claimed discoveries from Ethiopia to hidden temple chambers have not been supported by independent archaeological verification.',
+    ],
+    mainstream_view: 'Biblical scholars study the Ark as a central symbol of Israelite covenant theology and divine presence. Its historical core — whether an actual cultic object existed — remains debated. Most scholars consider it a real religious artifact whose specific fate is unknown; technological reinterpretations are not accepted in academic biblical archaeology.',
+    open_questions: [
+      'Did a historical cultic object underlie the elaborate biblical Ark traditions, and if so, what form did it take?',
+      'When and under what circumstances did the Ark disappear from the historical and textual record before the Babylonian destruction?',
+      'How did later traditions, including the Ethiopian Tabot tradition, develop from and transform earlier Ark narratives?',
+    ],
+    tags: ['Hebrew Bible', 'Israelite religion', 'Exodus', 'Solomon\'s Temple', 'Jerusalem', 'covenant', 'Ark', 'Ethiopia', 'biblical archaeology'],
+    evidence_level: 'debated',
+    confidence_score: 0.22,
+    color: '#dc2626',
+    icon: '📦',
+    coordinates: [31.7781, 35.2360],
+    year: -950,
+  },
+
+  {
+    id: 'tower-of-babel',
+    title: 'Tower of Babel',
+    category: 'Religion',
+    description: 'A narrative in Genesis 11 describing a post-flood humanity united by a single language who begin constructing a tower reaching toward heaven. God responds by confounding their language and dispersing the builders across the earth, explaining linguistic diversity as a divine act. The name Babel is etymologically linked to Babylon in biblical tradition. The story is widely studied as an etiological narrative — one that explains a present condition (linguistic diversity) through a foundational event — and is understood in the context of Mesopotamian urban culture and ziggurat architecture.',
+    claims: [
+      'The narrative likely reflects Israelite engagement with and critique of Babylonian urban grandeur and imperial ambition, possibly inspired by the great ziggurat of Babylon (Etemenanki).',
+      'It functions as an origin story for linguistic diversity that also conveys a theological critique of human pride and the limits of human ambition before the divine.',
+      'Some alternative researchers propose the Babel narrative preserves memory of a real technological achievement or advanced construction project.',
+    ],
+    criticisms: [
+      'The story is theological and etiological literature, not historical documentation of a construction project or an actual tower.',
+      'Global linguistic diversification is explained by documented long-term human migration and cultural evolution over tens of thousands of years — not a single divine event.',
+      'No specific archaeological structure has been identified as the historical basis for the Tower of Babel beyond general Babylonian ziggurat influence on the narrative.',
+    ],
+    mainstream_view: 'Biblical scholars interpret the Tower of Babel as an etiological and theological narrative engaging with Mesopotamian urban symbolism, Babylonian imperial power, and ancient Israelite theology of divine sovereignty over human ambition.',
+    open_questions: [
+      'To what extent did specific Babylonian ziggurat traditions — particularly Etemenanki — directly influence the Babel narrative\'s imagery?',
+      'How does the Babel story function within the broader primordial history of Genesis 1–11 as a theological unit?',
+      'How did later Jewish, Christian, and Islamic traditions expand and transform the Babel narrative?',
+    ],
+    tags: ['Genesis', 'Babylon', 'Mesopotamia', 'ziggurat', 'linguistic diversity', 'biblical narrative', 'etiological myth', 'Etemenanki'],
+    evidence_level: 'mythological',
+    confidence_score: 0.18,
+    color: '#b91c1c',
+    icon: '🏗️',
+    coordinates: [32.5355, 44.4275],
+    year: -580,
+  },
+
+  {
+    id: 'germ-theory',
+    title: 'Germ Theory',
+    category: 'Disease & Pandemic',
+    description: 'The scientific framework establishing that many diseases are caused by specific microorganisms — bacteria, viruses, fungi, and parasites. Germ theory emerged principally in the 19th century through the work of Louis Pasteur (fermentation and disease, 1857–1863), Joseph Lister (antiseptic surgery, 1867), Robert Koch (anthrax and tuberculosis, 1876–1882, postulates 1884), and Ignaz Semmelweis (handwashing and puerperal fever, published 1861). It replaced miasma theory as the dominant explanatory framework for infectious disease and revolutionized medicine, surgery, and public health.',
+    claims: [
+      'Germ theory provided the theoretical foundation for modern vaccination, antibiotic development, surgical sterilization, hospital infection control, and epidemic response.',
+      'Koch\'s postulates — four criteria establishing a causal relationship between a microbe and a disease — created the methodological framework for infectious disease causation.',
+      'The theory\'s development in the 19th century represents one of the most consequential paradigm shifts in the history of medicine.',
+    ],
+    criticisms: [
+      'Disease causation is more complex than simple germ-cause models — host immunity, environmental conditions, social determinants, and dose all shape outcomes.',
+      'Koch\'s postulates do not map perfectly onto all pathogens, particularly viruses and asymptomatic carriers, requiring later modification.',
+      'An overly narrow germ-only focus can neglect the social and environmental determinants of health that shape who is exposed and who becomes ill.',
+    ],
+    mainstream_view: 'Germ theory is foundational to modern biomedical science and one of the most robustly supported frameworks in the history of medicine. Contemporary infectious disease science integrates microbial causation with ecology, immunology, epidemiology, and social determinants of health.',
+    open_questions: [
+      'How should germ theory integrate with the emerging science of the human microbiome, where trillions of microorganisms are essential to health rather than causative of disease?',
+      'What role do ecological and evolutionary factors — antimicrobial resistance, zoonotic spillover — play in reshaping the practical implications of germ theory?',
+      'How can public health communication about germ theory better convey the multi-factorial nature of infectious disease?',
+    ],
+    tags: ['Pasteur', 'Koch', 'Lister', 'Semmelweis', 'bacteriology', 'virology', 'infectious disease', 'Koch\'s postulates', '19th century'],
+    evidence_level: 'verified',
+    confidence_score: 0.99,
+    color: '#e11d48',
+    icon: '🔬',
+    coordinates: [48.8467, 2.3060],
+    date_start: 1857,
+    date_end: 1900,
+    year: 1876,
+  },
+
+  {
+    id: 'watergate',
+    title: 'Watergate',
+    category: 'Historical Controversy',
+    description: 'A political scandal beginning with the June 17, 1972 break-in at Democratic National Committee headquarters in the Watergate complex in Washington D.C. — carried out by operatives connected to President Richard Nixon\'s re-election campaign — and the subsequent cover-up by the Nixon administration. Senate hearings, House impeachment proceedings, the Supreme Court ruling requiring release of White House tape recordings, and investigative reporting by the Washington Post combined to reveal a pattern of presidential obstruction of justice and abuse of executive power. Nixon resigned on August 9, 1974 — the first U.S. president to resign the office.',
+    claims: [
+      'Watergate established that presidential power has enforceable constitutional limits and that investigative journalism, legislative oversight, and judicial review can function as effective checks on executive abuse.',
+      'The scandal\'s exposure reshaped American political culture, intensifying distrust of government institutions and executive secrecy for subsequent decades.',
+      'It led to significant reforms including campaign finance law, government ethics legislation, and strengthened congressional oversight mechanisms.',
+    ],
+    criticisms: [
+      '"Watergate" is sometimes applied too broadly as a metaphor for any political scandal — the original case involved specific documented criminal acts.',
+      'Conspiracy claims extending beyond the documented record (including claims that Watergate was staged or that other actors were involved) require evidence that the documentary record does not support.',
+      'The institutional response — Nixon\'s resignation, prosecutions, reforms — is as historically important as the criminal acts themselves.',
+    ],
+    mainstream_view: 'Watergate is one of the most thoroughly documented political scandals in U.S. history, supported by court records, White House tape transcripts, congressional hearings, journalism, and thousands of pages of declassified documents. It is taught as a case study in executive accountability and constitutional governance.',
+    open_questions: [
+      'How did Watergate permanently reshape the relationship between the executive branch, the press, and public trust in American political institutions?',
+      'Which of the post-Watergate oversight reforms proved durable and which were subsequently weakened or circumvented?',
+      'How should historians evaluate Nixon\'s broader policy record in the context of the Watergate criminality?',
+    ],
+    tags: ['Nixon', 'Washington D.C.', 'cover-up', 'obstruction of justice', 'resignation', 'Senate hearings', 'investigative journalism', '1972', '1974'],
+    evidence_level: 'verified',
+    confidence_score: 0.99,
+    color: '#7c3aed',
+    icon: '🏛️',
+    coordinates: [38.8993, -77.0565],
+    date_start: 1972,
+    date_end: 1974,
+    year: 1972,
+  },
+
+  {
+    id: 'cia-stargate-project',
+    title: 'CIA Stargate Project',
+    category: 'Government Program',
+    description: 'A U.S. government research program investigating psychic phenomena — primarily remote viewing — for potential intelligence applications, operating under various code names from 1972 to 1995. Early programs (Gondola Wish, Grill Flame, Center Lane, Sun Streak) were consolidated and designated "Stargate" in 1991. The program was funded through DIA, CIA, and Army channels at various points and involved researchers including Harold Puthoff and Russell Targ at SRI International. It was terminated in 1995 following an American Institutes for Research evaluation commissioned by the CIA. The program\'s name has no documented connection to ancient portal concepts; the naming is coincidental and administrative.',
+    claims: [
+      'The CIA Stargate Project is documented proof that U.S. intelligence agencies conducted official research into psychic phenomena, making it a verified government program rather than a rumoured one.',
+      'Some supporters argue that certain remote viewing sessions produced statistically or operationally significant results that warrant scientific attention.',
+      'The program\'s existence is occasionally cited by proponents of the Ancient Stargate Hypothesis as implied institutional awareness of ancient portal knowledge — a connection without documentary support.',
+    ],
+    criticisms: [
+      'The 1995 American Institutes for Research evaluation concluded that remote viewing had not produced actionable intelligence of value and recommended the program be discontinued.',
+      'The evaluation\'s two authors reached different conclusions: Jessica Utts found statistical evidence of anomalous cognition; Ray Hyman concluded methodological flaws prevented valid inference.',
+      'The administrative code name "Stargate" reflects no connection to ancient portal theories; it was an internal program designation in the U.S. intelligence code-naming system.',
+    ],
+    mainstream_view: 'The CIA Stargate Project is a historically documented government research program. Its claimed remote viewing results remain contested scientifically: the 1995 evaluation is the official conclusion, and the CIA independently determined the program had not produced actionable intelligence. It is unrelated to ancient portal claims despite the shared name.',
+    open_questions: [
+      'Under rigorously controlled experimental conditions, can any anomalous cognition effects be replicated with sufficient statistical reliability to warrant further investigation?',
+      'How did classified program results differ from those prepared for public or evaluation audiences?',
+      'What drove the long institutional commitment to the program despite limited demonstrated operational value?',
+    ],
+    tags: ['CIA', 'DIA', 'remote viewing', 'psychic phenomena', 'Cold War', 'SRI International', 'Harold Puthoff', '1972', '1995'],
+    evidence_level: 'debated',
+    confidence_score: 0.74,
+    color: '#0284c7',
+    icon: '👁',
+    coordinates: [37.4530, -122.1817],
+    date_start: 1972,
+    date_end: 1995,
+    year: 1972,
+  },
+
+  // ═══════════════════════════════════════════
+  // TEST BATCH 1 — 2026-06-09
+  // 5 nodes from 50-Node Seed Pack
+  // Staged import: duplicate analysis complete,
+  // selected for category diversity and platform
+  // coverage. Pending full source audit and review.
+  // ═══════════════════════════════════════════
+
+  {
+    id: 'stonehenge',
+    title: 'Stonehenge',
+    category: 'Ancient Site',
+    description: 'A prehistoric stone monument in Wiltshire, southern England, constructed and modified in multiple phases from approximately 3000 to 1500 BCE. The monument is famous for its large sarsen standing stones, the astronomical alignment of the Avenue with the midsummer sunrise and midwinter sunset, and the transport of smaller bluestones from the Preseli Hills in Wales approximately 250 kilometres away. Stonehenge is the centrepiece of a wider Neolithic and Bronze Age ritual landscape designated a UNESCO World Heritage Site.',
+    claims: [
+      'Stonehenge functioned as part of a broader ritual landscape incorporating nearby monuments, cursus earthworks, and burial mounds extending across the Salisbury Plain.',
+      'Astronomical alignments with the midsummer sunrise and midwinter sunset were very likely intentional and central to the monument\'s construction and use.',
+      'Alternative theories have proposed functions including healing centre, ancestor monument, unified British calendar, and large-scale ceremonial gathering place.',
+      'Transport of bluestones from the Preseli Hills in Wales approximately 250 kilometres away demonstrates significant organizational and logistical capability in Neolithic society.',
+    ],
+    criticisms: [
+      'No single purpose fully explains all phases of Stonehenge\'s construction — the monument changed in form and likely in function over nearly two millennia.',
+      'Popular accounts often exaggerate mystery; experimental archaeology has documented viable construction and transport methods for both sarsen and bluestone elements.',
+      'Ritual landscape archaeology reduces the interpretive isolation of the monument, making exotic explanations unnecessary.',
+    ],
+    mainstream_view: 'Stonehenge is treated by archaeologists as a prehistoric ceremonial and ritual monument within a wider Neolithic and Bronze Age landscape. Its astronomical alignments are well-established. Its precise religious and social functions remain subjects of active research but do not require extraordinary explanations.',
+    open_questions: [
+      'How did the monument\'s meaning and function change across its nearly two-thousand-year construction history?',
+      'What social groups organized its construction and what was the ritual relationship between Stonehenge and nearby monuments such as Avebury and Durrington Walls?',
+      'How were the solstice observations embedded in the specific ritual practices of Stonehenge\'s builders?',
+    ],
+    tags: ['Neolithic', 'Bronze Age', 'England', 'UNESCO', 'solstice', 'megalith', 'Wiltshire', 'ritual landscape', 'bluestones', 'sarsen'],
+    evidence_level: 'verified',
+    confidence_score: 0.96,
+    color: '#ca8a04',
+    icon: '🪨',
+    coordinates: [51.1789, -1.8262],
+    date_start: -3000,
+    date_end: -2000,
+    year: -3000,
+  },
+
+  {
+    id: 'anunnaki',
+    title: 'Anunnaki',
+    category: 'Religion',
+    description: 'Divine beings of the Sumerian, Akkadian, Babylonian, and Assyrian pantheons, appearing in Mesopotamian religious texts, cosmological narratives, king lists, and ritual literature from approximately the 3rd millennium BCE onward. Their roles, attributes, and hierarchical significance vary across periods and genres. The Anunnaki appear in major texts including the Enuma Elish, Atrahasis, Descent of Inanna, and the Sumerian King List. They have been extensively and incorrectly reinterpreted in modern alternative history as extraterrestrial beings — a reading rejected by all professional Assyriologists.',
+    claims: [
+      'Mainstream scholarship treats the Anunnaki as a collective designation for the divine assembly in Mesopotamian religion, with roles that vary by period, text, and cosmological context.',
+      'The Anunnaki\'s documented roles include cosmic judges, underworld powers, members of the divine council, and figures associated with the fate of the dead.',
+      'Zecharia Sitchin reinterpreted the Anunnaki as extraterrestrial beings from a hypothetical planet Nibiru who created humanity as a slave race — interpretations rejected as mistranslation by every professional Sumerologist who has examined them.',
+    ],
+    criticisms: [
+      'Sitchin\'s translations are rejected by professional Assyriologists and Sumerologists as non-standard, selective, and without philological support in the cuneiform record.',
+      'Modern internet narratives frequently conflate the Anunnaki with unrelated mythologies and attribute characteristics not found in any primary Mesopotamian text.',
+      'The textual evidence supports religious cosmology and palace ideology; no primary source supports an extraterrestrial or technological interpretation.',
+    ],
+    mainstream_view: 'Assyriologists interpret the Anunnaki as Mesopotamian deities within documented ancient religious systems, fully explicable within the scholarly study of Sumerian and Akkadian religion. Extraterrestrial reinterpretations are considered pseudohistorical and are not endorsed by any accredited Assyriologist or Sumerologist.',
+    open_questions: [
+      'How did the designation and role of the Anunnaki shift across Sumerian, Akkadian, Babylonian, and Assyrian periods?',
+      'How did Anunnaki theology relate to temple economy, political legitimacy, and funerary ritual in different Mesopotamian city-states?',
+      'Why have the Anunnaki become a central focus of modern alternative history, and how can public education most effectively address circulating mistranslations?',
+    ],
+    tags: ['Mesopotamia', 'Sumerian', 'Akkadian', 'Babylonian', 'deities', 'Enuma Elish', 'ancient religion', 'Iraq', 'cuneiform'],
+    evidence_level: 'verified',
+    confidence_score: 0.90,
+    color: '#dc2626',
+    icon: '⚡',
+    coordinates: [30.8138, 45.9953],
+    year: -2500,
+  },
+
+  {
+    id: 'project-blue-book',
+    title: 'Project Blue Book',
+    category: 'Government Program',
+    description: 'A U.S. Air Force program for systematic collection, investigation, and analysis of UFO reports, operating from 1952 to 1969. The third and longest-running official Air Force UFO study — preceded by Project Sign (1948) and Project Grudge (1949). Astronomer J. Allen Hynek served as scientific consultant throughout. The project collected over 12,000 reports; 701 were officially classified as unexplained at closure. The program was terminated following the 1968 Condon Report\'s finding that continued study was unlikely to yield scientific value.',
+    claims: [
+      'Project Blue Book represents officially documented U.S. Air Force interest in investigating UFO reports over nearly two decades, making it a verified government program — not a rumoured or speculative one.',
+      'J. Allen Hynek, initially a skeptic commissioned to debunk UFO claims, concluded during the program that some cases warranted genuine scientific attention; he later developed the Close Encounter classification system.',
+      'Critics have argued the program\'s structure in its later phases prioritized case closure over genuine scientific inquiry, with institutional pressure toward conventional explanations.',
+    ],
+    criticisms: [
+      '"Unexplained" in Project Blue Book files means insufficient data to identify a conventional cause — it does not constitute evidence of extraterrestrial origin.',
+      'The Air Force\'s 1969 formal conclusion stated that no UFO had ever represented a threat to national security or demonstrated technology beyond the range of present scientific knowledge.',
+      'Data collection and case documentation quality varied widely across the program\'s 17-year history.',
+    ],
+    mainstream_view: 'Project Blue Book is a historically verified U.S. Air Force UFO investigation program. Its 701 unresolved cases represent data gaps, not evidence of specific origin. The program\'s closure, the Condon Report, and the Air Force statement are the official institutional conclusions.',
+    open_questions: [
+      'Which of the 701 officially unresolved cases might yield new insights under modern analytical and imaging methods?',
+      'How did Cold War intelligence concerns shape case handling, classification decisions, and the program\'s institutional culture?',
+      'What relationship existed between Blue Book\'s public case files and classified military aerospace intelligence reporting on the same incidents?',
+    ],
+    tags: ['U.S. Air Force', 'UFO', 'government program', 'J. Allen Hynek', 'Condon Report', 'Cold War', '1950s', '1960s', 'investigation'],
+    evidence_level: 'verified',
+    confidence_score: 0.94,
+    color: '#0284c7',
+    icon: '📂',
+    coordinates: [39.8310, -84.0479],
+    date_start: 1952,
+    date_end: 1969,
+    year: 1952,
+  },
+
+  {
+    id: 'black-death',
+    title: 'Black Death',
+    category: 'Disease & Pandemic',
+    description: 'A catastrophic pandemic caused primarily by Yersinia pestis that struck Eurasia, the Middle East, and Europe between approximately 1346 and 1353 CE. The major European wave of 1347–1351 is estimated to have killed between 30% and 60% of Europe\'s population — with some regions experiencing higher mortality — making it among the deadliest events in recorded human history. The pandemic arrived in Sicily and southern Italy via trading vessels in autumn 1347 and spread across the continent within five years. Ancient DNA analysis from burial sites across Europe and Central Asia has confirmed Y. pestis as the causative agent.',
+    claims: [
+      'The Black Death fundamentally reshaped medieval European society — demographic, economic, religious, and institutional consequences unfolded over the subsequent century.',
+      'Trade route ecology involving rodent reservoirs, flea vectors, and intensified human commercial movement drove spread; climate stress and malnutrition likely increased population vulnerability.',
+      'Labour market disruptions following the pandemic contributed to the decline of serfdom and rising peasant bargaining power in parts of Western Europe.',
+    ],
+    criticisms: [
+      'Regional mortality estimates vary widely and some earlier figures may be overstated; modern scholarship refines estimates through burial archaeology and documentary evidence.',
+      'Transmission dynamics were more complex than the simplified rat-flea-human model; pneumonic plague, direct human-to-human transmission, and environmental factors played additional roles.',
+      'Monocausal explanations attributing subsequent medieval social changes solely to the pandemic oversimplify a complex and regionally variable transition.',
+    ],
+    mainstream_view: 'The Black Death is one of the best-documented pandemics in history, supported by contemporary chronicles, burial archaeology across multiple countries, and ancient DNA analysis confirming Yersinia pestis as the pathogen. Its demographic and social consequences are extensively studied across history, archaeology, and epidemiology.',
+    open_questions: [
+      'What ecological and climatic factors drove the specific regional variation in mortality rates across Europe and the Middle East?',
+      'How did plague reservoirs persist in rodent populations between major epidemic waves?',
+      'What role did the pre-existing Great Famine (1315–1322) and early 14th-century climate deterioration play in population vulnerability?',
+    ],
+    tags: ['plague', 'Yersinia pestis', 'medieval', 'Europe', 'pandemic', '14th century', 'mortality', 'ancient DNA', 'bubonic'],
+    evidence_level: 'verified',
+    confidence_score: 0.98,
+    color: '#e11d48',
+    icon: '☠️',
+    coordinates: [38.1938, 15.5540],
+    date_start: 1347,
+    date_end: 1351,
+    year: 1347,
+  },
+
+  // ═══════════════════════════════════════════
+  // STAGE 3 — 2026-06-09
+  // 15 nodes from 50-Node Seed Pack
+  // ═══════════════════════════════════════════
+
+  // ── DISEASE & PANDEMIC CLUSTER ──
+
+  {
+    id: 'spanish-flu-1918',
+    title: 'Spanish Flu (1918 Influenza Pandemic)',
+    category: 'Disease & Pandemic',
+    description: 'A global influenza pandemic caused by an H1N1 influenza A virus circulating in three major waves from spring 1918 through spring 1920. Infected an estimated 500 million people — approximately one-third of the world\'s population — and killed between 50 and 100 million. Unusually, the 1918 strain produced disproportionate mortality in young adults aged 20–40, the inverse of typical influenza patterns. Despite its common name, the pandemic did not originate in Spain; Spain\'s non-wartime press reported it openly while belligerent nations suppressed news, creating the erroneous association. In 2005 researchers reconstructed the 1918 virus from archived lung tissue, confirming its avian-like origins.',
+    claims: [
+      'The 1918 pandemic remains the deadliest infectious disease event in recorded history by total death toll, though the precise figure is uncertain due to incomplete records from many affected regions.',
+      'WWI conditions — overcrowded military camps, mass troop movement, censored reporting, and malnutrition — likely accelerated spread and may have contributed to the severe cytokine-storm pathology characteristic of the second wave.',
+      'The reconstructed 1918 virus genome (Taubenberger et al., 2005) provided critical insights into pandemic influenza emergence and informed H5N1 and H1N1 preparedness.',
+      'Public health measures during the 1918 pandemic — early school closures and bans on public gatherings — produced measurable reductions in mortality in cities that implemented them promptly.',
+    ],
+    criticisms: [
+      'Total mortality estimates vary enormously (17–100 million) due to inadequate death registration in much of the world in 1918.',
+      'The "Spanish Flu" name is a historical misnomer that has never been corrected in popular usage.',
+      'The virus\'s exact geographic origin remains undetermined; competing hypotheses place early cases in Kansas, France, and China.',
+    ],
+    mainstream_view: 'The 1918 influenza pandemic is one of the most thoroughly studied disease events in history, approached through epidemiology, virology, genomics, historical records, and military archives. It remains the primary benchmark against which pandemic preparedness is measured.',
+    open_questions: [
+      'Where did the 1918 H1N1 virus originate, and how did it acquire its unusual virulence in young adults?',
+      'To what extent did WWI-specific conditions amplify severity beyond what would have occurred in peacetime?',
+      'What lessons from differential city-level mortality in 1918 should directly inform non-pharmaceutical intervention design for future pandemics?',
+    ],
+    tags: ['influenza', 'H1N1', 'pandemic', 'World War I', 'virology', 'public health', '1918', 'mortality'],
+    evidence_level: 'verified',
+    confidence_score: 0.98,
+    color: '#e11d48',
+    icon: '🦠',
+    coordinates: [39.1972, -96.7438],
+    date_start: 1918,
+    date_end: 1920,
+    year: 1918,
+  },
+
+  {
+    id: 'smallpox-eradication',
+    title: 'Smallpox Eradication',
+    category: 'Disease & Pandemic',
+    description: 'The global eradication of smallpox (Variola virus) — the only human infectious disease to have been deliberately and verifiably eliminated worldwide. Smallpox had killed an estimated 300–500 million people in the 20th century alone. The WHO\'s Intensified Smallpox Eradication Programme (1967–1980) deployed ring vaccination and surveillance-containment strategy globally. The last naturally occurring case was diagnosed in Ali Maow Maalin in Somalia on October 26, 1977. WHO certified global eradication on May 8, 1980. Variola virus is now officially stored only at two WHO-designated repositories: the CDC in Atlanta and VECTOR in Novosibirsk, Russia.',
+    claims: [
+      'Smallpox eradication is the most consequential achievement of organized international public health and the definitive demonstration of vaccination-based disease elimination.',
+      'The ring vaccination strategy — vaccinating contacts of confirmed cases rather than entire populations — proved more efficient than mass vaccination and is now a model for outbreak response.',
+      'Eradication was achieved despite Cold War geopolitical tensions, representing successful international scientific cooperation across ideological boundaries.',
+    ],
+    criticisms: [
+      'The continued existence of official variola stockpiles at two repositories raises biosecurity concerns about accidental release or potential weaponization.',
+      'Whether the officially acknowledged stocks are the only existing variola samples remains an unresolved biosecurity concern.',
+      'Success has sometimes been overgeneralized as a template for diseases with fundamentally different epidemiology.',
+    ],
+    mainstream_view: 'Smallpox eradication is universally recognized by the public health community as the definitive demonstration of vaccination-based elimination of human disease. It remains a historical benchmark for vaccine development, international cooperation, and public health capacity.',
+    open_questions: [
+      'Should the remaining official variola stocks be destroyed, or does research value justify continued storage with associated biosecurity risks?',
+      'What surveillance and stockpiles are needed to respond to a potential reemergence from unofficial stocks or accidental release?',
+      'Could eradication approaches be applied to measles or polio, which have different epidemiological characteristics?',
+    ],
+    tags: ['smallpox', 'Variola', 'WHO', 'vaccination', 'eradication', 'ring vaccination', '1980', 'biosecurity'],
+    evidence_level: 'verified',
+    confidence_score: 0.99,
+    color: '#e11d48',
+    icon: '💉',
+    coordinates: [46.2044, 6.1432],
+    date_start: 1967,
+    date_end: 1980,
+    year: 1980,
+  },
+
+  {
+    id: 'hiv-aids',
+    title: 'HIV/AIDS Pandemic',
+    category: 'Disease & Pandemic',
+    description: 'A global pandemic caused by the Human Immunodeficiency Virus (HIV), which attacks the immune system and, if untreated, causes Acquired Immunodeficiency Syndrome (AIDS). First clinically described in 1981 among communities of men who have sex with men in Los Angeles and New York; the causative virus was identified by Luc Montagnier (Institut Pasteur, 1983) and Robert Gallo (NCI, 1984). HIV\'s origin is traced to zoonotic spillover of Simian Immunodeficiency Virus (SIV) from chimpanzees in Central Africa, with the ancestor of the HIV-1 pandemic strain estimated to have crossed into humans in the Kinshasa region around 1920. As of 2024, approximately 40 million people have died from AIDS-related illnesses; approximately 39 million are living with HIV globally.',
+    claims: [
+      'HIV\'s zoonotic origins in Central Africa, initial spread through Kinshasa\'s commercial networks, and global dissemination via air travel routes are reconstructed from viral phylogenetics and historical epidemiology.',
+      'The development of effective antiretroviral therapy (ART) beginning in the mid-1990s transformed HIV/AIDS from a near-universal death sentence into a manageable chronic condition for those with access to medication.',
+      'U.S. federal government response under the Reagan administration was significantly delayed by political factors — documented by historian Randy Shilts in And the Band Played On (1987).',
+    ],
+    criticisms: [
+      'Early framing of AIDS as a "gay plague" contributed to stigma that slowed public health response and distorted the global epidemiological picture.',
+      'AIDS denialism — associated primarily with Peter Duesberg — caused measurable harm in South Africa under Thabo Mbeki (2000–2008), delaying treatment programs.',
+      'Contemporary global ART access remains deeply unequal; millions who could benefit from treatment do not receive it.',
+    ],
+    mainstream_view: 'HIV/AIDS is one of the most thoroughly researched disease systems in history. HIV\'s causation of AIDS is established beyond scientific doubt. The zoonotic origin, transmission dynamics, and treatment options are extensively documented.',
+    open_questions: [
+      'What combination of social, demographic, and transport changes allowed HIV to spread from a local Central African epidemic to a global pandemic in the mid-20th century?',
+      'How can effective antiretroviral treatment be made universally accessible, particularly in sub-Saharan Africa?',
+      'When will an effective prophylactic HIV vaccine be developed, given that HIV\'s high mutation rate has frustrated traditional vaccine approaches?',
+    ],
+    tags: ['HIV', 'AIDS', 'pandemic', 'virology', 'antiretroviral', 'zoonotic', 'Africa', 'public health', 'LGBTQ'],
+    evidence_level: 'verified',
+    confidence_score: 0.99,
+    color: '#e11d48',
+    icon: '🧬',
+    coordinates: [-4.3217, 15.3222],
+    date_start: 1981,
+    year: 1983,
+  },
+
+  {
+    id: 'covid-19',
+    title: 'COVID-19 Pandemic',
+    category: 'Disease & Pandemic',
+    description: 'A global pandemic caused by SARS-CoV-2, a novel betacoronavirus first identified in Wuhan, Hubei Province, China in December 2019. WHO declared a Public Health Emergency of International Concern on January 30, 2020, and a pandemic on March 11, 2020. SARS-CoV-2 spreads primarily through respiratory aerosols. COVID-19 causes a spectrum of illness from asymptomatic infection through severe pneumonia, with elevated risk in older individuals and those with comorbidities. As of 2024, the WHO has recorded more than 7 million confirmed deaths globally; excess mortality estimates suggest the true figure is substantially higher. The pandemic prompted the fastest vaccine development in history, including mRNA vaccines authorized for emergency use in December 2020.',
+    claims: [
+      'The rapid development of the Pfizer/BioNTech BNT162b2 and Moderna mRNA-1273 vaccines demonstrated the maturation of mRNA vaccine technology and compressed development timelines from years to months.',
+      'Long COVID — persistent symptoms including fatigue, cognitive impairment, and cardiovascular effects — affects an estimated 10–30% of non-hospitalized COVID-19 patients and represents a major emerging public health burden.',
+      'The pandemic exposed systemic weaknesses in global pandemic preparedness infrastructure, supply chains for medical equipment, and international disease surveillance and response coordination.',
+    ],
+    criticisms: [
+      'Government responses varied enormously in effectiveness, timing, and social cost; some 2020 interventions were later found to have limited effectiveness relative to their disruption.',
+      'WHO\'s initial communication regarding human-to-human transmission and its pandemic declaration timeline have been subjects of critical review.',
+      'Vaccine mandate policies generated significant public controversy; the appropriate use of mandates versus incentive-based approaches remains contested.',
+    ],
+    mainstream_view: 'COVID-19 is the most extensively documented pandemic in history, with real-time epidemiological surveillance, genomic sequencing, and public health reporting unprecedented in scale. SARS-CoV-2\'s causation of COVID-19 is established; the efficacy and safety of authorized vaccines are supported by the largest post-authorization safety surveillance database ever assembled.',
+    open_questions: [
+      'What is the precise mechanism of Long COVID pathology, and when will effective treatments be available?',
+      'How should pandemic preparedness be restructured internationally to prevent a comparable response failure?',
+      'What is the origin of SARS-CoV-2, and how can this question be resolved given access constraints on primary data?',
+    ],
+    tags: ['SARS-CoV-2', 'pandemic', 'Wuhan', 'mRNA vaccine', 'WHO', 'Long COVID', 'coronavirus', '2020'],
+    evidence_level: 'verified',
+    confidence_score: 0.99,
+    color: '#e11d48',
+    icon: '🦠',
+    coordinates: [30.5928, 114.3055],
+    date_start: 2019,
+    year: 2019,
+  },
+
+  {
+    id: 'covid-19-origin-debate',
+    title: 'COVID-19 Origin Debate',
+    category: 'Historical Controversy',
+    description: 'An ongoing scientific, intelligence, and political debate about whether SARS-CoV-2 emerged through natural zoonotic spillover from an animal reservoir — as with SARS-CoV-1 (2002–2003) and MERS-CoV — or through a laboratory-associated incident, most commonly framed as an accidental leak from the Wuhan Institute of Virology (WIV). The question remains unresolved due to limited access to primary epidemiological, animal reservoir, and laboratory data from China; political dynamics that complicated international scientific investigation; and genuine scientific uncertainty about the biology of SARS-CoV-2\'s proximal origin. U.S. intelligence community assessments (2023) reflect split conclusions: the FBI and Department of Energy favor a laboratory-related origin; other agencies favor natural spillover; the Director of National Intelligence describes the question as unresolved.',
+    claims: [
+      'Multiple markers in the SARS-CoV-2 genome — including a furin cleavage site not found in close bat coronavirus relatives — have been cited by some virologists as inconsistent with known natural evolution, though others consider it explicable through natural selection.',
+      'Epidemiological analysis of early COVID-19 case clustering around the Huanan Seafood Market supports a natural spillover scenario (Worobey et al., Science 2022; Pekar et al., Science 2022).',
+      'The WIV has not provided access to a pre-October 2019 database of bat coronavirus sequences that was taken offline in September 2019, which has sustained concern about laboratory activities.',
+    ],
+    criticisms: [
+      'Early dismissal of the lab leak hypothesis as a "conspiracy theory" — including a March 2020 Lancet statement — inappropriately foreclosed legitimate scientific inquiry; this characterization was subsequently retracted.',
+      'Without access to primary data from China — including WIV laboratory records, early patient samples, and wildlife market records — the question cannot be definitively resolved.',
+      'Both laboratory and natural spillover hypotheses are plausible given existing evidence; the public debate has often misrepresented scientific uncertainty as resolved in one direction or the other.',
+    ],
+    mainstream_view: 'The scientific community has not reached consensus on SARS-CoV-2\'s origin. Both natural zoonotic spillover and laboratory-associated emergence remain scientifically viable hypotheses. The question is empirically resolvable in principle but practically constrained by data access limitations.',
+    open_questions: [
+      'What animal reservoir was SARS-CoV-2\'s direct progenitor circulating in, and can it be identified through systematic wildlife surveillance?',
+      'What did the WIV\'s pre-2019 coronavirus research database contain, and why was it removed from public access in September 2019?',
+      'Can the proximal origin question be resolved through comparative genomics alone, or does resolution require primary epidemiological and laboratory data from China?',
+    ],
+    tags: ['SARS-CoV-2', 'Wuhan Institute of Virology', 'lab leak', 'zoonotic spillover', 'WIV', 'intelligence community', 'China', 'biosafety', 'origins'],
+    evidence_level: 'debated',
+    confidence_score: 0.40,
+    color: '#7c3aed',
+    icon: '🔬',
+    coordinates: [30.5928, 114.3055],
+    year: 2020,
+  },
+
+  {
+    id: 'who-organization',
+    title: 'World Health Organization (WHO)',
+    category: 'Organization',
+    description: 'A specialized agency of the United Nations responsible for international public health, established on April 7, 1948. WHO sets international health standards, coordinates emergency health responses through the International Health Regulations (IHR), leads disease surveillance, and convenes international expert panels. WHO played a central role in the global eradication of smallpox and the near-eradication of polio. Its core functions include normative work (guidelines, standards, classifications), health diplomacy, technical cooperation with member states, and emergency response coordination. WHO is headquartered in Geneva, Switzerland.',
+    claims: [
+      'WHO\'s leadership of the Intensified Smallpox Eradication Programme (1967–1980) produced the only successful eradication of a human infectious disease in history.',
+      'WHO\'s authority depends on the political cooperation of member states and is constrained by its funding structure; major donors including the U.S. and private foundations exercise significant informal influence through earmarked contributions.',
+      'WHO\'s performance during COVID-19 — particularly its initial communication about human-to-human transmission — has been subjected to significant external review and criticism, generating calls for structural reform.',
+    ],
+    criticisms: [
+      'WHO\'s operational capacity and authority are limited by its political structure — it cannot compel member states to share information or accept assistance.',
+      'Reliance on voluntary earmarked funding from member states and private donors creates potential influence over WHO\'s programmatic priorities and communications.',
+      'The organization\'s COVID-19 response, including initial deference to Chinese government statements, has generated calls for significant reform of its emergency response authorities.',
+    ],
+    mainstream_view: 'WHO is the central international institution for global health governance. Its roles in disease surveillance, standard-setting, and outbreak response are recognized as essential international public goods, within acknowledged limitations of any multilateral health body operating within the international state system.',
+    open_questions: [
+      'How should WHO\'s emergency response authorities and independence from political pressure be reformed following COVID-19\'s exposure of its limitations?',
+      'How can WHO better balance normative, technical, and emergency response functions when they create institutional tensions?',
+      'What governance reforms would make WHO more effective without undermining the political legitimacy it derives from universal membership?',
+    ],
+    tags: ['United Nations', 'public health', 'Geneva', 'pandemic response', 'IHR', 'smallpox', 'SARS', 'international organization'],
+    evidence_level: 'verified',
+    confidence_score: 0.97,
+    color: '#475569',
+    icon: '🌐',
+    coordinates: [46.2282, 6.1674],
+    year: 1948,
+  },
+
+  {
+    id: 'vaccine-history',
+    title: 'Vaccine Development History',
+    category: 'Disease & Pandemic',
+    description: 'The history of vaccination begins with Edward Jenner\'s 1796 demonstration that inoculation with cowpox material conferred immunity to smallpox — the first deliberate immunization procedure. The term "vaccine" derives from Jenner\'s use of "variolae vaccinae" (smallpox of the cow). Louis Pasteur subsequently developed vaccines for chicken cholera, anthrax, and rabies in the 1880s and articulated the germ theory basis for vaccination. The 20th century saw vaccines developed for diphtheria, tetanus, pertussis, polio (Salk 1955, Sabin 1961), measles, mumps, rubella, and hepatitis B. The 2020s demonstrated the power of the mRNA platform: Pfizer/BioNTech and Moderna authorized COVID-19 vaccines within a year of pathogen identification, a milestone for which Katalin Karikó and Drew Weissman received the 2023 Nobel Prize in Physiology or Medicine.',
+    claims: [
+      'Vaccination is among the most cost-effective public health interventions in medical history; the WHO estimates vaccines prevent 2–3 million deaths annually.',
+      'The development of mRNA vaccine technology represents a platform with broad potential applications beyond COVID-19, including cancer immunotherapy and other infectious diseases.',
+      'Childhood vaccination programs have eliminated or dramatically reduced the incidence of multiple historically deadly diseases in high-income countries.',
+    ],
+    criticisms: [
+      'Vaccine hesitancy — driven by historical abuses of informed consent, distrust of pharmaceutical industry, and misinformation — has reduced vaccination coverage in some communities.',
+      'Global vaccine equity remains severely inadequate; COVID-19 demonstrated that high-income countries disproportionately accessed early vaccine supplies.',
+      'Some early vaccine programs caused real harms — the 1976 swine flu vaccine campaign produced cases of Guillain-Barré syndrome — informing the importance of rigorous post-authorization surveillance.',
+    ],
+    mainstream_view: 'Vaccination is the most thoroughly validated preventive medicine intervention in history. The safety and efficacy of licensed vaccines are supported by extensive clinical trial and post-authorization surveillance data.',
+    open_questions: [
+      'How can mRNA platform technology be adapted to develop effective vaccines for HIV, tuberculosis, and malaria?',
+      'What governance and financing mechanisms can ensure equitable global access to vaccines during future pandemics?',
+      'How can public health systems better address root causes of vaccine hesitancy without compromising public trust?',
+    ],
+    tags: ['Jenner', 'Pasteur', 'mRNA', 'public health', 'immunology', 'smallpox', 'polio', 'Nobel Prize', 'Karikó', 'Weissman'],
+    evidence_level: 'verified',
+    confidence_score: 0.98,
+    color: '#e11d48',
+    icon: '💉',
+    coordinates: [51.6917, -2.4481],
+    date_start: 1796,
+    year: 1796,
+  },
+
+  // ── GOVERNMENT / HISTORICAL CLUSTER ──
+
+  {
+    id: 'phoenix-lights',
+    title: 'Phoenix Lights',
+    category: 'UFO / UAP',
+    description: 'A mass sighting of unexplained aerial phenomena over Arizona (and parts of Nevada and Sonora, Mexico) on the night of March 13, 1997. Thousands of witnesses — including then-Governor Fife Symington III — reported seeing a massive, silent V-shaped formation of lights moving at low altitude over the Phoenix metropolitan area. A separate event involving stationary lights near the Estrella Mountain range that same night was later attributed by the Arizona Air National Guard to A-10 aircraft flares. These two events — the early-evening V-formation and the later stationary lights — are distinct incidents that are frequently conflated. The V-formation has no official explanation. Governor Symington, who publicly ridiculed witnesses in 1997, later stated he personally observed a massive craft and believed the event warranted serious investigation.',
+    claims: [
+      'The early-evening V-shaped formation, witnessed by thousands across multiple cities, does not correspond to the military flares identified as the cause of the later stationary lights.',
+      'The Phoenix Lights is one of the largest mass UAP sightings in U.S. history in terms of witness count and subsequent documentation.',
+      'Governor Symington\'s public reversal — first dismissing witnesses publicly, then privately and eventually publicly acknowledging his own sighting — illustrates a recurring pattern in official handling of UAP incidents.',
+    ],
+    criticisms: [
+      'The later stationary lights widely circulated in news footage were confirmed as military flares — conflation of this identified event with the unidentified early formation has muddied the evidentiary record.',
+      'No physical evidence, radar confirmation, or official investigation has produced an identification of the early-evening V-formation.',
+      'Large-scale nocturnal light formations can result from conventional aircraft flying in formation; without corroborating radar data the formation sighting remains anecdotal however numerous the witnesses.',
+    ],
+    mainstream_view: 'The Phoenix Lights involved two distinct events on the same evening: the later stationary lights have a conventional explanation (military flares); the earlier V-shaped formation remains officially unexplained. It is among the most reported and credibly witnessed modern UAP incidents in U.S. history.',
+    open_questions: [
+      'What radar data, if any, was recorded by civilian or military systems during the early-evening V-formation, and why has this not been released?',
+      'Why did Arizona authorities handle the event as they did, and was any classified information relevant to the official response?',
+      'Would the Phoenix Lights formation meet current AARO reporting criteria, and has it been assessed under post-2020 UAP frameworks?',
+    ],
+    tags: ['Arizona', 'UAP', 'UFO', 'mass sighting', 'Phoenix', '1997', 'Governor Symington', 'V-formation', 'military'],
+    evidence_level: 'strong_evidence',
+    confidence_score: 0.78,
+    color: '#16a34a',
+    icon: '🔦',
+    coordinates: [33.4484, -112.0740],
+    year: 1997,
+  },
+
+  {
+    id: 'pentagon-papers',
+    title: 'Pentagon Papers',
+    category: 'Government Secrecy',
+    description: 'A 7,000-page classified study commissioned by Secretary of Defense Robert McNamara in 1967 — formally titled "History of U.S. Decision-Making on Vietnam Policy" — documenting U.S. political and military involvement in Vietnam from 1945 to 1967. The study showed that successive administrations had systematically misled Congress and the public about U.S. objectives and prospects in Vietnam. Daniel Ellsberg, a former State and Defense Department analyst who had worked on the study, leaked it to the New York Times and Washington Post in June 1971. The Nixon administration obtained an unprecedented court injunction — prior restraint on publication — before the Supreme Court ruled 6-3 in New York Times Co. v. United States (1971) that the government had failed to meet the heavy constitutional burden required for prior restraint.',
+    claims: [
+      'The Pentagon Papers documented that the Kennedy and Johnson administrations had systematically deceived Congress and the public about the scale of U.S. military involvement in Vietnam and internal assessments of the war\'s prospects.',
+      'New York Times Co. v. United States is a landmark First Amendment precedent establishing a very high bar for government prior restraint of press publication.',
+      'Nixon\'s "Plumbers" unit — later responsible for the Watergate break-in — was created specifically to stop leaks in response to the Pentagon Papers disclosure.',
+    ],
+    criticisms: [
+      'The Nixon administration\'s attempt to suppress the papers through prior restraint was a serious constitutional violation; prosecutorial misconduct including illegal wiretapping and a break-in at Ellsberg\'s psychiatrist\'s office ultimately caused dismissal of all charges against Ellsberg.',
+      'The Pentagon Papers covered only through 1967; Nixon\'s own subsequent escalations and secret Cambodian bombing program were outside their scope.',
+    ],
+    mainstream_view: 'The Pentagon Papers are a historically verified primary source on U.S. decision-making in Vietnam, documenting institutional deception of democratic oversight bodies. The Supreme Court ruling is a foundational First Amendment precedent. The case is studied across journalism, law, and political science as a canonical case of government secrecy versus press freedom.',
+    open_questions: [
+      'Did publication of the Pentagon Papers meaningfully alter the course of the Vietnam War, or primarily confirm what critics already believed?',
+      'How should democratic systems balance legitimate national security classification with the public\'s right to know about governmental deception?',
+      'What precedents does the case set for contemporary national security whistleblower prosecutions under the Espionage Act?',
+    ],
+    tags: ['Vietnam War', 'McNamara', 'Daniel Ellsberg', 'First Amendment', 'New York Times', 'Supreme Court', 'whistleblower', 'classified', 'prior restraint', '1971'],
+    evidence_level: 'verified',
+    confidence_score: 0.99,
+    color: '#0369a1',
+    icon: '📄',
+    coordinates: [38.8719, -77.0563],
+    year: 1971,
+  },
+
+  // ── EPSTEIN CLUSTER ──
+
+  {
+    id: 'jeffrey-epstein',
+    title: 'Jeffrey Epstein',
+    category: 'Historical Figure',
+    description: 'An American financier and convicted sex offender who operated an extensive sex trafficking network targeting minors across multiple decades. Epstein accumulated substantial wealth as a financial manager and maintained connections to prominent figures in politics, academia, and finance. He pleaded guilty in 2008 to Florida state charges of solicitation of prostitution from a minor, serving 13 months with extensive work-release privileges under a non-prosecution agreement later found by a federal judge to have violated the Crime Victims\' Rights Act. Re-arrested on July 6, 2019 on federal sex trafficking charges in the Southern District of New York. He died on August 10, 2019, in the Metropolitan Correctional Center while awaiting trial; the Medical Examiner ruled suicide by hanging. The official determination has been publicly contested by Epstein\'s legal team and by some forensic pathologists who conducted an independent review.',
+    claims: [
+      'Court records, victim testimony, and civil litigation established that Epstein operated a systematic sex trafficking network over more than two decades across multiple properties, including his Manhattan townhouse, Palm Beach estate, and private island.',
+      'The 2008 non-prosecution agreement reached with Florida prosecutors shielded co-conspirators from federal prosecution — a provision later ruled by a federal court to have violated the Crime Victims\' Rights Act, as established in Doe v. United States (S.D. Fla.).',
+      'The circumstances of Epstein\'s death — including non-functioning security cameras outside his cell, removal of his cellmate the night before, and guards who falsified log records — have sustained public questioning of the official suicide determination.',
+    ],
+    criticisms: [
+      'The Medical Examiner\'s suicide determination, while contested by Epstein\'s legal representatives and by forensic pathologist Michael Baden, is the official forensic conclusion.',
+      'Extensions of documented facts to unproven claims about specific associates should be restricted to what has been established through legal proceedings.',
+      'The documented failures of the 2008 plea agreement and the 2019 jail conditions were institutional failures requiring systemic analysis alongside any other considerations.',
+    ],
+    mainstream_view: 'Jeffrey Epstein\'s sex trafficking crimes are documented in extensive court records, victim testimony, and the subsequent conviction of his associate Ghislaine Maxwell. His death in federal custody is officially ruled a suicide. The case is studied as an example of failures in judicial accountability, law enforcement oversight, and the intersection of wealth and access to justice.',
+    open_questions: [
+      'Who were Epstein\'s unnamed co-conspirators protected by the 2008 non-prosecution agreement, and will they face prosecution?',
+      'What was the actual source and structure of Epstein\'s financial wealth, and who were his financial partners?',
+      'Were the circumstances of Epstein\'s death the result of deliberate action, institutional failure, or both?',
+    ],
+    tags: ['sex trafficking', 'financier', 'SDNY', 'Palm Beach', 'Manhattan', 'non-prosecution agreement', 'federal custody', '2019'],
+    evidence_level: 'verified',
+    confidence_score: 0.97,
+    color: '#64748b',
+    icon: '⚖️',
+    coordinates: [40.7711, -73.9632],
+    year: 2019,
+  },
+
+  {
+    id: 'ghislaine-maxwell',
+    title: 'Ghislaine Maxwell',
+    category: 'Historical Figure',
+    description: 'A British socialite and longtime associate of Jeffrey Epstein convicted on December 29, 2021 of five federal crimes including sex trafficking of a minor, in the U.S. District Court for the Southern District of New York. Maxwell was sentenced to 20 years in federal prison on June 28, 2022. Evidence at trial established that she served as a key recruiter and facilitator of Epstein\'s sex trafficking network — grooming and trafficking underage victims at multiple properties. Maxwell is the daughter of media magnate Robert Maxwell, who died in 1991. She met Epstein in the early 1990s and became central to both his social operations and his criminal network. She was arrested in July 2020 in New Hampshire after approximately a year of avoiding arrest following Epstein\'s 2019 death.',
+    claims: [
+      'Maxwell\'s federal conviction established her as an active participant in Epstein\'s criminal network, not merely a passive associate.',
+      'Victim testimony and supporting evidence at trial documented Maxwell\'s active role in recruiting underage girls, creating false safety, and facilitating abuse.',
+      'Materials released in connection with the Maxwell trial and related civil litigation have shed light on the network\'s scope and some of the individuals who participated in or had knowledge of Epstein\'s activities.',
+    ],
+    criticisms: [
+      'Maxwell\'s conviction is a matter of criminal record; extensions to unproven claims about other specific individuals require the same evidentiary standard applied in court.',
+      'Some materials from related civil litigation remain under seal pending further proceedings.',
+    ],
+    mainstream_view: 'Ghislaine Maxwell\'s conviction is a matter of federal criminal record. Her role in Epstein\'s sex trafficking network was established by evidence and jury verdict in federal court. The case significantly expanded the documentary record of the network\'s scope and operations.',
+    open_questions: [
+      'What additional individuals identified through sealed or partially-released court materials as participants in the network will face prosecution?',
+      'How did the network maintain access to prominent social and institutional contexts despite criminal conduct documented by multiple victims over many years?',
+      'What were the full details of Maxwell\'s cooperation or refusal to cooperate with federal prosecutors regarding other participants?',
+    ],
+    tags: ['sex trafficking', 'federal conviction', 'SDNY', 'Jeffrey Epstein', 'grooming', '2021', 'British', '20 years'],
+    evidence_level: 'verified',
+    confidence_score: 0.97,
+    color: '#64748b',
+    icon: '⚖️',
+    year: 2021,
+  },
+
+  {
+    id: 'little-saint-james',
+    title: 'Little Saint James Island',
+    category: 'Modern Mystery',
+    description: 'A 75-acre private island in the U.S. Virgin Islands purchased by Jeffrey Epstein around 1998, documented in court proceedings and civil litigation as a primary location of his sex trafficking operations. The island is staffed and maintained with permanent structures including a main residence. Victim testimony and civil litigation established Little Saint James as a central site of abuse. Epstein also purchased the adjacent Great Saint James Island in 2016. Following Epstein\'s 2019 death, the U.S. Virgin Islands government pursued civil litigation against Epstein\'s estate for trafficking operations conducted on the island, settling with the estate in 2024 for $105 million — acknowledging the estate\'s liability for operations there.',
+    claims: [
+      'Court records and victim testimony in multiple civil and criminal proceedings establish Little Saint James as a location where Epstein\'s trafficking network operated over multiple decades.',
+      'The USVI civil lawsuit alleged that Epstein used his business relationship with the territory to evade and obstruct law enforcement, and that local officials received tax benefits that may have influenced their oversight.',
+      'The $105 million settlement of the USVI civil case in 2024 represents legal acknowledgment of the estate\'s liability for trafficking operations conducted on the island.',
+    ],
+    criticisms: [
+      'The island itself is a location; inferences about specific non-convicted individuals who visited should be evaluated based on the evidentiary record of specific proceedings.',
+      'Media coverage has frequently mixed established court record facts with unverified allegations about particular visitors; the documented record should be distinguished from speculation.',
+    ],
+    mainstream_view: 'Little Saint James is documented as a primary location of Jeffrey Epstein\'s sex trafficking operation through court records, victim testimony, and civil litigation settlement. Its significance is a matter of legal record.',
+    open_questions: [
+      'What did USVI officials know about Epstein\'s activities, and when, given that the USVI government simultaneously pursued civil claims and received significant Epstein tax contributions?',
+      'What records remain in Epstein\'s estate related to the island\'s operations and visitor records?',
+    ],
+    tags: ['U.S. Virgin Islands', 'Epstein', 'sex trafficking', 'private island', 'USVI', 'civil litigation', '2024 settlement'],
+    evidence_level: 'verified',
+    confidence_score: 0.95,
+    color: '#6366f1',
+    icon: '🏝️',
+    coordinates: [18.3005, -64.8257],
+    year: 1998,
+  },
+
+  {
+    id: 'epstein-flight-logs',
+    title: 'Epstein Flight Logs',
+    category: 'Historical Controversy',
+    description: 'Records of flight activity aboard Jeffrey Epstein\'s private aircraft — primarily his Boeing 727 (colloquially referred to in media as the "Lolita Express") and a smaller Gulfstream. The flight logs were compiled from FAA records, pilot logbooks, and records obtained through civil litigation. Significant portions were made public through court proceedings; a substantial tranche was ordered unsealed in January 2024 by U.S. District Judge Loretta Preska as part of the civil lawsuit Giuffre v. Maxwell. The logs document passengers and destinations of Epstein\'s private travel, establishing a factual record of his social and professional network and corroborating victim accounts of travel to Epstein properties.',
+    claims: [
+      'The flight logs document that many prominent individuals traveled aboard Epstein\'s aircraft, establishing a factual record of his network that has been used in civil proceedings and investigations.',
+      'Flight log entries corroborate victim accounts of travel to Epstein properties and have been used by civil plaintiffs to identify potential witnesses.',
+      'The pattern of travel documented in the logs — including regular flights to Little Saint James — is consistent with court testimony from trafficking victims regarding the logistics of Epstein\'s network.',
+    ],
+    criticisms: [
+      'Presence on a flight log establishes that an individual flew on Epstein\'s aircraft; it does not establish knowledge of or participation in his criminal activities — these are distinct evidentiary questions that courts have consistently distinguished.',
+      'Media coverage has frequently treated flight log appearances as equivalent to participation in trafficking, conflating separate factual and legal questions.',
+      'Flight logs are incomplete records released through multiple proceedings; absence of a name in released records does not mean a person never flew with Epstein.',
+    ],
+    mainstream_view: 'The Epstein flight logs are authentic court-produced primary source documents whose evidentiary significance has been established by federal courts. The distinction between flight log appearances and criminal culpability is an important evidentiary and legal distinction that credible reporting observes.',
+    open_questions: [
+      'Do complete flight records for all of Epstein\'s aircraft exist, and will they be produced in ongoing or future legal proceedings?',
+      'How many individuals documented in the flight logs will be identified as having direct knowledge of or participation in Epstein\'s trafficking network?',
+      'What is the current status of federal investigations into Epstein\'s co-conspirators, and have the flight logs contributed to those investigations?',
+    ],
+    tags: ['Jeffrey Epstein', 'flight records', 'court documents', 'Boeing 727', 'SDNY', 'civil litigation', 'Giuffre', '2024'],
+    evidence_level: 'verified',
+    confidence_score: 0.95,
+    color: '#7c3aed',
+    icon: '✈️',
+    year: 2024,
+  },
+
+  // ── MYTHOLOGY / SYMBOLISM CLUSTER ──
+
+  {
+    id: 'pleiades-seven-sisters',
+    title: 'Pleiades / Seven Sisters',
+    category: 'Mythology',
+    description: 'The Pleiades is an open star cluster in the constellation Taurus, approximately 440 light-years from Earth, with seven stars typically visible to the naked eye. It is one of the most widely documented astronomical objects in human cultural history, featuring in the mythology, calendrics, and cosmology of cultures on six continents. In Greek tradition: the Seven Sisters, daughters of Atlas and Pleione. In Japanese culture: Subaru (昴). In Māori culture: Matariki, associated with the new year. In Aboriginal Australian traditions, the Pleiades appear in multiple distinct unconnected traditions as a group of women. In Hindu tradition: Kṛttikā, connected to the god Skanda. The cluster was used as a calendrical marker across multiple civilizations, with heliacal rising marking agricultural and ceremonial cycles from ancient Greece to Mesoamerica.',
+    claims: [
+      'The cross-cultural prevalence of Pleiades mythology in cultures with no documented historical contact — including independent Indigenous Australian traditions, Amazonian groups, and Pacific island cultures — has been proposed as evidence of astronomical knowledge preserved from a common ancestral cultural period possibly exceeding 100,000 years in age.',
+      'The "lost Pleiad" motif — one of the seven sisters described as invisible or dim — appears independently in Greek, Aboriginal Australian, and other traditions, potentially reflecting observation of the same faint star (Pleione or Merope) across millennia.',
+      'The Pleiades served as a practical calendrical tool across multiple independent civilizations, suggesting their prominence reflects both cultural and functional astronomical utility.',
+    ],
+    criticisms: [
+      'Inferring a 100,000-year-old common cultural origin requires extreme caution given the ease of independent invention for a highly visible, calendar-relevant astronomical cluster.',
+      'The "lost Pleiad" parallel may reflect independent observation of the same faint star rather than shared cultural inheritance.',
+      'Contemporary archaeoastronomical claims about Pleiades alignments in ancient monuments require rigorous methodology to distinguish intentional alignment from coincidence.',
+    ],
+    mainstream_view: 'The Pleiades cluster\'s prominence in world mythology is one of the most well-documented cases of cross-cultural astronomical significance. Its use as a calendrical marker in multiple independent civilizations reflects both practical utility and visual prominence. The proposed deep cultural antiquity hypothesis is a subject of ongoing archaeoastronomy and anthropology research.',
+    open_questions: [
+      'Does the cross-cultural "Seven Sisters" convergence reflect independent invention, genuine cultural diffusion, or some combination?',
+      'What accounts for the extraordinary consistency of the "seven sisters" numerical framing across cultures when many cluster stars are faint to typical naked-eye observers?',
+      'How were the Pleiades embedded in the ritual and agricultural calendrical systems of specific ancient cultures?',
+    ],
+    tags: ['Pleiades', 'Seven Sisters', 'Greek mythology', 'Matariki', 'Taurus', 'star cluster', 'archaeoastronomy', 'cross-cultural', 'calendrics', 'Subaru'],
+    evidence_level: 'verified',
+    confidence_score: 0.90,
+    color: '#b91c1c',
+    icon: '⭐',
+    year: -3000,
+  },
+
+  {
+    id: 'subaru-pleiades',
+    title: 'Subaru / Pleiades Symbolism',
+    category: 'Symbolism',
+    description: 'Subaru (昴) is the Japanese name for the Pleiades star cluster, meaning "to gather" or the clustering of stars. In Japanese astronomical tradition, the Pleiades were observed as one of the 28 lunar mansions (二十八宿, nijūhasshuku) used to track the moon\'s position across the year. The name became internationally known as the brand identity of Fuji Heavy Industries\' automobile line, launched in the 1950s. The Subaru logo — six stars arranged in an ellipse — depicts the Pleiades as visible to the naked eye and also references the corporate history of the companies that formed Fuji Heavy Industries. This makes Subaru one of the most globally visible examples of ancient astronomical naming traditions persisting into modern commercial culture.',
+    claims: [
+      'The Subaru corporate name deliberately uses traditional Japanese astronomical nomenclature, carrying the cultural weight of the Pleiades\' deep significance in Japanese tradition into modern commercial branding.',
+      'The Subaru example demonstrates that ancient astronomical naming traditions can retain sufficient cultural significance to function effectively as modern brand identities.',
+      'Cross-cultural researchers cite the Subaru/Pleiades connection as one of the most visible contemporary examples of ancient cosmological symbol systems in the modern world.',
+    ],
+    criticisms: [
+      'The Subaru/Pleiades connection is historically documented and uncontroversial; it becomes significant for the archive primarily in context of broader claims about Pleiades symbolism\'s deep historical roots.',
+      'The Subaru logo\'s six-star design reflects corporate history as much as astronomical observation; conflating logo meaning with ancient astronomical tradition requires careful contextual distinction.',
+    ],
+    mainstream_view: 'The etymology and symbolism of the Subaru name is historically documented in Japanese automotive and cultural history. The Pleiades\' significance in Japanese astronomical tradition is well-established in academic Japanese studies.',
+    open_questions: [
+      'How has the Pleiades\' role in Japanese cultural and astronomical tradition evolved from pre-modern to contemporary contexts?',
+      'What other contemporary commercial or institutional naming traditions draw on ancient astronomical symbolism in similarly traceable ways?',
+    ],
+    tags: ['Subaru', 'Pleiades', 'Japanese astronomy', 'corporate symbolism', 'star cluster', 'lunar mansions', 'Japan', 'cultural astronomy'],
+    evidence_level: 'verified',
+    confidence_score: 0.92,
+    color: '#0891b2',
+    icon: '🌟',
+    coordinates: [35.6762, 139.6503],
+    year: 1953,
+  },
+
+  {
+    id: 'mkultra',
+    title: 'MKUltra',
+    category: 'Intelligence Operation',
+    description: 'A covert CIA program of human experimentation in behavioural research, mind-control techniques, and interrogation methods, authorized in April 1953 under Director Allen Dulles and continuing into the early 1970s. MKUltra involved administration of LSD and other psychoactive drugs to subjects often without their knowledge or consent, sensory deprivation, hypnosis, psychological manipulation, and collaboration with academic researchers and hospitals across the United States and Canada. The program was publicly exposed through the Church Committee (1975) and Senate hearings (1977) following CIA Director Richard Helms\'s order to destroy most MKUltra records in 1973.',
+    claims: [
+      'MKUltra is documented proof that the CIA conducted unauthorized, non-consensual human experimentation — a verified historical case of institutional abuse, not a conspiracy theory.',
+      'The Church Committee and subsequent FOIA releases confirmed the program\'s scale, including experiments on unwitting subjects in hospitals, prisons, and universities.',
+      'Richard Helms\'s 1973 destruction of MKUltra records severely limited accountability and means the surviving documentation represents only a fraction of the full program.',
+    ],
+    criticisms: [
+      'Documented MKUltra facts should not be used to validate unrelated or unsubstantiated mind-control claims that go beyond the surviving historical record.',
+      'Popular narratives routinely merge MKUltra with fictional programs and speculative claims, distorting public understanding of what the documented record actually shows.',
+      'The destruction of most records makes definitive statements about the full scope of the program permanently impossible.',
+    ],
+    mainstream_view: 'MKUltra is a historically verified CIA program and a major documented case of Cold War-era intelligence-community ethical failure. It is studied as a benchmark for the consequences of inadequate oversight and as evidence that confirmed government conspiracies can be distinguished from speculative ones by documentary evidence and institutional investigation.',
+    open_questions: [
+      'What was the full scope and subject count of MKUltra before Helms ordered the records destroyed in January 1973?',
+      'How many individuals were subjected to non-consensual experimentation without ever being informed?',
+      'How can oversight mechanisms prevent similar programs from developing within intelligence bureaucracies operating under classification?',
+    ],
+    tags: ['CIA', 'Cold War', 'mind control', 'LSD', 'human experimentation', 'Church Committee', 'non-consensual', '1950s', '1960s', 'Allen Dulles'],
+    evidence_level: 'verified',
+    confidence_score: 0.95,
+    color: '#1d4ed8',
+    icon: '🧬',
+    coordinates: [38.9518, -77.1462],
+    date_start: 1953,
+    date_end: 1973,
+    year: 1953,
   },
 
 ];

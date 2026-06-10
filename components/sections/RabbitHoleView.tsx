@@ -8,8 +8,15 @@ import { formatYear, RELATIONSHIP_COLORS, RELATIONSHIP_LABELS, TIER_COLORS, scor
 import { useUserStore } from '@/lib/store/userStore';
 import ConnectionCard from '@/components/rabbit-hole/ConnectionCard';
 import PathCard from '@/components/rabbit-hole/PathCard';
+import ExplorationSynthesis from '@/components/synthesis/ExplorationSynthesis';
 import type { SourceRecord } from '@/lib/source-types';
 import type { GraphNode } from '@/lib/graph/types';
+import type { SynthesisResult } from '@/lib/synthesis/rule-engine';
+
+// ── Synthesis constants ───────────────────────────────────────────────────────
+const SYNTHESIS_THRESHOLD = 5;  // trigger at this many unique nodes
+const SYNTHESIS_STEP      = 2;  // re-trigger every N new nodes after first
+const IDLE_DELAY_MS       = 8000; // wait this long after last navigate
 
 type Tab = 'connections' | 'paths' | 'sources' | 'locations' | 'timeline';
 
@@ -143,6 +150,14 @@ export default function RabbitHoleView() {
   const [relFilter, setRelFilter] = useState<string>('');
   const abortRef = useRef<AbortController | null>(null);
 
+  // ── Synthesis state ────────────────────────────────────────────────────────
+  type SynthesisResponse = SynthesisResult & { narrative?: string | null };
+  const [synthesis,        setSynthesis]        = useState<SynthesisResponse | null>(null);
+  const [synthLoading,     setSynthLoading]     = useState(false);
+  const [showSynthesis,    setShowSynthesis]    = useState(false);
+  const [lastSynthesisLen, setLastSynthesisLen] = useState(0); // session path length when last triggered
+  const synthTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Clear the pending node signal immediately after consuming it on mount
   useEffect(() => {
     if (pendingRabbitHoleNodeId) setPendingRabbitHoleNodeId(null);
@@ -168,6 +183,44 @@ export default function RabbitHoleView() {
   }, []);
 
   useEffect(() => { load(currentId); }, [currentId, load]);
+
+  // ── Synthesis trigger ──────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!currentId) return;
+
+    // Deduplicated session path (order preserved, currentId at end)
+    const rawPath  = [...history, currentId].filter(Boolean);
+    const seen     = new Set<string>();
+    const path     = rawPath.filter(id => { if (seen.has(id)) return false; seen.add(id); return true; });
+    const pathLen  = path.length;
+
+    const firstTrigger = pathLen >= SYNTHESIS_THRESHOLD && lastSynthesisLen === 0;
+    const stepTrigger  = lastSynthesisLen > 0 && (pathLen - lastSynthesisLen) >= SYNTHESIS_STEP;
+
+    if (!firstTrigger && !stepTrigger) return;
+
+    // Reset idle timer — waits until user pauses
+    if (synthTimerRef.current) clearTimeout(synthTimerRef.current);
+    synthTimerRef.current = setTimeout(async () => {
+      setSynthLoading(true);
+      setShowSynthesis(true);
+      setLastSynthesisLen(pathLen);
+      try {
+        const res  = await fetch('/api/synthesis', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ nodeIds: path }),
+        });
+        if (res.ok) {
+          const json: SynthesisResponse = await res.json();
+          setSynthesis(json);
+        }
+      } catch { /* silent */ }
+      finally { setSynthLoading(false); }
+    }, IDLE_DELAY_MS);
+
+    return () => { if (synthTimerRef.current) clearTimeout(synthTimerRef.current); };
+  }, [currentId, history.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const navigate = (id: string) => {
     setHistory(prev => [...prev, currentId]);
@@ -552,6 +605,25 @@ export default function RabbitHoleView() {
           </div>
         </div>
       )}
+
+      {/* Synthesis panel — floating bottom-right, auto-triggered */}
+      <AnimatePresence>
+        {showSynthesis && (synthesis || synthLoading) && (
+          <ExplorationSynthesis
+            result={synthesis ?? {
+              nodeIds: [], nodeCount: 0, nodes: [], themes: [], connections: [],
+              contradictions: [], evidenceBreakdown: { verified: 0, strong_evidence: 0,
+                debated: 0, speculative: 0, mythological: 0, qualityScore: 0, dominantLevel: 'speculative' },
+              categoryDistribution: [], bridges: [], connectivity: 0,
+              pathType: 'mixed', qualityScore: 0, isMinimallyConnected: false,
+              synthesizedAt: new Date().toISOString(),
+            }}
+            loading={synthLoading}
+            onClose={() => setShowSynthesis(false)}
+            onExplore={(id) => { setShowSynthesis(false); navigate(id); }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

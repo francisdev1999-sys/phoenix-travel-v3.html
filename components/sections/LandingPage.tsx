@@ -1,14 +1,19 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 import { ChevronDown, Compass, Zap } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
-import TunnelEffect from '@/components/effects/TunnelEffect';
-import ParticleField from '@/components/effects/ParticleField';
+
+const TunnelEffect  = lazy(() => import('@/components/effects/TunnelEffect'));
+const ParticleField = lazy(() => import('@/components/effects/ParticleField'));
+import { useNodes, useEdges } from '@/lib/graph/useNodes';
+import { ancientSites } from '@/lib/data/sites';
 
 const GLYPHS = ['⬡', '◈', '⊕', '△', '◇', '✦', '⟁', '⬟', '✧', '⊗', '⌬', '⎔'];
 
 export default function LandingPage() {
+  const nodes = useNodes();
+  const edges = useEdges();
   const setCurrentView = useUserStore((s) => s.setCurrentView);
   const [glyphIndex, setGlyphIndex] = useState(0);
   const [titleVisible, setTitleVisible] = useState(false);
@@ -58,9 +63,11 @@ export default function LandingPage() {
 
   return (
     <div ref={containerRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#000005]">
-      {/* Background layers */}
-      <TunnelEffect />
-      <ParticleField />
+      {/* Background layers — lazy to avoid blocking first paint */}
+      <Suspense fallback={null}>
+        <TunnelEffect />
+        <ParticleField />
+      </Suspense>
 
       {/* Vignette */}
       <div className="fixed inset-0 pointer-events-none z-10"
@@ -194,9 +201,9 @@ export default function LandingPage() {
             className="flex items-center gap-8 mt-8"
           >
             {[
-              { label: 'Theories', value: '50+' },
-              { label: 'Connections', value: '200+' },
-              { label: 'Ancient Sites', value: '12' },
+              { label: 'Theories', value: String(nodes.length) },
+              { label: 'Connections', value: String(edges.length) },
+              { label: 'Ancient Sites', value: String(ancientSites.length) },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <div className="text-2xl font-black text-purple-300">{stat.value}</div>
