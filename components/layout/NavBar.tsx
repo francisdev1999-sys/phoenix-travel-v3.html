@@ -8,8 +8,16 @@ import {
 } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { nodes as staticNodes } from '@/lib/graph';
-import { CATEGORY_COLORS } from '@/lib/graph';
+import { CATEGORY_COLORS } from '@/lib/graph/colors';
+
+type LightNode = { id: string; title: string; category: string; description?: string; tags?: string[]; icon?: string; evidence_level?: string };
+let _staticNodes: LightNode[] | null = null;
+async function lazyStaticNodes(): Promise<LightNode[]> {
+  if (_staticNodes) return _staticNodes;
+  const mod = await import('@/lib/graph/nodes');
+  _staticNodes = mod.nodes as unknown as LightNode[];
+  return _staticNodes;
+}
 import UserProfilePanel from '@/components/sections/UserProfilePanel';
 import { usePerformanceStore, getEffectiveMode, type PerfMode } from '@/lib/store/performanceStore';
 
@@ -44,9 +52,10 @@ function normaliseDbNode(n: Record<string, unknown>): SearchResult {
   };
 }
 
-function searchStatic(q: string): SearchResult[] {
+async function searchStatic(q: string): Promise<SearchResult[]> {
   const lq = q.toLowerCase();
-  return staticNodes
+  const nodes = await lazyStaticNodes();
+  return nodes
     .filter(n =>
       n.title.toLowerCase().includes(lq) ||
       n.description?.toLowerCase().includes(lq) ||
@@ -256,7 +265,7 @@ export default function NavBar() {
         }
       }
     } catch { /* fall through */ }
-    setResults(searchStatic(q));
+    setResults(await searchStatic(q));
     setSearching(false);
   }, []);
 
