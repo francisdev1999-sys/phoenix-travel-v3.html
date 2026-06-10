@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useSession, signIn } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, Network, GitBranch, BookMarked, Activity, FileWarning, Plus, Loader2, Package, InboxIcon, Sparkles } from 'lucide-react';
+import { ShieldCheck, Network, GitBranch, BookMarked, Activity, FileWarning, Plus, Loader2, Package, InboxIcon, Sparkles, Link2 } from 'lucide-react';
 import AdminStats from '@/components/admin/AdminStats';
 import ProposedNodeCard from '@/components/admin/ProposedNodeCard';
 import ProposedEdgeCard from '@/components/admin/ProposedEdgeCard';
@@ -15,8 +15,10 @@ import ImportBatchList from '@/components/admin/ImportBatchList';
 import ImportBatchDetail from '@/components/admin/ImportBatchDetail';
 import DraftNodeQueue from '@/components/admin/DraftNodeQueue';
 import RelationshipSuggestions from '@/components/admin/RelationshipSuggestions';
+import ArchiveAuditDashboard from '@/components/admin/ArchiveAuditDashboard';
+import SourceLinkEnrichment from '@/components/admin/SourceLinkEnrichment';
 
-type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports' | 'imports' | 'drafts' | 'suggestions';
+type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports' | 'imports' | 'drafts' | 'suggestions' | 'ai-audit' | 'source-enrichment';
 
 export default function AdminPanel() {
   const { data: session, status } = useSession();
@@ -96,9 +98,11 @@ export default function AdminPanel() {
     { id: 'nodes',       label: 'Nodes',         icon: <Network size={13} /> },
     { id: 'edges',       label: 'Relationships', icon: <GitBranch size={13} /> },
     { id: 'sources',     label: 'Sources',       icon: <BookMarked size={13} /> },
-    { id: 'suggestions', label: 'Suggestions',   icon: <Sparkles size={13} /> },
-    { id: 'diagnostics', label: 'Diagnostics',   icon: <Activity size={13} /> },
-    { id: 'reports',     label: 'Reports',       icon: <FileWarning size={13} /> },
+    { id: 'suggestions',        label: 'Suggestions',    icon: <Sparkles size={13} />   },
+    { id: 'ai-audit',           label: 'Archive Audit',  icon: <ShieldCheck size={13} /> },
+    { id: 'source-enrichment',  label: 'Link Enrichment',icon: <Link2 size={13} />       },
+    { id: 'diagnostics',        label: 'Diagnostics',    icon: <Activity size={13} />    },
+    { id: 'reports',            label: 'Reports',        icon: <FileWarning size={13} /> },
   ];
 
   return (
@@ -243,8 +247,10 @@ export default function AdminPanel() {
 
           {tab === 'sources' && <SourceReviewQueue />}
 
-          {tab === 'suggestions' && <RelationshipSuggestions />}
-          {tab === 'diagnostics' && <GraphDiagnostics />}
+          {tab === 'suggestions'       && <RelationshipSuggestions />}
+          {tab === 'ai-audit'          && <ArchiveAuditDashboard />}
+          {tab === 'source-enrichment' && <SourceLinkEnrichment />}
+          {tab === 'diagnostics'       && <GraphDiagnostics />}
 
           {tab === 'reports' && <AdminReports />}
         </motion.div>

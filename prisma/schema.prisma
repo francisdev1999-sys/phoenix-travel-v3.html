@@ -621,3 +621,49 @@ model AuditLog {
   @@index([createdAt])
   @@index([action])
 }
+
+model SystemConfig {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}
+
+model ArchiveAuditRun {
+  id          String                @id @default(cuid())
+  status      String                @default("running")
+  triggeredBy String
+  startedAt   DateTime              @default(now())
+  completedAt DateTime?
+  summary     Json                  @default("{}")
+  settings    Json                  @default("{}")
+  findings    ArchiveAuditFinding[]
+
+  @@index([status])
+  @@index([startedAt(sort: Desc)])
+}
+
+model ArchiveAuditFinding {
+  id          String          @id @default(cuid())
+  runId       String
+  run         ArchiveAuditRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  type        String
+  severity    String
+  status      String          @default("pending")
+  nodeId      String?
+  edgeId      String?
+  title       String
+  description String          @db.Text
+  beforeState Json            @default("{}")
+  afterState  Json            @default("{}")
+  reasoning   String          @db.Text
+  autoFixable Boolean         @default(false)
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  appliedAt   DateTime?
+  applyError  String?
+
+  @@index([runId, status])
+  @@index([type, severity])
+  @@index([nodeId])
+}
