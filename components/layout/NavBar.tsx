@@ -4,14 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Globe, BarChart3, Clock, MapPin, Grid3X3, User,
   Volume2, VolumeX, Menu, X, LogIn, LogOut, Activity, BookMarked,
-  ShieldCheck, Rabbit, Loader2,
+  ShieldCheck, Rabbit, Loader2, MoreHorizontal, Wrench,
 } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { nodes as staticNodes } from '@/lib/graph';
 import { CATEGORY_COLORS, EVIDENCE_COLORS } from '@/lib/graph';
 
-const NAV_BASE = [
+const NAV_PRIMARY = [
   { id: 'graph',          label: 'Knowledge Graph', icon: Grid3X3 },
   { id: 'universe',       label: 'Universe View',   icon: Globe },
   { id: 'timeline',       label: 'Timeline',        icon: Clock },
@@ -19,10 +19,15 @@ const NAV_BASE = [
   { id: 'evidence-board', label: 'Evidence Board',  icon: BarChart3 },
   { id: 'rabbit-hole',    label: 'Rabbit Hole',     icon: Rabbit },
   { id: 'dashboard',      label: 'Dashboard',       icon: User },
-  { id: 'diagnostics',    label: 'Diagnostics',     icon: Activity },
-  { id: 'sources',        label: 'Sources',         icon: BookMarked },
 ];
-const NAV_ADMIN = { id: 'admin', label: 'Admin', icon: ShieldCheck };
+// Always-visible tools (no auth required)
+const NAV_TOOLS_BASE = [
+  { id: 'diagnostics', label: 'Diagnostics', icon: Activity },
+  { id: 'sources',     label: 'Sources',     icon: BookMarked },
+];
+const NAV_ADMIN = { id: 'admin', label: 'Admin Panel', icon: ShieldCheck };
+// Keep NAV_BASE alias for mobile menu
+const NAV_BASE = [...NAV_PRIMARY, ...NAV_TOOLS_BASE];
 
 interface SearchResult {
   id: string;
@@ -68,6 +73,8 @@ export default function NavBar() {
   const [mobileOpen, setMobileOpen]     = useState(false);
   const [searchOpen, setSearchOpen]     = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [toolsOpen, setToolsOpen]       = useState(false);
+  const toolsRef = useRef<HTMLDivElement>(null);
   const [query, setQuery]               = useState('');
   const [results, setResults]           = useState<SearchResult[]>([]);
   const [searching, setSearching]       = useState(false);
@@ -80,6 +87,7 @@ export default function NavBar() {
   const role    = (session?.user as { role?: string })?.role ?? 'user';
   const isAdmin = role === 'owner' || role === 'admin';
   const navItems = isAdmin ? [...NAV_BASE, NAV_ADMIN] : NAV_BASE;
+  const toolsItems = isAdmin ? [...NAV_TOOLS_BASE, NAV_ADMIN] : NAV_TOOLS_BASE;
 
   // Detect whether Google OAuth is actually configured by checking the
   // /api/auth/providers endpoint once on mount.
@@ -108,11 +116,14 @@ export default function NavBar() {
     setResults([]);
   };
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setDropdownOpen(false);
+      }
+      if (toolsRef.current && !toolsRef.current.contains(e.target as Node)) {
+        setToolsOpen(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -181,26 +192,78 @@ export default function NavBar() {
             </span>
           </button>
 
-          {/* Desktop Nav */}
-          <div className="hidden lg:flex items-center gap-1">
-            {navItems.map((item) => {
+          {/* Desktop Nav — primary views */}
+          <div className="hidden lg:flex items-center gap-1 flex-shrink-0">
+            {NAV_PRIMARY.map((item) => {
               const Icon = item.icon;
               const active = currentView === item.id;
               return (
                 <button
                   key={item.id}
                   onClick={() => handleNav(item.id)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+                  className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap ${
                     active
                       ? 'bg-purple-900/50 text-purple-300 border border-purple-500/30'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
                   }`}
                 >
                   <Icon size={13} />
-                  {item.label}
+                  <span className="hidden xl:inline">{item.label}</span>
                 </button>
               );
             })}
+
+            {/* Tools dropdown — Diagnostics, Sources, Admin */}
+            <div ref={toolsRef} className="relative">
+              <button
+                onClick={() => setToolsOpen(!toolsOpen)}
+                className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+                  toolsItems.some(t => t.id === currentView) || toolsOpen
+                    ? 'bg-purple-900/50 text-purple-300 border border-purple-500/30'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                }`}
+                title="Tools"
+              >
+                <Wrench size={13} />
+                <span className="hidden xl:inline">Tools</span>
+                <MoreHorizontal size={10} className="opacity-50" />
+              </button>
+              <AnimatePresence>
+                {toolsOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                    transition={{ duration: 0.12 }}
+                    className="absolute left-0 top-10 w-44 glass-dark border border-purple-900/40 rounded-xl shadow-2xl z-50 py-1"
+                  >
+                    {toolsItems.map((item) => {
+                      const Icon = item.icon;
+                      const active = currentView === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => { handleNav(item.id); setToolsOpen(false); }}
+                          className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-colors text-left ${
+                            active
+                              ? 'text-purple-300 bg-purple-900/30'
+                              : 'text-slate-400 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          <Icon size={13} />
+                          {item.label}
+                          {item.id === 'admin' && (
+                            <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-300 uppercase font-bold">
+                              Owner
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
           {/* Right side */}
