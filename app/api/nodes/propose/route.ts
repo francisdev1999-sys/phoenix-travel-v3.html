@@ -7,6 +7,7 @@ import { checkTrustGate, checkSubmissionRate, validateNodeSubmission, checkDupli
 import { logActivity } from '@/lib/rank-system';
 import { rateLimit } from '@/lib/rate-limiter';
 import { auditProposedNode } from '@/lib/ai/node-auditor';
+import { auditProposalSimilarity } from '@/lib/similarity/proposal-similarity';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -143,8 +144,9 @@ export async function POST(req: NextRequest) {
     logActivity(session.user.id, 'submit', { type: 'node', proposalId: node.id }),
   ]);
 
-  // AI quality audit — fire-and-forget, never blocks the response
+  // AI quality audit + similarity scoring — fire-and-forget, never block the response
   void auditProposedNode(node.id);
+  void auditProposalSimilarity(node.id);
 
   return NextResponse.json({ ...node, warnings: validation.warnings, risk: validation.risk }, { status: 201 });
 }

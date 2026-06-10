@@ -1,10 +1,12 @@
 'use client';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, User, Calendar, Bot, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { ChevronDown, ChevronUp, User, Calendar, Bot, AlertTriangle, CheckCircle, Clock, Search, TrendingUp } from 'lucide-react';
 import { EVIDENCE_COLORS, CATEGORY_COLORS } from '@/lib/graph';
 import ReviewActions from './ReviewActions';
 import type { NodeAuditResult, AuditFlag } from '@/lib/ai/node-auditor';
+import type { ProposalSimilarityResult, ProposalSimilarityEntry } from '@/lib/similarity/proposal-similarity';
+import type { SimilarityDimensions } from '@/lib/similarity/engine';
 
 interface ProposedNode {
   id: string;
@@ -24,6 +26,7 @@ interface ProposedNode {
   reviewNotes?: string | null;
   aiAuditResult?: NodeAuditResult | null;
   aiAuditedAt?: string | null;
+  proposalSimilarity?: ProposalSimilarityResult | null;
   createdAt: string;
   submitter?: { id: string; name?: string | null; image?: string | null } | null;
 }
@@ -126,6 +129,15 @@ export default function ProposedNodeCard({ node, onReviewed }: Props) {
                 : <div className="flex items-center gap-2 text-xs text-slate-600 py-1">
                     <Bot size={12} />
                     <span>AI audit pending…</span>
+                  </div>
+              }
+
+              {/* Similarity against existing archive nodes */}
+              {node.proposalSimilarity
+                ? <ProposalSimilarityPanel result={node.proposalSimilarity} />
+                : <div className="flex items-center gap-2 text-xs text-slate-600 py-1">
+                    <Search size={12} />
+                    <span>Similarity scan pending…</span>
                   </div>
               }
 
@@ -304,6 +316,141 @@ function AuditPanel({ audit }: { audit: NodeAuditResult }) {
               <p className="text-[9px] text-slate-600 leading-relaxed border-t border-purple-900/10 pt-2">
                 ⚠ AI audit evaluates internal consistency only — not factual accuracy.
                 Human review is required before any approval decision.
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Proposal Similarity Panel ─────────────────────────────────────────────────
+
+const DIM_LABELS: Record<keyof SimilarityDimensions, string> = {
+  thematic:     'Thematic',
+  timeline:     'Timeline',
+  geographic:   'Geographic',
+  source:       'Sources',
+  evidence:     'Evidence',
+  entity:       'Entities',
+  relationship: 'Graph links',
+};
+
+function SimilarEntryRow({ entry }: { entry: ProposalSimilarityEntry }) {
+  const [open, setOpen] = useState(false);
+  const pct = Math.round(entry.overall * 100);
+  const color = pct >= 65 ? '#a855f7' : pct >= 40 ? '#f59e0b' : '#64748b';
+  return (
+    <div className="rounded-lg border border-purple-900/20 bg-white/3 overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-white/5 transition-all"
+      >
+        <span className="text-sm flex-shrink-0">{entry.icon ?? '◈'}</span>
+        <span className="flex-1 text-xs font-medium text-white truncate">{entry.title}</span>
+        <span className="text-[10px] text-slate-500 flex-shrink-0">{entry.category}</span>
+        <span className="text-xs font-bold flex-shrink-0 ml-1" style={{ color }}>{pct}%</span>
+        {open ? <ChevronUp size={11} className="text-slate-500 flex-shrink-0" /> : <ChevronDown size={11} className="text-slate-500 flex-shrink-0" />}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
+            <div className="px-3 pb-3 pt-2 border-t border-purple-900/10 space-y-1.5">
+              {(Object.entries(entry.dimensions) as [keyof SimilarityDimensions, { score: number; rationale: string }][]).map(([k, v]) => {
+                const dp = Math.round(v.score * 100);
+                const dc = dp >= 65 ? '#a855f7' : dp >= 40 ? '#f59e0b' : '#64748b';
+                return (
+                  <div key={k}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] text-slate-600 w-14 flex-shrink-0">{DIM_LABELS[k]}</span>
+                      <div className="flex-1 h-1 rounded-full bg-slate-800">
+                        <div className="h-full rounded-full" style={{ width: `${dp}%`, background: dc }} />
+                      </div>
+                      <span className="text-[9px] w-6 text-right flex-shrink-0" style={{ color: dc }}>{dp}%</span>
+                    </div>
+                    <p className="text-[9px] text-slate-600 ml-16 leading-relaxed">{v.rationale}</p>
+                  </div>
+                );
+              })}
+
+              {entry.critic.contradictions.length > 0 && (
+                <div className="pt-1 space-y-1">
+                  {entry.critic.contradictions.map((c, i) => (
+                    <p key={i} className="text-[9px] text-amber-500/80 leading-relaxed flex gap-1.5">
+                      <AlertTriangle size={9} className="flex-shrink-0 mt-0.5" />{c.detail}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function ProposalSimilarityPanel({ result }: { result: ProposalSimilarityResult }) {
+  const [open, setOpen] = useState(false);
+  const top = result.top_similar[0];
+  const topPct = top ? Math.round(top.overall * 100) : 0;
+  const topColor = topPct >= 65 ? '#a855f7' : topPct >= 40 ? '#f59e0b' : '#64748b';
+
+  return (
+    <div className="rounded-xl border border-purple-900/30 bg-white/3 overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-white/5 transition-all"
+      >
+        <Search size={13} className="text-purple-400 flex-shrink-0" />
+
+        {top ? (
+          <span className="text-[10px] text-slate-400 flex-1 truncate">
+            Closest match: <span className="text-white font-medium">{top.title}</span>
+          </span>
+        ) : (
+          <span className="text-[10px] text-slate-500 flex-1">No close matches found</span>
+        )}
+
+        {top && (
+          <span className="text-xs font-bold flex-shrink-0" style={{ color: topColor }}>{topPct}%</span>
+        )}
+
+        <span className="text-[10px] text-slate-600 flex-shrink-0">Similarity scan</span>
+        {open ? <ChevronUp size={12} className="text-slate-500 flex-shrink-0" /> : <ChevronDown size={12} className="text-slate-500 flex-shrink-0" />}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
+            <div className="px-3 pb-3 border-t border-purple-900/20 pt-3 space-y-3">
+
+              <div className="p-2.5 rounded-lg border border-amber-500/20 bg-amber-900/5">
+                <p className="text-[9px] text-amber-400/80 leading-relaxed">
+                  <span className="font-bold">Similarity ≠ evidence.</span>{' '}
+                  {result.disclaimer}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                {result.top_similar.map(entry => (
+                  <SimilarEntryRow key={entry.nodeId} entry={entry} />
+                ))}
+              </div>
+
+              {result.top_similar.some(e => e.research_potential >= 0.6) && (
+                <div className="flex items-center gap-1.5 text-[10px] text-purple-400">
+                  <TrendingUp size={10} />
+                  <span>
+                    {result.top_similar.filter(e => e.research_potential >= 0.6).length} match(es) with high research potential — may be worth cross-referencing during review.
+                  </span>
+                </div>
+              )}
+
+              <p className="text-[9px] text-slate-600 border-t border-purple-900/10 pt-2">
+                Scanned {new Date(result.computed_at).toLocaleString()}
               </p>
             </div>
           </motion.div>
