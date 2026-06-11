@@ -1,3 +1,10 @@
+export interface WebSource {
+  url:      string;
+  title:    string;
+  type:     'wikipedia' | 'wikidata' | 'academic' | 'news' | 'other';
+  excerpt?: string;
+}
+
 export type FindingType =
   | 'orphan' | 'stale_edge' | 'weak_edge' | 'missing_fields'
   | 'duplicate' | 'source_quality' | 'ai_quality' | 'category_mismatch';
