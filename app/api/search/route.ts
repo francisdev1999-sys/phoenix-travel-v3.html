@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { rateLimit } from '@/lib/rate-limiter';
 
@@ -52,25 +53,30 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'q is required' }, { status: 400 });
   }
 
+  // ── Build reusable conditional SQL fragments ──────────────────────────────
+  const categoryFilter = category
+    ? Prisma.sql`AND EXISTS (SELECT 1 FROM "Category" c WHERE c."id" = n."categoryId" AND c."slug" = ${category})`
+    : Prisma.empty;
+  const evidenceFilter = evidence
+    ? Prisma.sql`AND n."evidenceLevel" = ${evidence}`
+    : Prisma.empty;
+
   try {
     // ── Tier 1: Full-text search (tsvector) ────────────────────────────────
     const exactResults = await prisma.$queryRaw<{ id: string; rank: number }[]>`
       SELECT n."id",
              ts_rank(n."search_vector",
-                     websearch_to_tsquery('english', unaccent(${q}))) AS "rank"
+                     websearch_to_tsquery('english', ${q})) AS "rank"
       FROM   "Node" n
-      WHERE  n."search_vector" @@ websearch_to_tsquery('english', unaccent(${q}))
+      WHERE  n."search_vector" @@ websearch_to_tsquery('english', ${q})
         AND  n."status" = 'published'
-        ${category ? prisma.$queryRaw`AND EXISTS (
-            SELECT 1 FROM "Category" c WHERE c."id" = n."categoryId" AND c."slug" = ${category}
-          )` : prisma.$queryRaw``}
-        ${evidence ? prisma.$queryRaw`AND n."evidenceLevel" = ${evidence}` : prisma.$queryRaw``}
+        ${categoryFilter}
+        ${evidenceFilter}
       ORDER  BY "rank" DESC
       LIMIT  50
     `;
 
     // ── Tier 2: Fuzzy search (pg_trgm) ────────────────────────────────────
-    // Search on title and tags separately; union the results
     const fuzzyResults = await prisma.$queryRaw<{ id: string; sim: number }[]>`
       SELECT DISTINCT ON (n."id") n."id",
              GREATEST(
@@ -91,18 +97,13 @@ export async function GET(req: NextRequest) {
               AND similarity(t."tag", ${q}) > ${TRGM_THRESHOLD}
           )
         )
-        ${category ? prisma.$queryRaw`AND EXISTS (
-            SELECT 1 FROM "Category" c WHERE c."id" = n."categoryId" AND c."slug" = ${category}
-          )` : prisma.$queryRaw``}
-        ${evidence ? prisma.$queryRaw`AND n."evidenceLevel" = ${evidence}` : prisma.$queryRaw``}
+        ${categoryFilter}
+        ${evidenceFilter}
       ORDER  BY n."id", "sim" DESC
       LIMIT  50
     `;
 
     // ── Tier 3: Semantic search (pgvector) ────────────────────────────────
-    // Only runs when a pre-computed embedding is passed by the client.
-    // The caller (UI) is responsible for generating the embedding via
-    // POST /api/search/embed, then passing it here as base64 Float32Array.
     let semanticResults: { id: string; similarity: number }[] = [];
 
     if (embParam) {
@@ -111,21 +112,26 @@ export async function GET(req: NextRequest) {
         const f32  = new Float32Array(buf.buffer, buf.byteOffset, buf.byteLength / 4);
         const vec  = `[${Array.from(f32).join(',')}]`;
 
+        const categoryFilterSem = category
+          ? Prisma.sql`AND EXISTS (SELECT 1 FROM "Category" c WHERE c."id" = n."categoryId" AND c."slug" = ${category})`
+          : Prisma.empty;
+        const evidenceFilterSem = evidence
+          ? Prisma.sql`AND n."evidenceLevel" = ${evidence}`
+          : Prisma.empty;
+
         semanticResults = await prisma.$queryRaw<{ id: string; similarity: number }[]>`
           SELECT ne."nodeId" AS "id",
                  1 - (ne."embedding" <=> ${vec}::vector) AS "similarity"
           FROM   "NodeEmbedding" ne
           JOIN   "Node" n ON n."id" = ne."nodeId"
           WHERE  n."status" = 'published'
-            ${category ? prisma.$queryRaw`AND EXISTS (
-                SELECT 1 FROM "Category" c WHERE c."id" = n."categoryId" AND c."slug" = ${category}
-              )` : prisma.$queryRaw``}
-            ${evidence ? prisma.$queryRaw`AND n."evidenceLevel" = ${evidence}` : prisma.$queryRaw``}
+            ${categoryFilterSem}
+            ${evidenceFilterSem}
           ORDER  BY ne."embedding" <=> ${vec}::vector
           LIMIT  50
         `;
       } catch {
-        // Invalid embedding — skip semantic tier
+        // Invalid embedding or pgvector unavailable — skip semantic tier
       }
     }
 
