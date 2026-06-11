@@ -1,7 +1,8 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, ChevronDown, ChevronUp, MapPin, BookMarked, Loader2, Database } from 'lucide-react';
+import { Clock, ChevronDown, ChevronUp, MapPin, BookMarked, Loader2, Database, Globe } from 'lucide-react';
+import { useUserStore } from '@/lib/store/userStore';
 import type { TimelineEntry } from '@/app/api/timeline/route';
 
 const ERA_COLORS: Record<string, string> = {
@@ -32,23 +33,51 @@ const formatYear = (year: number) =>
   year < 0 ? `${Math.abs(year).toLocaleString()} BCE` : `${year.toLocaleString()} CE`;
 
 export default function TimelineExplorer() {
-  const [events,       setEvents]       = useState<TimelineEntry[]>([]);
-  const [loading,      setLoading]      = useState(true);
-  const [activeEras,   setActiveEras]   = useState<string[]>(
+  const [events,     setEvents]     = useState<TimelineEntry[]>([]);
+  const [loading,    setLoading]    = useState(true);
+  const [activeEras, setActiveEras] = useState<string[]>(
     ['ancient', 'classical', 'medieval', 'modern', 'contemporary'],
   );
-  const [selected,     setSelected]     = useState<string | null>(null);
+  const [selected,   setSelected]   = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const eventRefs    = useRef<Record<string, HTMLDivElement | null>>({});
 
+  const { focusedTheoryId, setFocusedTheoryId } = useUserStore();
+
+  // Load live timeline from API
   useEffect(() => {
     fetch('/api/timeline')
       .then(r => r.json())
       .then((data: TimelineEntry[]) => setEvents(data))
+      .catch(() => {/* keep empty, show no-results state */})
       .finally(() => setLoading(false));
   }, []);
 
+  // Globe sync — when another view sets focusedTheoryId, highlight the matching event
+  useEffect(() => {
+    if (!focusedTheoryId || events.length === 0) return;
+    const match = events.find(e =>
+      e.id === focusedTheoryId || e.tags.includes(focusedTheoryId),
+    );
+    if (!match) return;
+    setSelected(match.id);
+    setActiveEras(prev => prev.includes(match.era) ? prev : [...prev, match.era]);
+    setTimeout(() => {
+      eventRefs.current[match.id]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 80);
+  }, [focusedTheoryId, events]);
+
+  const handleSelect = useCallback((id: string, tags: string[]) => {
+    const next = selected === id ? null : id;
+    setSelected(next);
+    setFocusedTheoryId(next ? (tags[0] ?? id) : null);
+  }, [selected, setFocusedTheoryId]);
+
   const filteredEvents = events.filter(e => activeEras.includes(e.era));
   const liveCount      = events.filter(e => e.isLive).length;
+  const syncedEvent    = focusedTheoryId
+    ? events.find(e => e.id === focusedTheoryId || e.tags.includes(focusedTheoryId))
+    : null;
 
   const toggleEra = (era: string) =>
     setActiveEras(prev =>
@@ -59,26 +88,31 @@ export default function TimelineExplorer() {
     <div className="h-full flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex-shrink-0 p-6 border-b border-purple-900/20">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div>
-            <h2 className="text-xl font-black text-white flex items-center gap-2">
-              <Clock size={20} className="text-purple-400" />
-              Timeline Explorer
-            </h2>
-            <p className="text-sm text-slate-500 mt-0.5">
-              Credible, approved nodes plotted across history
-            </p>
+        <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
+          <h2 className="text-xl font-black text-white flex items-center gap-2">
+            <Clock size={20} className="text-purple-400" />
+            Timeline Explorer
+          </h2>
+          <div className="flex items-center gap-3">
+            {syncedEvent && (
+              <div className="flex items-center gap-1.5 text-[10px] text-cyan-400 bg-cyan-900/20 border border-cyan-500/30 rounded-full px-2.5 py-1">
+                <Globe size={9} />Synced with Globe
+              </div>
+            )}
+            {!loading && (
+              <div className="flex items-center gap-3 text-xs text-slate-500">
+                <span className="flex items-center gap-1">
+                  <Database size={11} className="text-purple-400" />
+                  {liveCount} live
+                </span>
+                <span>{filteredEvents.length} showing</span>
+              </div>
+            )}
           </div>
-          {!loading && (
-            <div className="flex items-center gap-3 text-xs text-slate-500">
-              <span className="flex items-center gap-1">
-                <Database size={11} className="text-purple-400" />
-                {liveCount} live from archive
-              </span>
-              <span>{filteredEvents.length} showing</span>
-            </div>
-          )}
         </div>
+        <p className="text-sm text-slate-500">
+          Credible, approved nodes plotted across history
+        </p>
 
         {/* Era filters */}
         <div className="flex flex-wrap gap-2 mt-4">
@@ -96,7 +130,7 @@ export default function TimelineExplorer() {
               <span className="w-1.5 h-1.5 rounded-full" style={{ background: ERA_COLORS[era] }} />
               {label}
               {!loading && (
-                <span className="opacity-60">
+                <span className="opacity-60 ml-0.5">
                   ({events.filter(e => e.era === era).length})
                 </span>
               )}
@@ -107,7 +141,6 @@ export default function TimelineExplorer() {
 
       {/* Body */}
       <div ref={containerRef} className="flex-1 overflow-y-auto p-6">
-
         {loading && (
           <div className="flex flex-col items-center justify-center gap-3 py-16">
             <Loader2 size={24} className="animate-spin text-purple-400" />
@@ -129,13 +162,15 @@ export default function TimelineExplorer() {
 
             <div className="space-y-6 pl-12">
               {filteredEvents.map((event, i) => {
-                const eraColor  = ERA_COLORS[event.era] ?? '#7c3aed';
-                const evColor   = EVIDENCE_COLORS[event.evidenceLevel] ?? '#94a3b8';
-                const isOpen    = selected === event.id;
+                const eraColor = ERA_COLORS[event.era] ?? '#7c3aed';
+                const evColor  = EVIDENCE_COLORS[event.evidenceLevel] ?? '#94a3b8';
+                const isOpen   = selected === event.id;
+                const isSynced = syncedEvent?.id === event.id;
 
                 return (
                   <motion.div
                     key={event.id}
+                    ref={el => { eventRefs.current[event.id] = el; }}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: Math.min(i * 0.03, 0.6) }}
@@ -145,26 +180,26 @@ export default function TimelineExplorer() {
                     <div
                       className="absolute -left-[2.75rem] top-2 w-4 h-4 rounded-full border-2 transition-all"
                       style={{
-                        borderColor: eraColor,
+                        borderColor: isSynced ? '#06b6d4' : eraColor,
                         background:  isOpen ? eraColor : `${eraColor}33`,
-                        boxShadow:   isOpen ? `0 0 12px ${eraColor}` : 'none',
+                        boxShadow:   isOpen ? `0 0 12px ${eraColor}` : isSynced ? '0 0 10px #06b6d4' : 'none',
                       }}
                     />
 
                     <button
-                      onClick={() => setSelected(isOpen ? null : event.id)}
+                      onClick={() => handleSelect(event.id, event.tags)}
                       className="w-full text-left"
                     >
                       <div
                         className="rounded-xl p-4 border transition-all"
                         style={{
-                          background:  isOpen ? `${eraColor}15` : 'rgba(15,15,30,0.5)',
-                          borderColor: isOpen ? `${eraColor}40` : 'rgba(255,255,255,0.05)',
+                          background:  isOpen ? `${eraColor}15` : isSynced ? 'rgba(6,182,212,0.06)' : 'rgba(15,15,30,0.5)',
+                          borderColor: isOpen ? `${eraColor}40` : isSynced ? '#06b6d430' : 'rgba(255,255,255,0.05)',
                         }}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
-                            {/* Date + era chip */}
+                            {/* Date + era chip + evidence badge */}
                             <div className="flex items-center gap-2 flex-wrap mb-1">
                               <span className="text-xs font-mono font-bold" style={{ color: eraColor }}>
                                 {formatYear(event.year)}
@@ -174,7 +209,6 @@ export default function TimelineExplorer() {
                                 style={{ background: `${eraColor}20`, color: eraColor }}>
                                 {ERA_LABELS[event.era] ?? event.era}
                               </span>
-                              {/* Evidence badge */}
                               <span className="text-[10px] px-2 py-0.5 rounded-full capitalize"
                                 style={{ background: `${evColor}18`, color: evColor }}>
                                 {event.evidenceLevel.replace('_', ' ')}
@@ -191,7 +225,7 @@ export default function TimelineExplorer() {
                               )}
                             </div>
 
-                            {/* Location + category + sources */}
+                            {/* Meta row */}
                             <div className="flex items-center gap-3 mt-1 flex-wrap">
                               {event.location && (
                                 <span className="flex items-center gap-1 text-xs text-slate-500">
@@ -237,7 +271,7 @@ export default function TimelineExplorer() {
                                   ))}
                                 </div>
                               )}
-                              <div className="mt-2 flex items-center gap-2">
+                              <div className="mt-2 flex items-center gap-3 flex-wrap">
                                 <span className="text-[10px] text-slate-600">
                                   Confidence: {Math.round(event.confidenceScore * 100)}%
                                 </span>

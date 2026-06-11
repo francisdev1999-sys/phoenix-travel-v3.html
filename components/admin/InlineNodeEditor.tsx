@@ -2,11 +2,12 @@
 import { useState } from 'react';
 import {
   ArrowLeft, Save, Send, Archive, Loader2, AlertCircle,
-  Pencil, BookMarked, History, ChevronDown, ChevronUp,
+  Pencil, BookMarked, History, ChevronDown, ChevronUp, Sparkles,
 } from 'lucide-react';
 import TextFieldModal    from './TextFieldModal';
 import NodeSourceManager from './NodeSourceManager';
 import NodeVersionHistory from './NodeVersionHistory';
+import AiResearchReview  from './AiResearchReview';
 
 interface DraftNode {
   id:                string;
@@ -45,7 +46,7 @@ function listToString(arr: string[]) { return arr.join('\n'); }
 function stringToList(s: string)     { return s.split('\n').map(l => l.trim()).filter(Boolean); }
 
 type ModalField = 'description' | 'mainstreamView' | null;
-type SidePanel  = 'sources' | 'history' | null;
+type SidePanel  = 'sources' | 'history' | 'ai-review' | null;
 
 export default function InlineNodeEditor({ node, onCancel, onSaved }: Props) {
   // Editable scalars
@@ -197,8 +198,9 @@ export default function InlineNodeEditor({ node, onCancel, onSaved }: Props) {
           </div>
           {/* Panel toggles */}
           <div className="flex items-center gap-1">
-            <PanelToggle icon={<BookMarked size={12} />} label="Sources" active={sidePanel === 'sources'} onClick={() => togglePanel('sources')} />
-            <PanelToggle icon={<History size={12} />}    label="History" active={sidePanel === 'history'} onClick={() => togglePanel('history')} />
+            <PanelToggle icon={<BookMarked size={12} />} label="Sources"    active={sidePanel === 'sources'}    onClick={() => togglePanel('sources')} />
+            <PanelToggle icon={<History size={12} />}    label="History"    active={sidePanel === 'history'}    onClick={() => togglePanel('history')} />
+            <PanelToggle icon={<Sparkles size={12} />}   label="AI Review"  active={sidePanel === 'ai-review'}  onClick={() => togglePanel('ai-review')} />
           </div>
         </div>
 
@@ -286,6 +288,12 @@ export default function InlineNodeEditor({ node, onCancel, onSaved }: Props) {
         {sidePanel === 'history' && (
           <Section label="Version History" onClose={() => setSidePanel(null)}>
             <NodeVersionHistory nodeId={node.id} />
+          </Section>
+        )}
+
+        {sidePanel === 'ai-review' && (
+          <Section label="AI Deep Research Review" onClose={() => setSidePanel(null)}>
+            <AiResearchReview nodeId={node.id} />
           </Section>
         )}
 

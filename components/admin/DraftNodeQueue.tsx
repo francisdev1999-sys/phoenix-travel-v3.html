@@ -143,6 +143,11 @@ export default function DraftNodeQueue() {
                   <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${IQS_TIER_COLORS[node.iqs.tier] ?? 'text-slate-400'}`}>
                     IQS {node.iqs.score}
                   </span>
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                    node.sourceCount === 0 ? 'bg-red-900/30 text-red-400' : 'bg-slate-800 text-slate-400'
+                  }`}>
+                    {node.sourceCount} src
+                  </span>
                   {node.adminReviewStatus && (
                     <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-900/30 text-purple-400">
                       {node.adminReviewStatus.replace(/_/g, ' ')}

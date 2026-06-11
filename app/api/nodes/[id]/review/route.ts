@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { writeAuditLog } from '@/lib/audit';
+import { applyTrustEvent } from '@/lib/trust-score';
+import { evaluateBadges, refreshUserRank } from '@/lib/rank-system';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -19,6 +21,9 @@ export async function POST(req: NextRequest, { params }: Params) {
   const { action, reviewNotes } = await req.json();
   if (!['approved', 'rejected', 'needs_revision'].includes(action)) {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+  }
+  if (reviewNotes && reviewNotes.length > 2000) {
+    return NextResponse.json({ error: 'Review notes must be 2000 characters or fewer' }, { status: 400 });
   }
 
   // ── Non-approval: just update proposal status ────────────────────────────
@@ -41,6 +46,18 @@ export async function POST(req: NextRequest, { params }: Params) {
       entityId:   id,
       detail:     { proposalId: id, reviewNotes: reviewNotes?.trim() || null },
     });
+
+    if (action === 'rejected' && proposal.submittedBy) {
+      const submitterId = proposal.submittedBy;
+      const reviewerId  = session!.user!.id;
+      void Promise.allSettled([
+        applyTrustEvent(submitterId, 'rejected_content', undefined, reviewNotes?.trim() || undefined, reviewerId),
+        prisma.user.update({ where: { id: submitterId }, data: { rejectedCount: { increment: 1 } } }),
+        evaluateBadges(submitterId),
+        refreshUserRank(submitterId),
+      ]);
+    }
+
     return NextResponse.json(updated);
   }
 
@@ -189,6 +206,17 @@ export async function POST(req: NextRequest, { params }: Params) {
     entityId:   newNode.id,
     detail:     { proposalId: id, reviewNotes: reviewNotes?.trim() || null },
   });
+
+  if (updatedProposal.submitter?.id) {
+    const submitterId = updatedProposal.submitter.id;
+    const reviewerId  = session!.user!.id;
+    void Promise.allSettled([
+      applyTrustEvent(submitterId, 'approved_node', undefined, `Node ${newNode.id} approved`, reviewerId),
+      prisma.user.update({ where: { id: submitterId }, data: { approvedCount: { increment: 1 } } }),
+      evaluateBadges(submitterId),
+      refreshUserRank(submitterId),
+    ]);
+  }
 
   return NextResponse.json({
     proposal: updatedProposal,

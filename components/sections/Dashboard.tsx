@@ -2,7 +2,7 @@
 import { motion } from 'framer-motion';
 import { Trophy, Star, GitBranch, Rabbit, Clock, Target, TrendingUp, Award } from 'lucide-react';
 import { useUserStore, ACHIEVEMENTS } from '@/lib/store/userStore';
-import { theories } from '@/lib/data/theories';
+import { useNodes } from '@/lib/graph/useNodes';
 
 const LEVEL_XP: Record<string, number> = {
   'Curious Visitor': 0,
@@ -23,6 +23,7 @@ const LEVEL_COLORS: Record<string, string> = {
 };
 
 export default function Dashboard() {
+  const nodes = useNodes();
   const { progress, getNextLevel } = useUserStore();
   const nextLevel = getNextLevel();
   const levelColor = LEVEL_COLORS[progress.level] || '#64748b';
@@ -33,11 +34,11 @@ export default function Dashboard() {
     : 100;
 
   const recentTheories = progress.recentDiscoveries
-    .map(id => theories.find(t => t.id === id))
+    .map(id => nodes.find(n => n.id === id))
     .filter(Boolean)
     .slice(0, 5);
 
-  const totalTheories = theories.length;
+  const totalTheories = nodes.length;
   const exploredCount = progress.theoriesExplored.length;
   const completionPct = Math.round((exploredCount / totalTheories) * 100);
 
@@ -132,16 +133,16 @@ export default function Dashboard() {
           />
         </div>
         <div className="mt-3 grid grid-cols-3 gap-2">
-          {theories.slice(0, 9).map(theory => {
-            const explored = progress.theoriesExplored.includes(theory.id);
+          {nodes.slice(0, 9).map(node => {
+            const explored = progress.theoriesExplored.includes(node.id);
             return (
               <div
-                key={theory.id}
+                key={node.id}
                 className="flex items-center gap-1.5 text-xs"
-                style={{ color: explored ? theory.color : '#374151' }}
+                style={{ color: explored ? (node.color ?? '#7c3aed') : '#374151' }}
               >
-                <span>{theory.icon}</span>
-                <span className="truncate">{theory.title}</span>
+                <span>{node.icon ?? '◈'}</span>
+                <span className="truncate">{node.title}</span>
                 {explored && <span className="text-green-400 ml-auto">✓</span>}
               </div>
             );
@@ -156,18 +157,18 @@ export default function Dashboard() {
             Recent Discoveries
           </h3>
           <div className="space-y-2">
-            {recentTheories.map((theory, i) => theory && (
+            {recentTheories.map((node, i) => node && (
               <motion.div
-                key={theory.id}
+                key={node.id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.07 }}
                 className="flex items-center gap-3 p-3 rounded-lg bg-slate-900/40 border border-white/5"
               >
-                <span className="text-lg">{theory.icon}</span>
+                <span className="text-lg">{node.icon ?? '◈'}</span>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-white truncate">{theory.title}</div>
-                  <div className="text-xs text-slate-500">{theory.category}</div>
+                  <div className="text-sm font-medium text-white truncate">{node.title}</div>
+                  <div className="text-xs text-slate-500">{node.category}</div>
                 </div>
                 <div className="text-xs text-green-400">✓ Explored</div>
               </motion.div>

@@ -1,7 +1,16 @@
 'use client';
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { BookMarked, Plus, Trash2, Loader2, Search, X, FilePlus } from 'lucide-react';
+import { BookMarked, Plus, Trash2, Loader2, Search, X, FilePlus, ShieldCheck, ShieldAlert, ShieldX } from 'lucide-react';
 import { SOURCE_TYPES } from '@/lib/validation/enums';
+import { CREDIBILITY_BAR_COLOR } from '@/lib/source-credibility';
+
+interface SourceQuality {
+  approvedCount:          number;
+  pendingCount:           number;
+  sourceQualityScore:     number;
+  publicationRecommendation: 'ready' | 'needs_review' | 'not_ready';
+  publicationReasons:     string[];
+}
 
 interface SourceSummary {
   id:               string;
@@ -44,6 +53,7 @@ const CREDIBILITY_COLOR = (score: number) => {
 export default function NodeSourceManager({ nodeId }: Props) {
   const [links,      setLinks]      = useState<SourceLink[]>([]);
   const [loading,    setLoading]    = useState(false);
+  const [quality,    setQuality]    = useState<SourceQuality | null>(null);
   const [query,      setQuery]      = useState('');
   const [results,    setResults]    = useState<SearchResult[]>([]);
   const [searching,  setSearching]  = useState(false);
@@ -63,16 +73,26 @@ export default function NodeSourceManager({ nodeId }: Props) {
   const [creating,   setCreating]   = useState(false);
   const [createErr,  setCreateErr]  = useState('');
 
+  const loadQuality = useCallback(() => {
+    fetch(`/api/nodes/${nodeId}/source-quality`)
+      .then(r => r.ok ? r.json() : null)
+      .then(setQuality)
+      .catch(() => null);
+  }, [nodeId]);
+
   const loadLinks = useCallback(() => {
     setLoading(true);
     fetch(`/api/nodes/${nodeId}/sources`)
       .then(r => r.json())
       .then(d => setLinks(Array.isArray(d) ? d : []))
       .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [nodeId]);
+      .finally(() => {
+        setLoading(false);
+        loadQuality();
+      });
+  }, [nodeId, loadQuality]);
 
-  useEffect(() => { loadLinks(); }, [loadLinks]);
+  useEffect(() => { loadLinks(); loadQuality(); }, [loadLinks, loadQuality]);
 
   useEffect(() => {
     if (!query.trim()) { setResults([]); return; }
@@ -168,8 +188,44 @@ export default function NodeSourceManager({ nodeId }: Props) {
   const openSearch = () => { setShowSearch(true); setMode('search'); };
   const closePanel = () => { setShowSearch(false); setMode('search'); setQuery(''); setResults([]); setCreateErr(''); };
 
+  // Source quality banner
+  const QualityBanner = quality ? (() => {
+    const pct = Math.round(quality.sourceQualityScore * 100);
+    const Icon = quality.publicationRecommendation === 'ready' ? ShieldCheck
+               : quality.publicationRecommendation === 'needs_review' ? ShieldAlert : ShieldX;
+    const color = quality.publicationRecommendation === 'ready' ? 'text-emerald-400 border-emerald-900/40'
+                : quality.publicationRecommendation === 'needs_review' ? 'text-amber-400 border-amber-900/40'
+                : 'text-red-400 border-red-900/40';
+    const barColor = CREDIBILITY_BAR_COLOR(quality.sourceQualityScore);
+    return (
+      <div className={`flex flex-col gap-1.5 px-2.5 py-2 rounded-lg border bg-slate-900/40 ${color}`}>
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1 text-[10px] font-medium">
+            <Icon size={10} />
+            {quality.publicationRecommendation === 'ready'       ? 'Sources verified'  :
+             quality.publicationRecommendation === 'needs_review' ? 'Needs review'       : 'Insufficient sources'}
+          </span>
+          <span className="text-[10px] font-mono">{pct}% quality</span>
+        </div>
+        <div className="h-1 rounded-full bg-slate-800 overflow-hidden">
+          <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
+        </div>
+        {quality.publicationReasons.length > 0 && (
+          <div className="flex flex-col gap-0.5">
+            {quality.publicationReasons.map((r, i) => (
+              <p key={i} className="text-[9px] text-slate-400">· {r}</p>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  })() : null;
+
   return (
     <div className="flex flex-col gap-2">
+      {/* Source quality banner */}
+      {QualityBanner}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
