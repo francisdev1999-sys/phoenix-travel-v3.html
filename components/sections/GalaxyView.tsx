@@ -1,10 +1,10 @@
 'use client';
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import {
   Loader2, Landmark, CircleDot, Shield, Flame, Network,
   Dna, Users, Satellite, Telescope, ChevronRight,
-  Dot,
+  Dot, BookOpen, Link2, Folder,
 } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import type { GalaxyWithCounts } from '@/app/api/galaxies/route';
@@ -118,7 +118,115 @@ function GalaxyCard({ galaxy, index }: { galaxy: GalaxyWithCounts; index: number
   );
 }
 
+// ── Cluster card (used inside Galaxy detail view) ──────────────────────────
+
+interface ClusterItem {
+  id: string; slug: string; name: string; color: string; icon: string;
+  nodeCount: number; sourceCount: number;
+  evidenceDist: Record<string, number>;
+}
+
+function ClusterCard({ cluster, galaxySlug, galaxyName, index }: {
+  cluster: ClusterItem; galaxySlug: string; galaxyName: string; index: number;
+}) {
+  const { navigateToCluster } = useUserStore();
+  const [hovered, setHovered] = useState(false);
+  const c = cluster.color;
+
+  return (
+    <motion.button
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: index * 0.04 }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+      onClick={() => navigateToCluster(galaxySlug, galaxyName, cluster.slug, cluster.name)}
+      className="w-full text-left rounded-xl border transition-all duration-150 p-4"
+      style={{ borderColor: hovered ? c + '55' : c + '22', background: hovered ? c + '0c' : 'transparent' }}
+    >
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ background: c + '20', border: `1px solid ${c}35` }}>
+          <Folder size={15} style={{ color: c }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-white truncate">{cluster.name}</p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-[10px] text-slate-500"><span className="font-bold text-slate-300">{cluster.nodeCount}</span> nodes</span>
+            {cluster.sourceCount > 0 && (
+              <span className="text-[10px] text-slate-500 flex items-center gap-0.5"><BookOpen size={9} />{cluster.sourceCount}</span>
+            )}
+          </div>
+        </div>
+        <motion.div animate={{ opacity: hovered ? 1 : 0 }}>
+          <ChevronRight size={14} className="text-slate-500" />
+        </motion.div>
+      </div>
+    </motion.button>
+  );
+}
+
+// ── Galaxy detail (cluster list for a specific galaxy) ──────────────────────
+
+function GalaxyDetailView() {
+  const { navContext } = useUserStore();
+  const { galaxySlug, galaxyName } = navContext;
+
+  const [clusters, setClusters] = useState<ClusterItem[]>([]);
+  const [galaxy, setGalaxy]     = useState<{ name: string; description: string | null; color: string | null; icon: string | null } | null>(null);
+  const [loading, setLoading]   = useState(true);
+
+  useEffect(() => {
+    if (!galaxySlug) return;
+    fetch(`/api/galaxies/${galaxySlug}`)
+      .then(r => r.json())
+      .then(d => { setGalaxy(d.galaxy); setClusters(d.clusters); })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [galaxySlug]);
+
+  if (loading) return (
+    <div className="flex justify-center items-center h-full">
+      <Loader2 className="animate-spin text-purple-400" size={20} />
+    </div>
+  );
+
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-5 space-y-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold text-white">{galaxy?.name ?? galaxyName}</h1>
+          {galaxy?.description && (
+            <p className="text-xs text-slate-500 leading-relaxed">{galaxy.description}</p>
+          )}
+          <p className="text-[10px] text-slate-600">{clusters.length} clusters</p>
+        </div>
+
+        <div className="space-y-1.5">
+          {clusters.map((c, i) => (
+            <ClusterCard key={c.id} cluster={c} galaxySlug={galaxySlug ?? ''} galaxyName={galaxyName ?? ''} index={i} />
+          ))}
+        </div>
+
+        {clusters.length === 0 && (
+          <p className="text-xs text-slate-500 text-center py-8">No clusters with published nodes yet.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Universe view (all galaxies) ────────────────────────────────────────────
+
 export default function GalaxyView() {
+  const { currentView } = useUserStore();
+
+  // When on 'galaxy' view, show the selected galaxy's clusters
+  if (currentView === 'galaxy') return <GalaxyDetailView />;
+
+  // When on 'universe' view, show all galaxies
   const [galaxies, setGalaxies] = useState<GalaxyWithCounts[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState(false);

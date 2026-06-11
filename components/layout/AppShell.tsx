@@ -11,6 +11,7 @@ const ParticleField = lazy(() => import('@/components/effects/ParticleField'));
 const KnowledgeGraph = lazy(() => import('@/components/sections/KnowledgeGraph'));
 const UniverseView   = lazy(() => import('@/components/sections/UniverseView'));
 const GalaxyView     = lazy(() => import('@/components/sections/GalaxyView'));
+const ClusterView    = lazy(() => import('@/components/sections/ClusterView'));
 const TimelineExplorer = lazy(() => import('@/components/sections/TimelineExplorer'));
 const EvidenceBoard = lazy(() => import('@/components/sections/EvidenceBoard'));
 const AncientGlobe = lazy(() => import('@/components/sections/AncientGlobe'));
@@ -188,6 +189,11 @@ export default function AppShell() {
                     {currentView === 'galaxy' && (
                       <motion.div key="galaxy" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="absolute inset-0 overflow-y-auto">
                         <GalaxyView />
+                      </motion.div>
+                    )}
+                    {currentView === 'cluster' && (
+                      <motion.div key="cluster" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="absolute inset-0 overflow-y-auto">
+                        <ClusterView />
                       </motion.div>
                     )}
                     {currentView === 'timeline' && (
