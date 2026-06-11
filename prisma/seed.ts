@@ -11,6 +11,8 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { nodes as staticNodes, edges as staticEdges } from '../lib/graph';
 import { NODE_SOURCES } from '../lib/graph/sources';
 import type { ResearchSource } from '../lib/graph/types';
+import { GALAXIES, CATEGORY_TO_GALAXY } from '../lib/taxonomy/galaxies';
+import { CATEGORY_MIGRATION_MAP, NODE_CATEGORY_VALUES } from '../lib/taxonomy/node-categories';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
@@ -230,7 +232,50 @@ async function seedEdges() {
   console.log(`     Created/updated: ${created}  Skipped: ${skipped}  Failed: ${failed}`);
 }
 
-// ── 4. Seed sources (from NODE_SOURCES) ───────────────────────────────────────
+// ── 4. Seed galaxies + assign categories ─────────────────────────────────────
+
+async function seedGalaxies() {
+  console.log('\n[4/5] Seeding galaxies...');
+
+  // Upsert all 8 galaxy records
+  const galaxyIdMap = new Map<string, string>(); // slug → id
+  for (const g of GALAXIES) {
+    const galaxy = await prisma.galaxy.upsert({
+      where:  { slug: g.slug },
+      create: { slug: g.slug, name: g.name, description: g.description, icon: g.icon, color: g.color, order: g.order },
+      update: { name: g.name, description: g.description, icon: g.icon, color: g.color, order: g.order },
+    });
+    galaxyIdMap.set(g.slug, galaxy.id);
+    process.stdout.write(`  ✓ ${g.name}\n`);
+  }
+
+  // For each category in the DB, look up the galaxy it belongs to.
+  // Handle both new canonical names and old legacy names via migration map.
+  const allCategories = await prisma.category.findMany({ select: { id: true, name: true } });
+  let assigned = 0;
+
+  for (const cat of allCategories) {
+    // Resolve to canonical name (handles legacy names)
+    const canonicalName = (NODE_CATEGORY_VALUES as readonly string[]).includes(cat.name)
+      ? cat.name
+      : CATEGORY_MIGRATION_MAP[cat.name] ?? null;
+
+    if (!canonicalName) continue;
+
+    const galaxySlug = CATEGORY_TO_GALAXY[canonicalName];
+    if (!galaxySlug) continue;
+
+    const galaxyId = galaxyIdMap.get(galaxySlug);
+    if (!galaxyId) continue;
+
+    await prisma.category.update({ where: { id: cat.id }, data: { galaxyId } });
+    assigned++;
+  }
+
+  console.log(`     Galaxies: ${galaxyIdMap.size}  Categories assigned: ${assigned}`);
+}
+
+// ── 5. Seed sources (from NODE_SOURCES) ───────────────────────────────────────
 
 function stableDoi(src: ResearchSource): string {
   if (src.url?.startsWith('https://doi.org/')) {
@@ -251,7 +296,7 @@ function buildFlatSources(): { src: ResearchSource; nodeIds: string[] }[] {
 }
 
 async function seedSources() {
-  console.log('\n[4/4] Seeding sources...');
+  console.log('\n[5/5] Seeding sources...');
   const allSources = buildFlatSources();
   let sourcesCreated = 0;
   let linksCreated   = 0;
@@ -335,6 +380,7 @@ export async function main() {
   await seedCategories();
   await seedNodes();
   await seedEdges();
+  await seedGalaxies();
   await seedSources();
 
   console.log('\n✅ Seed complete.\n');
