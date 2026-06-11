@@ -270,7 +270,8 @@ export default function ArchiveAuditDashboard() {
   const [runError,  setRunError] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState('all');
   const [sevFilter,  setSevFilter]  = useState('all');
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollRef     = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollCount   = useRef(0);
 
   useEffect(() => {
     fetch('/api/admin/archive-audit/settings')
@@ -288,20 +289,31 @@ export default function ArchiveAuditDashboard() {
     }
   };
 
+  const stopPolling = useCallback(() => {
+    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    pollCount.current = 0;
+    setRunning(false);
+  }, []);
+
   const loadRun = useCallback(async (id: string) => {
+    pollCount.current += 1;
+    // Stop after 120 polls (~6 min) so the spinner doesn't run forever
+    if (pollCount.current > 120) {
+      stopPolling();
+      setRunError('Audit timed out — the background worker may have been interrupted. Try again.');
+      return;
+    }
     const r = await fetch(`/api/admin/archive-audit/${id}`);
     if (!r.ok) return;
     const run = await r.json() as AuditRun;
     setActive(run);
     if (run.status !== 'running') {
-      clearInterval(pollRef.current!);
-      pollRef.current = null;
-      setRunning(false);
+      stopPolling();
       loadRuns();
     }
-  }, []);
+  }, [stopPolling]);
 
-  useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
+  useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, [stopPolling]);
 
   const startAudit = async () => {
     setRunning(true);
@@ -311,13 +323,15 @@ export default function ArchiveAuditDashboard() {
     const j = await r.json().catch(() => ({})) as { runId?: string; error?: string };
     if (!r.ok) {
       if (r.status === 409 && j.runId) {
+        pollCount.current = 0;
         pollRef.current = setInterval(() => loadRun(j.runId!), 3000);
       } else {
         setRunError(j.error ?? `Server error ${r.status}`);
-        setRunning(false);
+        stopPolling();
       }
       return;
     }
+    pollCount.current = 0;
     pollRef.current = setInterval(() => loadRun(j.runId!), 3000);
   };
 
@@ -432,9 +446,17 @@ export default function ArchiveAuditDashboard() {
 
           {/* Running */}
           {running && !activeRun && (
-            <div className="flex items-center gap-2 p-3 bg-amber-900/20 border border-amber-700/40 rounded-lg">
-              <RotateCcw size={14} className="text-amber-400 animate-spin flex-shrink-0" />
-              <p className="text-xs text-amber-300">Audit running… results will appear automatically.</p>
+            <div className="flex items-center justify-between gap-2 p-3 bg-amber-900/20 border border-amber-700/40 rounded-lg">
+              <div className="flex items-center gap-2">
+                <RotateCcw size={14} className="text-amber-400 animate-spin flex-shrink-0" />
+                <p className="text-xs text-amber-300">Audit running… results will appear automatically.</p>
+              </div>
+              <button
+                onClick={stopPolling}
+                className="text-[10px] text-slate-400 hover:text-slate-200 underline flex-shrink-0"
+              >
+                Cancel
+              </button>
             </div>
           )}
 

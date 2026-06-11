@@ -22,7 +22,7 @@ export async function GET(
 
     const { runId } = await params;
 
-    const run = await prisma.archiveAuditRun.findUnique({
+    let run = await prisma.archiveAuditRun.findUnique({
       where: { id: runId },
       include: {
         findings: {
@@ -35,6 +35,18 @@ export async function GET(
 
     if (!run) {
       return NextResponse.json({ error: 'Run not found' }, { status: 404 });
+    }
+
+    // Auto-recover stuck runs: if still 'running' after 5 minutes, mark as failed
+    if (run.status === 'running') {
+      const ageMs = Date.now() - new Date(run.startedAt).getTime();
+      if (ageMs > 5 * 60 * 1000) {
+        run = await prisma.archiveAuditRun.update({
+          where: { id: runId },
+          data: { status: 'failed', completedAt: new Date() },
+          include: { findings: { orderBy: [{ status: 'asc' }] } },
+        });
+      }
     }
 
     // Sort findings by severity then status

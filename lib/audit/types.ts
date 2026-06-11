@@ -70,8 +70,8 @@ export const DEFAULT_AUDIT_SETTINGS: AuditSettings = {
     missingFields: true, duplicates: true, sourceQuality: true,
     aiQuality: true, categoryMismatch: true,
   },
-  aiModel: 'claude-haiku-4-5-20251001',
-  maxNodesPerAiRun: 80, maxFindingsPerRun: 200,
+  aiModel: 'claude-haiku-4-5',
+  maxNodesPerAiRun: 30, maxFindingsPerRun: 200,
   weakEdgeThreshold: 0.25, duplicateTitleThreshold: 0.70,
   autoApproveOrphans: false, autoApproveStaleEdges: true, autoApproveWeakEdges: false,
 };
