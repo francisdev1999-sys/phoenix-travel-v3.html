@@ -473,11 +473,14 @@ export default function NodeView() {
                     <div className="p-3 rounded-lg bg-slate-900/50 border border-white/5">
                       <ConfidenceMeter score={node.confidenceScore} label="Source Confidence" />
                     </div>
-                    <div className="p-3 rounded-lg bg-slate-900/50 border border-white/5">
+                    <button
+                      onClick={() => setActiveTab('relationships')}
+                      className="p-3 rounded-lg bg-slate-900/50 border border-white/5 text-left hover:border-purple-500/30 hover:bg-slate-900/80 transition-all"
+                    >
                       <div className="text-xs text-slate-500 mb-1">Connections</div>
                       <div className="text-lg font-black text-white">{neighbours.length}</div>
                       <div className="text-xs text-slate-600">linked nodes</div>
-                    </div>
+                    </button>
                   </div>
 
                   {(node.dateStart !== null && node.dateStart !== undefined) || node.year !== null ? (
