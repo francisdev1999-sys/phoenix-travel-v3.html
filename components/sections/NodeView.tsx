@@ -417,8 +417,10 @@ export default function NodeView() {
         )}
       </div>
 
-      {/* Tab bar ─────────────────────────────────────────────────────────────── */}
-      <div className="flex-shrink-0 border-b border-purple-900/20">
+      {/* Tab bar — desktop: top horizontal scroll; mobile: bottom icon strip ── */}
+
+      {/* Desktop tab bar (hidden on mobile) */}
+      <div className="hidden sm:block flex-shrink-0 border-b border-purple-900/20">
         <div className="flex overflow-x-auto scrollbar-hide px-2 pt-2 gap-0.5">
           {TABS.map(tab => {
             const Icon = tab.icon;
@@ -442,7 +444,8 @@ export default function NodeView() {
       </div>
 
       {/* Tab content ────────────────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto">
+      {/* pb-24 on mobile clears the sticky bottom tab bar + disclaimer banner */}
+      <div className="flex-1 overflow-y-auto pb-24 sm:pb-0">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-5">
           <AnimatePresence mode="wait">
             <motion.div
@@ -628,6 +631,34 @@ export default function NodeView() {
 
             </motion.div>
           </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Mobile bottom tab strip (visible only on sm and below) ─────────────── */}
+      {/* Sits at bottom-6 (above the ~24px disclaimer banner), z-50 wins over FABs */}
+      <div className="sm:hidden fixed bottom-6 left-0 right-0 z-50 glass-dark border-t border-purple-900/20">
+        <div className="flex overflow-x-auto scrollbar-hide">
+          {TABS.map(tab => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex flex-col items-center justify-center gap-0.5 min-w-[52px] py-2 px-1 flex-shrink-0 transition-all ${
+                  isActive ? 'text-purple-300' : 'text-slate-600'
+                }`}
+              >
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                  isActive ? 'bg-purple-700/40' : ''
+                }`}>
+                  {/* @ts-expect-error lucide size */}
+                  <Icon size={14} />
+                </div>
+                <span className="text-[8px] font-medium leading-tight">{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

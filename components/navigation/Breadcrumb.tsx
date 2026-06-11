@@ -43,6 +43,8 @@ export default function Breadcrumb() {
     });
   }
 
+  const total = crumbs.length;
+
   return (
     <nav
       aria-label="breadcrumb"
@@ -51,22 +53,37 @@ export default function Breadcrumb() {
     >
       <Telescope size={11} className="text-purple-500 flex-shrink-0" />
 
-      {crumbs.map((crumb, i) => (
-        <div key={i} className="flex items-center gap-1 flex-shrink-0">
-          {i > 0 && <ChevronRight size={9} className="text-slate-700" />}
-          <button
-            onClick={crumb.active ? undefined : crumb.onClick}
-            disabled={crumb.active}
-            className={`text-[10px] font-medium whitespace-nowrap transition-colors ${
-              crumb.active
-                ? 'text-white cursor-default'
-                : 'text-slate-500 hover:text-purple-300 cursor-pointer'
-            }`}
-          >
-            {crumb.label}
-          </button>
-        </div>
-      ))}
+      {crumbs.map((crumb, i) => {
+        // On mobile: truncate non-active intermediate crumbs so the active
+        // (last) crumb is always visible. "Universe" stays as a short label.
+        // Any crumb that is neither first nor last gets a tighter max-width.
+        const isMidCrumb = i > 0 && i < total - 1;
+        const isLast     = i === total - 1;
+
+        return (
+          <div key={i} className="flex items-center gap-1 flex-shrink-0 min-w-0">
+            {i > 0 && <ChevronRight size={9} className="text-slate-700 flex-shrink-0" />}
+            <button
+              onClick={crumb.active ? undefined : crumb.onClick}
+              disabled={crumb.active}
+              title={crumb.label}
+              className={`text-[10px] font-medium whitespace-nowrap transition-colors ${
+                crumb.active
+                  ? 'text-white cursor-default'
+                  : 'text-slate-500 hover:text-purple-300 cursor-pointer'
+              } ${
+                isMidCrumb
+                  ? 'max-w-[5rem] sm:max-w-none overflow-hidden text-ellipsis'
+                  : isLast
+                  ? 'max-w-[8rem] sm:max-w-none overflow-hidden text-ellipsis'
+                  : ''
+              }`}
+            >
+              {crumb.label}
+            </button>
+          </div>
+        );
+      })}
     </nav>
   );
 }
