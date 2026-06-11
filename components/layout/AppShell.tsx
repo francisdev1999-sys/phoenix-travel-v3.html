@@ -9,7 +9,6 @@ import FeedbackWidget from '@/components/beta/FeedbackWidget';
 const ParticleField = lazy(() => import('@/components/effects/ParticleField'));
 
 const KnowledgeGraph = lazy(() => import('@/components/sections/KnowledgeGraph'));
-const UniverseView   = lazy(() => import('@/components/sections/UniverseView'));
 const GalaxyView     = lazy(() => import('@/components/sections/GalaxyView'));
 const ClusterView    = lazy(() => import('@/components/sections/ClusterView'));
 const TimelineExplorer = lazy(() => import('@/components/sections/TimelineExplorer'));

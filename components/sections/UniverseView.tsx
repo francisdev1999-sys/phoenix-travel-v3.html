@@ -1,261 +1,268 @@
 'use client';
-import { useRef, useState, Suspense, useMemo } from 'react';
+import { useRef, useState, Suspense, useMemo, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Stars, Text, Billboard } from '@react-three/drei';
+import { OrbitControls, Stars, Billboard, Text } from '@react-three/drei';
 import * as THREE from 'three';
-import { motion, AnimatePresence } from 'framer-motion';
-import { edges } from '@/lib/graph/edges';
-import { useNodes } from '@/lib/graph/useNodes';
-import { GraphNode } from '@/lib/graph/types';
 import { useUserStore } from '@/lib/store/userStore';
-import { usePerformanceStore, getPerfConfig } from '@/lib/store/performanceStore';
+import type { GalaxyWithCounts } from '@/app/api/galaxies/route';
 
-// Module-level adjacency map — computed once, never changes
-const connectionsMap: Record<string, string[]> = {};
-edges.forEach(edge => {
-  if (!connectionsMap[edge.from]) connectionsMap[edge.from] = [];
-  if (!connectionsMap[edge.to]) connectionsMap[edge.to] = [];
-  connectionsMap[edge.from].push(edge.to);
-  connectionsMap[edge.to].push(edge.from);
-});
+// ── Sphere packing — 8 points evenly spaced on a sphere ──────────────────────
 
-function buildPositions(nodeList: GraphNode[]): Record<string, [number, number, number]> {
-  const pos: Record<string, [number, number, number]> = {};
-  nodeList.forEach((node, i) => {
-    const phi = Math.acos(-1 + (2 * i) / nodeList.length);
-    const theta = Math.sqrt(nodeList.length * Math.PI) * phi;
-    const r = 12;
-    pos[node.id] = [
-      r * Math.sin(phi) * Math.cos(theta),
-      r * Math.sin(phi) * Math.sin(theta),
-      r * Math.cos(phi),
-    ];
+function galaxyPositions(count: number, radius = 10): [number, number, number][] {
+  return Array.from({ length: count }, (_, i) => {
+    const phi   = Math.acos(-1 + (2 * i) / count);
+    const theta = Math.sqrt(count * Math.PI) * phi;
+    return [
+      radius * Math.sin(phi) * Math.cos(theta),
+      radius * Math.sin(phi) * Math.sin(theta),
+      radius * Math.cos(phi),
+    ] as [number, number, number];
   });
-  return pos;
 }
 
-function TheoryNode({ theory, position, isSelected, onSelect }: {
-  theory: GraphNode;
+// ── Single galaxy orb ─────────────────────────────────────────────────────────
+
+function GalaxyOrb({
+  galaxy, position, onSelect,
+}: {
+  galaxy: GalaxyWithCounts;
   position: [number, number, number];
-  isSelected: boolean;
-  onSelect: (t: GraphNode) => void;
+  onSelect: (g: GalaxyWithCounts) => void;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
-  // Memoize Color object — avoids allocation on every render
-  const color = useMemo(() => new THREE.Color(theory.color ?? '#7c3aed'), [theory.color]);
+  const color = useMemo(() => new THREE.Color(galaxy.color ?? '#7c3aed'), [galaxy.color]);
 
-  useFrame((state) => {
+  // Orb radius: base 0.7, scale up slightly for larger galaxies (max ~1.1)
+  const baseR = 0.7 + Math.min(galaxy.nodeCount / 400, 0.4);
+
+  useFrame(state => {
     if (!meshRef.current) return;
-    meshRef.current.rotation.y += 0.01;
-    const pulse = Math.sin(state.clock.elapsedTime * 2 + theory.id.length) * 0.1 + 1;
-    meshRef.current.scale.setScalar(isSelected ? 1.5 * pulse : hovered ? 1.2 * pulse : pulse);
+    meshRef.current.rotation.y += 0.004;
+    const pulse = Math.sin(state.clock.elapsedTime * 1.5 + galaxy.id.length) * 0.06 + 1;
+    meshRef.current.scale.setScalar(hovered ? 1.25 * pulse : pulse);
     if (glowRef.current) {
-      glowRef.current.scale.setScalar(isSelected ? 2.5 : hovered ? 2 : 1.5);
-      (glowRef.current.material as THREE.MeshBasicMaterial).opacity =
-        isSelected ? 0.4 : hovered ? 0.3 : 0.15;
+      glowRef.current.scale.setScalar(hovered ? 2.2 : 1.7);
+      (glowRef.current.material as THREE.MeshBasicMaterial).opacity = hovered ? 0.35 : 0.15;
     }
   });
 
   return (
     <group position={position}>
-      {/* Reduced from 16×16 to 8×8 — visually identical at this scale */}
+      {/* Glow halo */}
       <mesh ref={glowRef}>
-        <sphereGeometry args={[0.8, 8, 8]} />
+        <sphereGeometry args={[baseR * 1.4, 12, 12]} />
         <meshBasicMaterial color={color} transparent opacity={0.15} side={THREE.BackSide} />
       </mesh>
 
-      {/* Reduced icosahedron from subdivision 1 to 0 — saves ~50% geometry vertices */}
+      {/* Main orb */}
       <mesh
         ref={meshRef}
-        onClick={() => onSelect(theory)}
+        onClick={() => onSelect(galaxy)}
         onPointerOver={() => { setHovered(true); document.body.style.cursor = 'pointer'; }}
         onPointerOut={() => { setHovered(false); document.body.style.cursor = 'default'; }}
       >
-        <icosahedronGeometry args={[0.4, 0]} />
+        <icosahedronGeometry args={[baseR, 1]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={isSelected ? 1.5 : hovered ? 1 : 0.5}
-          metalness={0.8}
-          roughness={0.2}
+          emissiveIntensity={hovered ? 1.2 : 0.45}
+          metalness={0.6}
+          roughness={0.3}
         />
       </mesh>
 
-      {(hovered || isSelected) && (
-        <Billboard>
+      {/* Label — always visible */}
+      <Billboard>
+        <Text
+          position={[0, baseR + 0.55, 0]}
+          fontSize={hovered ? 0.28 : 0.22}
+          color={galaxy.color ?? '#c084fc'}
+          anchorX="center"
+          anchorY="bottom"
+          outlineWidth={0.025}
+          outlineColor="#000000"
+        >
+          {galaxy.name}
+        </Text>
+        {hovered && (
           <Text
-            position={[0, 0.7, 0]}
-            fontSize={0.18}
-            color={theory.color}
+            position={[0, baseR + 0.22, 0]}
+            fontSize={0.15}
+            color="#94a3b8"
             anchorX="center"
             anchorY="bottom"
             outlineWidth={0.02}
             outlineColor="#000000"
           >
-            {theory.title}
+            {`${galaxy.nodeCount} nodes · ${galaxy.clusterCount} clusters`}
           </Text>
-        </Billboard>
-      )}
-
+        )}
+      </Billboard>
     </group>
   );
 }
 
-type SelectHandler = (t: GraphNode) => void;
+// ── Ambient orbital ring around each orb ──────────────────────────────────────
 
-// Single LineSegments draw call for all edges — replaces N individual Line objects
-function EdgeLines({ nodeList, positions }: {
-  nodeList: GraphNode[];
-  positions: Record<string, [number, number, number]>;
-}) {
-  const lineSegments = useMemo(() => {
-    const pts: number[] = [];
-    const seen = new Set<string>();
-    nodeList.forEach(node => {
-      (connectionsMap[node.id] ?? []).forEach(connId => {
-        const key = [node.id, connId].sort().join('|');
-        if (seen.has(key) || !positions[node.id] || !positions[connId]) return;
-        seen.add(key);
-        pts.push(...positions[node.id], ...positions[connId]);
-      });
-    });
-    const geom = new THREE.BufferGeometry();
-    geom.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(pts), 3));
-    const mat = new THREE.LineBasicMaterial({ color: '#7c3aed', transparent: true, opacity: 0.1 });
-    return new THREE.LineSegments(geom, mat);
-  }, [nodeList, positions]);
+function OrbitalRing({ position, color }: { position: [number, number, number]; color: string }) {
+  const ringRef = useRef<THREE.Mesh>(null);
+  const c = useMemo(() => new THREE.Color(color), [color]);
 
-  return <primitive object={lineSegments} />;
+  useFrame(state => {
+    if (!ringRef.current) return;
+    ringRef.current.rotation.z = state.clock.elapsedTime * 0.3;
+    ringRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.2) * 0.4;
+  });
+
+  return (
+    <mesh ref={ringRef} position={position}>
+      <torusGeometry args={[1.5, 0.015, 4, 40]} />
+      <meshBasicMaterial color={c} transparent opacity={0.15} />
+    </mesh>
+  );
 }
 
-function Scene({ visibleNodes, onSelect, skipEffects }: { visibleNodes: GraphNode[]; onSelect: SelectHandler; skipEffects?: boolean }) {
-  const [selected, setSelected] = useState<string | null>(null);
+// ── 3D Scene ──────────────────────────────────────────────────────────────────
 
-  // Positions computed once per node list — stable reference for EdgeLines memo
-  const positions = useMemo(() => buildPositions(visibleNodes), [visibleNodes]);
-
-  const handleSelect = (node: GraphNode) => {
-    setSelected(node.id === selected ? null : node.id);
-    onSelect(node);
-  };
+function CosmosScene({
+  galaxies, onSelect,
+}: {
+  galaxies: GalaxyWithCounts[];
+  onSelect: (g: GalaxyWithCounts) => void;
+}) {
+  const positions = useMemo(() => galaxyPositions(galaxies.length), [galaxies.length]);
 
   return (
     <>
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 5]} intensity={0.8} color="#8060ff" />
-      <directionalLight position={[-8, -5, -8]} intensity={0.3} color="#4040aa" />
-      {!skipEffects && <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />}
+      <ambientLight intensity={0.35} />
+      <directionalLight position={[15, 10, 8]}  intensity={0.7} color="#8060ff" />
+      <directionalLight position={[-10, -8, -10]} intensity={0.25} color="#4040aa" />
+      <pointLight position={[0, 0, 0]} intensity={0.15} color="#ffffff" />
 
-      <EdgeLines nodeList={visibleNodes} positions={positions} />
+      <Stars radius={120} depth={60} count={6000} factor={4} saturation={0} fade speed={0.6} />
 
-      {visibleNodes.map(node => (
-        <TheoryNode
-          key={node.id}
-          theory={node}
-          position={positions[node.id]}
-          isSelected={selected === node.id}
-          onSelect={handleSelect}
-        />
+      {galaxies.map((g, i) => (
+        <group key={g.id}>
+          <GalaxyOrb galaxy={g} position={positions[i]} onSelect={onSelect} />
+          <OrbitalRing position={positions[i]} color={g.color ?? '#7c3aed'} />
+        </group>
       ))}
 
-      {/* autoRotate handles camera movement — no useFrame camera orbit needed */}
       <OrbitControls
-        enablePan
+        enablePan={false}
         enableZoom
         enableRotate
-        minDistance={5}
-        maxDistance={30}
+        minDistance={6}
+        maxDistance={28}
         autoRotate
-        autoRotateSpeed={0.3}
+        autoRotateSpeed={0.25}
       />
     </>
   );
 }
 
-export default function UniverseView() {
-  const nodes = useNodes();
-  const [selectedTheory, setSelectedTheory] = useState<GraphNode | null>(null);
-  const { exploreTheory, setCurrentView } = useUserStore();
-  const { mode } = usePerformanceStore();
-  const config = useMemo(() => getPerfConfig(mode), [mode]);
+// ── Main component ─────────────────────────────────────────────────────────────
 
-  // Apply performance mode node cap
-  const visibleNodes = useMemo(
-    () => nodes.length <= config.maxNodes ? nodes : nodes.slice(0, config.maxNodes),
-    [nodes, config.maxNodes]
-  );
+interface Props {
+  galaxies: GalaxyWithCounts[];
+  onClose?: () => void;
+}
 
-  const handleSelect = (node: GraphNode) => {
-    setSelectedTheory(node);
-    exploreTheory(node.id);
+export default function UniverseView({ galaxies, onClose }: Props) {
+  const { navigateToGalaxy } = useUserStore();
+  const [selected, setSelected] = useState<GalaxyWithCounts | null>(null);
+
+  const handleSelect = (g: GalaxyWithCounts) => {
+    setSelected(prev => prev?.id === g.id ? null : g);
+  };
+
+  const handleEnter = () => {
+    if (!selected) return;
+    navigateToGalaxy(selected.slug, selected.name);
+    onClose?.();
   };
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full bg-[#000005]">
       <Canvas
-        camera={{ position: [0, 0, 20], fov: 60 }}
+        camera={{ position: [0, 0, 22], fov: 55 }}
         style={{ background: 'transparent' }}
-        dpr={config.canvasDpr}
-        performance={{ min: config.skipHeavyEffects ? 0.1 : 0.5 }}
+        dpr={[1, 1.5]}
+        performance={{ min: 0.5 }}
       >
         <Suspense fallback={null}>
-          <Scene visibleNodes={visibleNodes} onSelect={handleSelect} skipEffects={config.skipHeavyEffects} />
+          <CosmosScene galaxies={galaxies} onSelect={handleSelect} />
         </Suspense>
       </Canvas>
 
-      <div className="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none">
-        <div className="glass rounded-xl px-4 py-3">
-          <h2 className="text-sm font-black text-white tracking-widest">UNIVERSE VIEW</h2>
-          <p className="text-xs text-slate-500 mt-0.5">{visibleNodes.length} nodes · Navigate the knowledge constellation</p>
+      {/* HUD: top controls */}
+      <div className="absolute top-4 left-4 right-4 flex items-start justify-between pointer-events-none">
+        <div className="glass rounded-xl px-4 py-2.5 pointer-events-none">
+          <p className="text-xs font-bold tracking-widest text-purple-300 uppercase">Cosmos View</p>
+          <p className="text-[10px] text-slate-500 mt-0.5">Click a galaxy to select · Enter to explore</p>
         </div>
-        <div className="glass rounded-xl px-4 py-3 text-xs text-slate-400 space-y-1">
-          <div>Drag to rotate</div>
-          <div>Scroll to zoom</div>
-          <div>Click nodes to explore</div>
-        </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="glass rounded-xl px-3 py-2 text-xs text-slate-400 hover:text-white transition-colors pointer-events-auto"
+          >
+            ✕ Grid view
+          </button>
+        )}
       </div>
 
-      <AnimatePresence>
-        {selectedTheory && (
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 glass rounded-2xl p-4 max-w-lg w-[calc(100%-2rem)]"
+      {/* Controls hint bottom-left */}
+      <div className="absolute bottom-16 left-4 glass rounded-xl px-3 py-2 text-[10px] text-slate-500 space-y-0.5 pointer-events-none">
+        <div>Drag to rotate</div>
+        <div>Scroll to zoom</div>
+        <div>Click to select</div>
+      </div>
+
+      {/* Selected galaxy info panel */}
+      {selected && (
+        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-full max-w-sm px-4">
+          <div
+            className="glass rounded-2xl p-4 border"
+            style={{ borderColor: (selected.color ?? '#7c3aed') + '40' }}
           >
-            <div className="flex items-start gap-3">
-              <span className="text-3xl flex-shrink-0">{selectedTheory.icon}</span>
+            <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <div className="text-xs text-purple-400/70 uppercase tracking-widest">{selectedTheory.category}</div>
-                <h3 className="text-base font-bold text-white">{selectedTheory.title}</h3>
-                <p className="text-xs text-slate-400 mt-1 leading-relaxed">{selectedTheory.description}</p>
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {selectedTheory.tags.slice(0, 4).map(tag => (
-                    <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-purple-900/30 text-purple-400">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <button
-                  onClick={() => { exploreTheory(selectedTheory.id); setCurrentView('graph'); }}
-                  className="mt-3 w-full py-2 rounded-xl bg-purple-700 hover:bg-purple-600 text-white text-xs font-bold transition-colors"
+                <p
+                  className="text-xs font-bold tracking-widest uppercase mb-0.5"
+                  style={{ color: selected.color ?? '#c084fc' }}
                 >
-                  Open Full Theory →
-                </button>
+                  Galaxy
+                </p>
+                <h3 className="text-lg font-black text-white leading-tight">{selected.name}</h3>
+                {selected.description && (
+                  <p className="text-xs text-slate-400 mt-1 line-clamp-2">{selected.description}</p>
+                )}
+                <div className="flex items-center gap-3 mt-2 text-[10px] text-slate-500">
+                  <span><span className="font-bold text-white">{selected.nodeCount}</span> nodes</span>
+                  <span><span className="font-bold text-slate-300">{selected.clusterCount}</span> clusters</span>
+                  <span><span className="font-bold text-slate-300">{selected.sourceCount}</span> sources</span>
+                </div>
               </div>
               <button
-                onClick={() => setSelectedTheory(null)}
-                className="text-slate-500 hover:text-white text-sm flex-shrink-0"
+                onClick={() => setSelected(null)}
+                className="text-slate-600 hover:text-slate-400 flex-shrink-0"
               >
                 ✕
               </button>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <button
+              onClick={handleEnter}
+              className="mt-3 w-full py-2 rounded-xl text-sm font-bold text-white transition-colors"
+              style={{ background: selected.color ?? '#7c3aed' }}
+            >
+              Enter Galaxy →
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

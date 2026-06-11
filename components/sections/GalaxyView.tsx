@@ -1,13 +1,15 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import {
   Loader2, Landmark, CircleDot, Shield, Flame, Network,
   Dna, Users, Satellite, Telescope, ChevronRight,
-  Dot, BookOpen, Link2, Folder,
+  Dot, BookOpen, Link2, Folder, Globe2,
 } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import type { GalaxyWithCounts } from '@/app/api/galaxies/route';
+
+const UniverseView = lazy(() => import('@/components/sections/UniverseView'));
 
 // Map galaxy icon names to lucide-react components
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
@@ -227,9 +229,10 @@ export default function GalaxyView() {
   if (currentView === 'galaxy') return <GalaxyDetailView />;
 
   // When on 'universe' view, show all galaxies
-  const [galaxies, setGalaxies] = useState<GalaxyWithCounts[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState(false);
+  const [galaxies, setGalaxies]   = useState<GalaxyWithCounts[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(false);
+  const [cosmosMode, setCosmosMode] = useState(false);
 
   useEffect(() => {
     fetch('/api/galaxies')
@@ -261,35 +264,66 @@ export default function GalaxyView() {
   const totalSources = galaxies.reduce((s, g) => s + g.sourceCount, 0);
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="text-center space-y-2 pb-2"
-        >
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <Telescope size={18} className="text-purple-400" />
-            <span className="text-[10px] font-bold tracking-[0.2em] text-purple-500 uppercase">The Nexus Archive</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Universe</h1>
-          <p className="text-xs text-slate-500 max-w-md mx-auto">
-            {totalNodes.toLocaleString()} nodes across {galaxies.length} galaxies · {totalSources.toLocaleString()} sources
-          </p>
-        </motion.div>
-
-        {/* Galaxy grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {galaxies.map((galaxy, i) => (
-            <GalaxyCard key={galaxy.id} galaxy={galaxy} index={i} />
-          ))}
+    <div className="h-full relative overflow-hidden">
+      {/* 3D Cosmos overlay */}
+      {cosmosMode && (
+        <div className="absolute inset-0 z-10">
+          <Suspense fallback={
+            <div className="h-full flex items-center justify-center">
+              <Loader2 className="animate-spin text-purple-400" size={24} />
+            </div>
+          }>
+            <UniverseView galaxies={galaxies} onClose={() => setCosmosMode(false)} />
+          </Suspense>
         </div>
+      )}
 
-        <p className="text-[10px] text-slate-700 text-center pb-4">
-          Select a galaxy to explore its clusters and nodes.
-        </p>
+      {/* Flat grid (always mounted, hidden under cosmos) */}
+      <div className={`h-full overflow-y-auto ${cosmosMode ? 'invisible' : ''}`}>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="space-y-2 pb-2"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Telescope size={16} className="text-purple-400" />
+                <span className="text-[10px] font-bold tracking-[0.2em] text-purple-500 uppercase">The Nexus Archive</span>
+              </div>
+              {/* Cosmos toggle */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setCosmosMode(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass border border-purple-500/20 text-xs text-purple-300 hover:text-purple-200 hover:border-purple-500/40 transition-all"
+                title="Switch to 3D Cosmos view"
+              >
+                <Globe2 size={12} />
+                Cosmos
+              </motion.button>
+            </div>
+            <div className="text-center">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Universe</h1>
+              <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
+                {totalNodes.toLocaleString()} nodes across {galaxies.length} galaxies · {totalSources.toLocaleString()} sources
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Galaxy grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {galaxies.map((galaxy, i) => (
+              <GalaxyCard key={galaxy.id} galaxy={galaxy} index={i} />
+            ))}
+          </div>
+
+          <p className="text-[10px] text-slate-700 text-center pb-4">
+            Select a galaxy to explore its clusters and nodes.
+          </p>
+        </div>
       </div>
     </div>
   );
