@@ -1,0 +1,188 @@
+'use client';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Loader2, Landmark, CircleDot, Shield, Flame, Network,
+  Dna, Users, Satellite, Telescope, ChevronRight,
+  Dot,
+} from 'lucide-react';
+import { useUserStore } from '@/lib/store/userStore';
+import type { GalaxyWithCounts } from '@/app/api/galaxies/route';
+
+// Map galaxy icon names to lucide-react components
+const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+  Landmark, CircleDot, Shield, Flame, Network, Dna, Users, Satellite, Telescope, Dot,
+};
+
+function GalaxyIcon({ name, size = 24, className, style }: { name: string | null; size?: number; className?: string; style?: React.CSSProperties }) {
+  const Comp = name ? (ICON_MAP[name] ?? Dot) : Dot;
+  return <Comp size={size} className={className} style={style} />;
+}
+
+const EVIDENCE_BAR_COLORS = ['#a855f7', '#8b5cf6', '#7c3aed', '#6d28d9'];
+
+function MaturityBar({ nodeCount }: { nodeCount: number }) {
+  // Archive maturity: 0–25 nodes = low, 26–50 = building, 51–100 = established, 100+ = rich
+  const pct = Math.min(Math.round((nodeCount / 100) * 100), 100);
+  const label = nodeCount < 10 ? 'Emerging' : nodeCount < 30 ? 'Building' : nodeCount < 60 ? 'Established' : 'Rich';
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between items-center">
+        <span className="text-[9px] text-slate-600">{label}</span>
+        <span className="text-[9px] text-slate-600">{nodeCount} nodes</span>
+      </div>
+      <div className="h-1 rounded-full bg-white/5 overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
+          className="h-full rounded-full"
+          style={{ background: 'linear-gradient(90deg, #7c3aed, #a855f7)' }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function GalaxyCard({ galaxy, index }: { galaxy: GalaxyWithCounts; index: number }) {
+  const { navigateToGalaxy } = useUserStore();
+  const [hovered, setHovered] = useState(false);
+  const color = galaxy.color ?? '#7c3aed';
+
+  return (
+    <motion.button
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: index * 0.05 }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+      onClick={() => navigateToGalaxy(galaxy.slug, galaxy.name)}
+      className="relative text-left w-full rounded-2xl overflow-hidden border transition-all duration-200"
+      style={{
+        borderColor: hovered ? color + '60' : color + '22',
+        background:  hovered ? color + '0f' : color + '07',
+      }}
+    >
+      {/* Glow spot */}
+      <motion.div
+        className="absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl pointer-events-none"
+        animate={{ opacity: hovered ? 0.3 : 0.1 }}
+        style={{ background: color }}
+      />
+
+      <div className="relative p-4 sm:p-5">
+        {/* Icon + Name */}
+        <div className="flex items-start gap-3 mb-3">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: color + '22', border: `1px solid ${color}44` }}
+          >
+            <GalaxyIcon name={galaxy.icon} size={18} className="opacity-90" style={{ color }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-bold text-white leading-tight truncate">{galaxy.name}</h3>
+            <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-2">{galaxy.description}</p>
+          </div>
+        </div>
+
+        {/* Stats row */}
+        <div className="flex items-center gap-3 mb-3">
+          <span className="text-[10px] text-slate-500">
+            <span className="font-bold text-white">{galaxy.nodeCount}</span> nodes
+          </span>
+          <span className="text-[10px] text-slate-600">·</span>
+          <span className="text-[10px] text-slate-500">
+            <span className="font-bold text-slate-300">{galaxy.sourceCount}</span> sources
+          </span>
+          <span className="text-[10px] text-slate-600">·</span>
+          <span className="text-[10px] text-slate-500">
+            <span className="font-bold text-slate-300">{galaxy.clusterCount}</span> clusters
+          </span>
+        </div>
+
+        {/* Maturity bar */}
+        <MaturityBar nodeCount={galaxy.nodeCount} />
+
+        {/* CTA */}
+        <motion.div
+          animate={{ opacity: hovered ? 1 : 0, x: hovered ? 0 : -4 }}
+          className="absolute bottom-4 right-4 flex items-center gap-1"
+        >
+          <span className="text-[10px] font-bold" style={{ color }}>Explore</span>
+          <ChevronRight size={11} style={{ color }} />
+        </motion.div>
+      </div>
+    </motion.button>
+  );
+}
+
+export default function GalaxyView() {
+  const [galaxies, setGalaxies] = useState<GalaxyWithCounts[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState(false);
+
+  useEffect(() => {
+    fetch('/api/galaxies')
+      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+      .then(setGalaxies)
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-3">
+        <Loader2 className="animate-spin text-purple-400" size={24} />
+        <p className="text-xs text-slate-500">Loading galaxies…</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-2">
+        <p className="text-sm text-red-400">Failed to load galaxies.</p>
+        <button onClick={() => window.location.reload()} className="text-xs text-purple-400 hover:text-purple-300">Retry</button>
+      </div>
+    );
+  }
+
+  const totalNodes   = galaxies.reduce((s, g) => s + g.nodeCount, 0);
+  const totalSources = galaxies.reduce((s, g) => s + g.sourceCount, 0);
+
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="text-center space-y-2 pb-2"
+        >
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <Telescope size={18} className="text-purple-400" />
+            <span className="text-[10px] font-bold tracking-[0.2em] text-purple-500 uppercase">The Nexus Archive</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Universe</h1>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            {totalNodes.toLocaleString()} nodes across {galaxies.length} galaxies · {totalSources.toLocaleString()} sources
+          </p>
+        </motion.div>
+
+        {/* Galaxy grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {galaxies.map((galaxy, i) => (
+            <GalaxyCard key={galaxy.id} galaxy={galaxy} index={i} />
+          ))}
+        </div>
+
+        <p className="text-[10px] text-slate-700 text-center pb-4">
+          Select a galaxy to explore its clusters and nodes.
+        </p>
+      </div>
+    </div>
+  );
+}

@@ -9,7 +9,8 @@ import FeedbackWidget from '@/components/beta/FeedbackWidget';
 const ParticleField = lazy(() => import('@/components/effects/ParticleField'));
 
 const KnowledgeGraph = lazy(() => import('@/components/sections/KnowledgeGraph'));
-const UniverseView = lazy(() => import('@/components/sections/UniverseView'));
+const UniverseView   = lazy(() => import('@/components/sections/UniverseView'));
+const GalaxyView     = lazy(() => import('@/components/sections/GalaxyView'));
 const TimelineExplorer = lazy(() => import('@/components/sections/TimelineExplorer'));
 const EvidenceBoard = lazy(() => import('@/components/sections/EvidenceBoard'));
 const AncientGlobe = lazy(() => import('@/components/sections/AncientGlobe'));
@@ -20,6 +21,7 @@ const GraphDiagnostics  = lazy(() => import('@/components/sections/GraphDiagnost
 const SourceIngestion   = lazy(() => import('@/components/sections/SourceIngestion'));
 const AdminPanel        = lazy(() => import('@/components/sections/AdminPanel'));
 const RabbitHoleView    = lazy(() => import('@/components/sections/RabbitHoleView'));
+import Breadcrumb from '@/components/navigation/Breadcrumb';
 
 function LoadingSpinner() {
   return (
@@ -111,7 +113,12 @@ export default function AppShell() {
 
   // Intercept browser back/forward — keep navigation within the SPA
   useEffect(() => {
-    const validViews = ['landing', 'graph', 'theory', 'universe', 'timeline', 'evidence-board', 'globe', 'dashboard', 'diagnostics', 'sources', 'admin', 'rabbit-hole'];
+    const validViews = [
+      'landing', 'graph', 'theory', 'universe',
+      'galaxy', 'cluster', 'node', 'research-graph',
+      'timeline', 'evidence-board', 'globe', 'dashboard',
+      'diagnostics', 'sources', 'admin', 'rabbit-hole',
+    ];
 
     const handlePopState = (e: PopStateEvent) => {
       const view = e.state?.view;
@@ -153,8 +160,17 @@ export default function AppShell() {
           >
             <NavBar />
 
+            {/* Below-navbar wrapper — accounts for the fixed NavBar height */}
+            <div className="flex-1 flex flex-col overflow-hidden pt-14 sm:pt-16">
+              {/* Breadcrumb — only visible on galaxy hierarchy views */}
+              {(['galaxy','cluster','node','research-graph'] as string[]).includes(currentView) && (
+                <div className="flex-shrink-0 px-4 py-1.5 border-b border-purple-900/15 bg-black/20">
+                  <Breadcrumb />
+                </div>
+              )}
+
             {/* Main content area */}
-            <div className="flex-1 flex overflow-hidden mt-14 sm:mt-16 relative">
+            <div className="flex-1 flex overflow-hidden relative">
               {/* Core view */}
               <div className="flex-1 overflow-hidden relative">
                 <Suspense fallback={<LoadingSpinner />}>
@@ -165,8 +181,13 @@ export default function AppShell() {
                       </motion.div>
                     )}
                     {currentView === 'universe' && (
-                      <motion.div key="universe" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">
-                        <UniverseView />
+                      <motion.div key="universe" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto">
+                        <GalaxyView />
+                      </motion.div>
+                    )}
+                    {currentView === 'galaxy' && (
+                      <motion.div key="galaxy" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="absolute inset-0 overflow-y-auto">
+                        <GalaxyView />
                       </motion.div>
                     )}
                     {currentView === 'timeline' && (
@@ -265,6 +286,7 @@ export default function AppShell() {
                 )}
               </AnimatePresence>
             </div>
+            </div> {/* end below-navbar wrapper */}
 
             {/* Floating action buttons — above disclaimer banner */}
             <div className="fixed bottom-12 right-4 flex flex-col gap-3 z-40">

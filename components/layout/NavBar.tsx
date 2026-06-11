@@ -22,8 +22,8 @@ import UserProfilePanel from '@/components/sections/UserProfilePanel';
 import { usePerformanceStore, getEffectiveMode, type PerfMode } from '@/lib/store/performanceStore';
 
 const NAV_PRIMARY = [
-  { id: 'graph',          label: 'Knowledge Graph', icon: Grid3X3 },
-  { id: 'universe',       label: 'Universe View',   icon: Globe },
+  { id: 'universe',       label: 'Universe',        icon: Globe },
+  { id: 'graph',          label: 'Research Graph',  icon: Grid3X3 },
   { id: 'timeline',       label: 'Timeline',        icon: Clock },
   { id: 'globe',          label: 'Nexus Globe',     icon: MapPin },
   { id: 'evidence-board', label: 'Evidence Board',  icon: BarChart3 },

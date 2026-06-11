@@ -25,6 +25,21 @@ const ACHIEVEMENTS: Achievement[] = [
   { id: 'archive-complete', title: 'Archive Complete', description: 'Explored all major theories', icon: '🏆', unlockCondition: 'explore_all', xpReward: 1000 },
 ];
 
+export type ViewType =
+  | 'landing' | 'graph' | 'theory' | 'universe'
+  | 'galaxy' | 'cluster' | 'node' | 'research-graph'
+  | 'timeline' | 'evidence-board' | 'globe' | 'dashboard'
+  | 'diagnostics' | 'sources' | 'admin' | 'rabbit-hole';
+
+export interface NavContext {
+  galaxySlug:  string | null;
+  galaxyName:  string | null;
+  clusterSlug: string | null;
+  clusterName: string | null;
+  nodeId:      string | null;
+  nodeName:    string | null;
+}
+
 interface UserStore {
   progress: UserProgress;
   audioEnabled: boolean;
@@ -32,7 +47,9 @@ interface UserStore {
   rabbitHoleNodeId: string | null;
   /** Not persisted — signals RabbitHoleView to load a specific node on mount */
   pendingRabbitHoleNodeId: string | null;
-  currentView: 'landing' | 'graph' | 'theory' | 'universe' | 'timeline' | 'evidence-board' | 'globe' | 'dashboard' | 'diagnostics' | 'sources' | 'admin' | 'rabbit-hole';
+  currentView: ViewType;
+  /** Navigation breadcrumb context — universe > galaxy > cluster > node */
+  navContext: NavContext;
   selectedTheory: string | null;
   searchQuery: string;
   /** Shared cross-view focus: theory ID that both Timeline and Globe react to */
@@ -44,7 +61,7 @@ interface UserStore {
   exploreTheory: (theoryId: string) => void;
   discoverConnection: (fromId: string, toId: string) => void;
   toggleAudio: () => void;
-  setCurrentView: (view: 'landing' | 'graph' | 'theory' | 'universe' | 'timeline' | 'evidence-board' | 'globe' | 'dashboard' | 'diagnostics' | 'sources' | 'admin' | 'rabbit-hole') => void;
+  setCurrentView: (view: ViewType) => void;
   setRabbitHoleNodeId: (id: string | null) => void;
   setRabbitHoleChain: (chain: string[]) => void;
   setSelectedTheory: (id: string | null) => void;
@@ -57,6 +74,12 @@ interface UserStore {
   unlockAchievement: (achievementId: string) => void;
   getLevel: () => string;
   getNextLevel: () => { name: string; xpNeeded: number } | null;
+
+  // Navigation actions for the Galaxy → Cluster → Node hierarchy
+  navigateToUniverse: () => void;
+  navigateToGalaxy: (slug: string, name: string) => void;
+  navigateToCluster: (galaxySlug: string, galaxyName: string, clusterSlug: string, clusterName: string) => void;
+  navigateToNode: (nodeId: string, nodeName: string, clusterSlug?: string, clusterName?: string, galaxySlug?: string, galaxyName?: string) => void;
 }
 
 export const useUserStore = create<UserStore>()(
@@ -76,6 +99,7 @@ export const useUserStore = create<UserStore>()(
       rabbitHoleNodeId: null,
       pendingRabbitHoleNodeId: null,
       currentView: 'landing',
+      navContext: { galaxySlug: null, galaxyName: null, clusterSlug: null, clusterName: null, nodeId: null, nodeName: null },
       selectedTheory: null,
       searchQuery: '',
       focusedTheoryId: null,
@@ -139,6 +163,33 @@ export const useUserStore = create<UserStore>()(
       toggleAudio: () => set((state) => ({ audioEnabled: !state.audioEnabled })),
 
       setCurrentView: (view) => set({ currentView: view }),
+
+      navigateToUniverse: () => set({
+        currentView: 'universe',
+        navContext: { galaxySlug: null, galaxyName: null, clusterSlug: null, clusterName: null, nodeId: null, nodeName: null },
+      }),
+
+      navigateToGalaxy: (slug, name) => set({
+        currentView: 'galaxy',
+        navContext: { galaxySlug: slug, galaxyName: name, clusterSlug: null, clusterName: null, nodeId: null, nodeName: null },
+      }),
+
+      navigateToCluster: (galaxySlug, galaxyName, clusterSlug, clusterName) => set({
+        currentView: 'cluster',
+        navContext: { galaxySlug, galaxyName, clusterSlug, clusterName, nodeId: null, nodeName: null },
+      }),
+
+      navigateToNode: (nodeId, nodeName, clusterSlug, clusterName, galaxySlug, galaxyName) => set((state) => ({
+        currentView: 'node',
+        navContext: {
+          galaxySlug:  galaxySlug  ?? state.navContext.galaxySlug,
+          galaxyName:  galaxyName  ?? state.navContext.galaxyName,
+          clusterSlug: clusterSlug ?? state.navContext.clusterSlug,
+          clusterName: clusterName ?? state.navContext.clusterName,
+          nodeId,
+          nodeName,
+        },
+      })),
 
       setRabbitHoleNodeId: (id) => set({ rabbitHoleNodeId: id }),
 
