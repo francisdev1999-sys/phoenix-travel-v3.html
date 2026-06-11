@@ -4,6 +4,7 @@ import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { applyTrustEvent } from '@/lib/trust-score';
 import { evaluateBadges, refreshUserRank } from '@/lib/rank-system';
+import { runSourceIntelligencePipeline } from '@/lib/source-intelligence/pipeline';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -78,6 +79,9 @@ export async function POST(req: NextRequest, { params }: Params) {
         ),
       );
     }
+
+    // Trigger source intelligence pipeline — fire-and-forget
+    void runSourceIntelligencePipeline(id);
   }
 
   const { links: _links, ...rest } = updated;

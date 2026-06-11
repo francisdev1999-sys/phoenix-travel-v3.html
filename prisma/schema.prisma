@@ -456,6 +456,11 @@ model Source {
   links     SourceLink[]
   embedding SourceEmbedding?
 
+  // Source Intelligence Engine (Phase C)
+  analysis                 SourceAnalysis?
+  potentialNodeSuggestions PotentialNodeSuggestion[]
+  contradictionSuggestions ContradictionSuggestion[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -977,4 +982,178 @@ model ResearchSimilarity {
   @@index([nodeBId])
   @@index([overallSimilarity(sort: Desc)])
   @@index([researchPotentialScore(sort: Desc)])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SOURCE INTELLIGENCE ENGINE  (Phase C)
+// Every approved source runs through the pipeline and produces advisory
+// extractions only. AI may extract/suggest — never publish or auto-approve.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model SourceAnalysis {
+  id              String  @id @default(cuid())
+  sourceId        String  @unique
+  status          String  @default("pending") // pending | processing | complete | failed
+  pipelineVersion String  @default("1.0")
+
+  aiSummary       String? @db.Text
+  relationshipHints Json  @default("[]") // [{fromNodeId, toNodeId, reason, confidence, relType}]
+
+  entityCount      Int @default(0)
+  claimCount       Int @default(0)
+  timelineCount    Int @default(0)
+  locationCount    Int @default(0)
+  nodeCount        Int @default(0)
+  contradictionCount Int @default(0)
+
+  processingError  String?  @db.Text
+  startedAt        DateTime?
+  completedAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  source         Source                   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  entities       ExtractedEntity[]
+  claims         ExtractedClaim[]
+  timelineRefs   TimelineReference[]
+  locationRefs   LocationReference[]
+  potentialNodes PotentialNodeSuggestion[]
+  contradictions ContradictionSuggestion[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ExtractedEntity {
+  id            String @id @default(cuid())
+  analysisId    String
+  entityType    String // person | organization | location | event | artifact | concept | text
+  name          String
+  aliases       String[]
+  context       String @db.Text
+  confidence    Float  @default(0.5)
+  matchedNodeId String?
+
+  createdAt DateTime       @default(now())
+  analysis  SourceAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+  @@index([entityType])
+  @@index([matchedNodeId])
+}
+
+model ExtractedClaim {
+  id            String  @id @default(cuid())
+  analysisId    String
+  claimText     String  @db.Text
+  claimType     String  // factual | temporal | geographic | causal | speculative | contradictory
+  confidence    Float   @default(0.5)
+  supportedBy   String? @db.Text
+  relatedNodeId String?
+  status        String  @default("pending") // pending | reviewed | applied | dismissed
+
+  createdAt DateTime       @default(now())
+  analysis  SourceAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+  @@index([relatedNodeId])
+  @@index([status])
+}
+
+model TimelineReference {
+  id            String  @id @default(cuid())
+  analysisId    String
+  year          Int?
+  yearStart     Int?
+  yearEnd       Int?
+  datePrecision String? // exact | decade | century | millennium | era
+  description   String  @db.Text
+  period        String?
+  confidence    Float   @default(0.5)
+  rawText       String  @db.Text
+  relatedNodeId String?
+
+  createdAt DateTime       @default(now())
+  analysis  SourceAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+  @@index([year])
+}
+
+model LocationReference {
+  id            String  @id @default(cuid())
+  analysisId    String
+  name          String
+  locationType  String  // country | region | city | site | ancient_name
+  modernName    String?
+  lat           Float?
+  lon           Float?
+  confidence    Float   @default(0.5)
+  context       String  @db.Text
+  relatedNodeId String?
+
+  createdAt DateTime       @default(now())
+  analysis  SourceAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+  @@index([locationType])
+}
+
+model PotentialNodeSuggestion {
+  id           String @id @default(cuid())
+  analysisId   String
+  sourceId     String
+
+  suggestedTitle         String
+  suggestedCategory      String
+  suggestedDescription   String @db.Text
+  suggestedEvidenceLevel String @default("speculative")
+  suggestedConfidence    Float  @default(0.3)
+  suggestedTags          String[]
+  suggestedYear          Int?
+  suggestedLocation      String?
+  reasoning              String @db.Text
+  aiConfidence           Float  @default(0.5)
+
+  status        String    @default("pending") // pending | approved | dismissed | applied
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  appliedNodeId String?
+
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  analysis  SourceAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  source    Source         @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+  @@index([sourceId])
+  @@index([status])
+}
+
+model ContradictionSuggestion {
+  id           String @id @default(cuid())
+  analysisId   String
+  sourceId     String
+
+  existingNodeId    String
+  contradictionType String // evidence_conflict | factual_dispute | dating_conflict | geographic_conflict | authorship_conflict
+  description       String @db.Text
+  sourceClaimText   String @db.Text
+  nodeClaimText     String @db.Text
+  severity          String @default("moderate") // minor | moderate | significant
+  aiConfidence      Float  @default(0.5)
+
+  status     String    @default("pending") // pending | reviewed | applied | dismissed
+  reviewedBy String?
+  reviewedAt DateTime?
+
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  analysis  SourceAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  source    Source         @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+  @@index([existingNodeId])
+  @@index([status])
 }
