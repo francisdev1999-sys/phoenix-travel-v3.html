@@ -22,6 +22,7 @@ const GraphDiagnostics  = lazy(() => import('@/components/sections/GraphDiagnost
 const SourceIngestion   = lazy(() => import('@/components/sections/SourceIngestion'));
 const AdminPanel        = lazy(() => import('@/components/sections/AdminPanel'));
 const RabbitHoleView    = lazy(() => import('@/components/sections/RabbitHoleView'));
+const NodeView          = lazy(() => import('@/components/sections/NodeView'));
 import Breadcrumb from '@/components/navigation/Breadcrumb';
 
 function LoadingSpinner() {
@@ -234,6 +235,11 @@ export default function AppShell() {
                     {currentView === 'rabbit-hole' && (
                       <motion.div key="rabbit-hole" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto">
                         <RabbitHoleView />
+                      </motion.div>
+                    )}
+                    {currentView === 'node' && (
+                      <motion.div key="node" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="absolute inset-0 overflow-y-auto">
+                        <NodeView />
                       </motion.div>
                     )}
                   </AnimatePresence>
