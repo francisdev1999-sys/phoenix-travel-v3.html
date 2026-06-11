@@ -5,7 +5,7 @@ import { MessageSquare, Rabbit, X } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import NavBar from '@/components/layout/NavBar';
 import LandingPage from '@/components/sections/LandingPage';
-import ParticleField from '@/components/effects/ParticleField';
+const ParticleField = lazy(() => import('@/components/effects/ParticleField'));
 
 const KnowledgeGraph = lazy(() => import('@/components/sections/KnowledgeGraph'));
 const UniverseView = lazy(() => import('@/components/sections/UniverseView'));
@@ -54,10 +54,41 @@ export default function AppShell() {
     setSidePanel(null);
   }, [currentView]);
 
+  const isInitialMountRef = useRef(true);
+
+  // Sync currentView → browser history so back/forward navigate within the app
+  useEffect(() => {
+    const hash = currentView === 'landing' ? '' : `#${currentView}`;
+
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      window.history.replaceState({ view: currentView }, '', hash || '/');
+      return;
+    }
+
+    // If hash already matches, this render was triggered by popstate — skip push
+    if (window.location.hash === hash) return;
+
+    window.history.pushState({ view: currentView }, '', hash || '/');
+  }, [currentView]);
+
+  // Intercept browser back/forward — keep navigation within the SPA
+  useEffect(() => {
+    const validViews = ['landing', 'graph', 'theory', 'universe', 'timeline', 'evidence-board', 'globe', 'dashboard', 'diagnostics', 'sources', 'admin', 'rabbit-hole'];
+
+    const handlePopState = (e: PopStateEvent) => {
+      const view = e.state?.view;
+      setCurrentView(validViews.includes(view) ? view : 'landing');
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [setCurrentView]);
+
   return (
-    <div className="min-h-screen bg-[#000005] text-slate-200 overflow-hidden">
+    <div className="min-h-screen bg-[#000005] text-slate-200 overflow-hidden" style={{ maxWidth: '100vw', overflowX: 'hidden' }}>
       {/* Global particle field for non-landing views */}
-      {!isLanding && <ParticleField />}
+      {!isLanding && <Suspense fallback={null}><ParticleField /></Suspense>}
 
       {/* Landing Page */}
       <AnimatePresence mode="wait">
@@ -86,7 +117,7 @@ export default function AppShell() {
             <NavBar />
 
             {/* Main content area */}
-            <div className="flex-1 flex overflow-hidden mt-16 relative">
+            <div className="flex-1 flex overflow-hidden mt-14 sm:mt-16 relative">
               {/* Core view */}
               <div className="flex-1 overflow-hidden relative">
                 <Suspense fallback={<LoadingSpinner />}>

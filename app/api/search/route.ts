@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { rateLimit } from '@/lib/rate-limiter';
 
 /**
  * GET /api/search
@@ -27,6 +28,16 @@ const RRF_K = 60; // Reciprocal Rank Fusion constant
 const TRGM_THRESHOLD = 0.15;
 
 export async function GET(req: NextRequest) {
+  // 30 searches per minute per IP
+  const ip  = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+  const rl  = await rateLimit(`search:${ip}`, 30, 60_000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests — please slow down.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } },
+    );
+  }
+
   const { searchParams } = req.nextUrl;
 
   const q          = (searchParams.get('q') ?? '').trim();

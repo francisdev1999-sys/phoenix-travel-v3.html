@@ -11,30 +11,36 @@ export const EVIDENCE_WEIGHTS: Record<EvidenceLevel, number> = {
 };
 
 export const RELATIONSHIP_WEIGHTS: Record<RelationshipType, number> = {
-  historical:    1.00,
-  textual:       0.90,
-  geographical:  0.80,
-  influence:     0.75,
-  thematic:      0.60,
-  contradictory: 0.50,
+  historical:              1.00,
+  textual:                 0.90,
+  geographical:            0.80,
+  influence:               0.75,
+  thematic:                0.60,
+  contradictory:           0.50,
+  alternative_explanation: 0.55,
+  criticism:               0.50,
 };
 
 export const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
-  historical:    'Historical',
-  textual:       'Textual',
-  geographical:  'Geographic',
-  influence:     'Influence',
-  thematic:      'Thematic',
-  contradictory: 'Contradicts',
+  historical:              'Historical',
+  textual:                 'Textual',
+  geographical:            'Geographic',
+  influence:               'Influence',
+  thematic:                'Thematic',
+  contradictory:           'Contradicts',
+  alternative_explanation: 'Alternative Explanation',
+  criticism:               'Criticism',
 };
 
 export const RELATIONSHIP_COLORS: Record<RelationshipType, string> = {
-  historical:    '#f59e0b',
-  textual:       '#6366f1',
-  geographical:  '#22c55e',
-  influence:     '#06b6d4',
-  thematic:      '#a855f7',
-  contradictory: '#ef4444',
+  historical:              '#f59e0b',
+  textual:                 '#6366f1',
+  geographical:            '#22c55e',
+  influence:               '#06b6d4',
+  thematic:                '#a855f7',
+  contradictory:           '#ef4444',
+  alternative_explanation: '#f97316',
+  criticism:               '#fb7185',
 };
 
 // ── Types ────────────────────────────────────────────────────────────────────

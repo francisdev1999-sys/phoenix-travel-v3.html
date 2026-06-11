@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Providers from "./providers";
+import AppErrorBoundary from "@/components/layout/AppErrorBoundary";
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -27,7 +28,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark h-full">
       <body className="antialiased min-h-full">
-        <Providers>{children}</Providers>
+        <AppErrorBoundary>
+          <Providers>{children}</Providers>
+        </AppErrorBoundary>
       </body>
     </html>
   );

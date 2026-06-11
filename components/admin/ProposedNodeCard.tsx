@@ -1,9 +1,12 @@
 'use client';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, User, Calendar } from 'lucide-react';
+import { ChevronDown, ChevronUp, User, Calendar, Bot, AlertTriangle, CheckCircle, Clock, Search, TrendingUp } from 'lucide-react';
 import { EVIDENCE_COLORS, CATEGORY_COLORS } from '@/lib/graph';
 import ReviewActions from './ReviewActions';
+import type { NodeAuditResult, AuditFlag } from '@/lib/ai/node-auditor';
+import type { ProposalSimilarityResult, ProposalSimilarityEntry } from '@/lib/similarity/proposal-similarity';
+import type { SimilarityDimensions } from '@/lib/similarity/engine';
 
 interface ProposedNode {
   id: string;
@@ -21,6 +24,9 @@ interface ProposedNode {
   country?: string | null;
   status: string;
   reviewNotes?: string | null;
+  aiAuditResult?: NodeAuditResult | null;
+  aiAuditedAt?: string | null;
+  proposalSimilarity?: ProposalSimilarityResult | null;
   createdAt: string;
   submitter?: { id: string; name?: string | null; image?: string | null } | null;
 }
@@ -117,6 +123,24 @@ export default function ProposedNodeCard({ node, onReviewed }: Props) {
                 </Section>
               )}
 
+              {/* AI Audit result */}
+              {node.aiAuditResult
+                ? <AuditPanel audit={node.aiAuditResult} />
+                : <div className="flex items-center gap-2 text-xs text-slate-600 py-1">
+                    <Bot size={12} />
+                    <span>AI audit pending…</span>
+                  </div>
+              }
+
+              {/* Similarity against existing archive nodes */}
+              {node.proposalSimilarity
+                ? <ProposalSimilarityPanel result={node.proposalSimilarity} />
+                : <div className="flex items-center gap-2 text-xs text-slate-600 py-1">
+                    <Search size={12} />
+                    <span>Similarity scan pending…</span>
+                  </div>
+              }
+
               {node.status === 'pending' && (
                 <ReviewActions
                   endpoint={`/api/nodes/${node.id}/review`}
@@ -143,6 +167,295 @@ function Section({ label, children }: { label: string; children: React.ReactNode
     <div>
       <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">{label}</p>
       {children}
+    </div>
+  );
+}
+
+// ── AI Audit Panel ────────────────────────────────────────────────────────────
+
+const REC_CONFIG = {
+  approve:         { label: 'Approve',          color: '#22c55e', icon: CheckCircle },
+  flag_for_review: { label: 'Flag for Review',  color: '#f59e0b', icon: AlertTriangle },
+  needs_revision:  { label: 'Needs Revision',   color: '#ef4444', icon: AlertTriangle },
+} as const;
+
+const SEV_COLOR: Record<AuditFlag['severity'], string> = {
+  low:    '#64748b',
+  medium: '#f59e0b',
+  high:   '#ef4444',
+};
+
+const SIX_Q_LABELS: Record<string, string> = {
+  supports:         'What supports this?',
+  contradicts:      'What contradicts this?',
+  mainstream_view:  'Mainstream perspective?',
+  missing_evidence: 'Evidence missing?',
+  assumptions:      'Underlying assumptions?',
+  archive_bias:     'Archive bias risk?',
+};
+
+function AuditPanel({ audit }: { audit: NodeAuditResult }) {
+  const [open, setOpen] = useState(false);
+  const rec      = REC_CONFIG[audit.recommendation] ?? REC_CONFIG.flag_for_review;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const RecIcon  = rec.icon as any;
+  const scoreColor = audit.quality_score >= 70 ? '#22c55e'
+                   : audit.quality_score >= 45 ? '#f59e0b'
+                   : '#ef4444';
+
+  return (
+    <div className="rounded-xl border bg-white/3 overflow-hidden"
+         style={{ borderColor: rec.color + '40' }}>
+
+      {/* Summary row */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-white/5 transition-all"
+      >
+        <Bot size={13} className="text-purple-400 flex-shrink-0" />
+
+        <span
+          className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+          style={{ background: rec.color + '20', color: rec.color, border: `1px solid ${rec.color}40` }}
+        >
+          <RecIcon size={9} />
+          {rec.label}
+        </span>
+
+        <span className="text-xs font-bold flex-shrink-0" style={{ color: scoreColor }}>
+          {audit.quality_score}/100
+        </span>
+
+        <div className="flex-1 h-1.5 rounded-full bg-slate-800 overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all"
+            style={{ width: `${audit.quality_score}%`, background: scoreColor }}
+          />
+        </div>
+
+        {audit.flags.length > 0 && (
+          <span className="text-[10px] text-slate-500 flex-shrink-0">
+            {audit.flags.length} flag{audit.flags.length !== 1 ? 's' : ''}
+          </span>
+        )}
+
+        <span className="text-[10px] text-slate-600 flex-shrink-0">AI audit</span>
+        {open ? <ChevronUp size={12} className="text-slate-500 flex-shrink-0" />
+               : <ChevronDown size={12} className="text-slate-500 flex-shrink-0" />}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0 }}
+            animate={{ height: 'auto' }}
+            exit={{ height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="px-3 pb-3 flex flex-col gap-3 border-t border-purple-900/20 pt-3">
+
+              <p className="text-xs text-slate-300 leading-relaxed">{audit.summary}</p>
+
+              <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                <Clock size={10} />
+                <span>Confidence: <span className="text-slate-400 font-medium">{audit.confidence}</span></span>
+                <span className="ml-auto">${audit.estimated_cost_usd.toFixed(4)} · {audit.model.split('-').slice(0, 3).join('-')}</span>
+              </div>
+
+              {audit.flags.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Flags</p>
+                  <ul className="flex flex-col gap-1.5">
+                    {audit.flags.map((f, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span
+                          className="mt-0.5 flex-shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase"
+                          style={{ background: SEV_COLOR[f.severity] + '20', color: SEV_COLOR[f.severity] }}
+                        >
+                          {f.severity}
+                        </span>
+                        <span className="text-[11px] text-slate-300">
+                          <span className="text-slate-500">{f.type.replace(/_/g, ' ')}: </span>
+                          {f.detail}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {audit.strengths.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Strengths</p>
+                  <ul className="flex flex-col gap-1">
+                    {audit.strengths.map((s, i) => (
+                      <li key={i} className="flex items-start gap-2 text-[11px] text-green-300">
+                        <CheckCircle size={10} className="mt-0.5 flex-shrink-0 text-green-500" />
+                        {s}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Six balance questions from the anti-echo-chamber spec */}
+              {audit.six_questions && (
+                <div>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Research Balance Review</p>
+                  <div className="flex flex-col gap-2">
+                    {Object.entries(audit.six_questions).map(([k, v]) => (
+                      <div key={k} className="px-2 py-1.5 rounded-lg bg-white/3">
+                        <p className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">{SIX_Q_LABELS[k] ?? k}</p>
+                        <p className="text-[10px] text-slate-300 leading-relaxed">{v as string}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <p className="text-[9px] text-slate-600 leading-relaxed border-t border-purple-900/10 pt-2">
+                ⚠ AI audit evaluates internal consistency only — not factual accuracy.
+                Human review is required before any approval decision.
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Proposal Similarity Panel ─────────────────────────────────────────────────
+
+const DIM_LABELS: Record<keyof SimilarityDimensions, string> = {
+  thematic:     'Thematic',
+  timeline:     'Timeline',
+  geographic:   'Geographic',
+  source:       'Sources',
+  evidence:     'Evidence',
+  entity:       'Entities',
+  relationship: 'Graph links',
+};
+
+function SimilarEntryRow({ entry }: { entry: ProposalSimilarityEntry }) {
+  const [open, setOpen] = useState(false);
+  const pct = Math.round(entry.overall * 100);
+  const color = pct >= 65 ? '#a855f7' : pct >= 40 ? '#f59e0b' : '#64748b';
+  return (
+    <div className="rounded-lg border border-purple-900/20 bg-white/3 overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-white/5 transition-all"
+      >
+        <span className="text-sm flex-shrink-0">{entry.icon ?? '◈'}</span>
+        <span className="flex-1 text-xs font-medium text-white truncate">{entry.title}</span>
+        <span className="text-[10px] text-slate-500 flex-shrink-0">{entry.category}</span>
+        <span className="text-xs font-bold flex-shrink-0 ml-1" style={{ color }}>{pct}%</span>
+        {open ? <ChevronUp size={11} className="text-slate-500 flex-shrink-0" /> : <ChevronDown size={11} className="text-slate-500 flex-shrink-0" />}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
+            <div className="px-3 pb-3 pt-2 border-t border-purple-900/10 space-y-1.5">
+              {(Object.entries(entry.dimensions) as [keyof SimilarityDimensions, { score: number; rationale: string }][]).map(([k, v]) => {
+                const dp = Math.round(v.score * 100);
+                const dc = dp >= 65 ? '#a855f7' : dp >= 40 ? '#f59e0b' : '#64748b';
+                return (
+                  <div key={k}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] text-slate-600 w-14 flex-shrink-0">{DIM_LABELS[k]}</span>
+                      <div className="flex-1 h-1 rounded-full bg-slate-800">
+                        <div className="h-full rounded-full" style={{ width: `${dp}%`, background: dc }} />
+                      </div>
+                      <span className="text-[9px] w-6 text-right flex-shrink-0" style={{ color: dc }}>{dp}%</span>
+                    </div>
+                    <p className="text-[9px] text-slate-600 ml-16 leading-relaxed">{v.rationale}</p>
+                  </div>
+                );
+              })}
+
+              {entry.critic.contradictions.length > 0 && (
+                <div className="pt-1 space-y-1">
+                  {entry.critic.contradictions.map((c, i) => (
+                    <p key={i} className="text-[9px] text-amber-500/80 leading-relaxed flex gap-1.5">
+                      <AlertTriangle size={9} className="flex-shrink-0 mt-0.5" />{c.detail}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function ProposalSimilarityPanel({ result }: { result: ProposalSimilarityResult }) {
+  const [open, setOpen] = useState(false);
+  const top = result.top_similar[0];
+  const topPct = top ? Math.round(top.overall * 100) : 0;
+  const topColor = topPct >= 65 ? '#a855f7' : topPct >= 40 ? '#f59e0b' : '#64748b';
+
+  return (
+    <div className="rounded-xl border border-purple-900/30 bg-white/3 overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-white/5 transition-all"
+      >
+        <Search size={13} className="text-purple-400 flex-shrink-0" />
+
+        {top ? (
+          <span className="text-[10px] text-slate-400 flex-1 truncate">
+            Closest match: <span className="text-white font-medium">{top.title}</span>
+          </span>
+        ) : (
+          <span className="text-[10px] text-slate-500 flex-1">No close matches found</span>
+        )}
+
+        {top && (
+          <span className="text-xs font-bold flex-shrink-0" style={{ color: topColor }}>{topPct}%</span>
+        )}
+
+        <span className="text-[10px] text-slate-600 flex-shrink-0">Similarity scan</span>
+        {open ? <ChevronUp size={12} className="text-slate-500 flex-shrink-0" /> : <ChevronDown size={12} className="text-slate-500 flex-shrink-0" />}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
+            <div className="px-3 pb-3 border-t border-purple-900/20 pt-3 space-y-3">
+
+              <div className="p-2.5 rounded-lg border border-amber-500/20 bg-amber-900/5">
+                <p className="text-[9px] text-amber-400/80 leading-relaxed">
+                  <span className="font-bold">Similarity ≠ evidence.</span>{' '}
+                  {result.disclaimer}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                {result.top_similar.map(entry => (
+                  <SimilarEntryRow key={entry.nodeId} entry={entry} />
+                ))}
+              </div>
+
+              {result.top_similar.some(e => e.research_potential >= 0.6) && (
+                <div className="flex items-center gap-1.5 text-[10px] text-purple-400">
+                  <TrendingUp size={10} />
+                  <span>
+                    {result.top_similar.filter(e => e.research_potential >= 0.6).length} match(es) with high research potential — may be worth cross-referencing during review.
+                  </span>
+                </div>
+              )}
+
+              <p className="text-[9px] text-slate-600 border-t border-purple-900/10 pt-2">
+                Scanned {new Date(result.computed_at).toLocaleString()}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

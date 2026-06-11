@@ -35,7 +35,12 @@ interface UserStore {
   currentView: 'landing' | 'graph' | 'theory' | 'universe' | 'timeline' | 'evidence-board' | 'globe' | 'dashboard' | 'diagnostics' | 'sources' | 'admin' | 'rabbit-hole';
   selectedTheory: string | null;
   searchQuery: string;
+  /** Shared cross-view focus: theory ID that both Timeline and Globe react to */
+  focusedTheoryId: string | null;
+  /** Guest mode — browse-only, no contributions. Not persisted. */
+  guestMode: boolean;
 
+  setGuestMode: (v: boolean) => void;
   exploreTheory: (theoryId: string) => void;
   discoverConnection: (fromId: string, toId: string) => void;
   toggleAudio: () => void;
@@ -44,6 +49,7 @@ interface UserStore {
   setRabbitHoleChain: (chain: string[]) => void;
   setSelectedTheory: (id: string | null) => void;
   setSearchQuery: (query: string) => void;
+  setFocusedTheoryId: (id: string | null) => void;
   setPendingRabbitHoleNodeId: (id: string | null) => void;
   startRabbitHole: (theoryId: string) => void;
   extendRabbitHole: (theoryId: string) => void;
@@ -72,6 +78,8 @@ export const useUserStore = create<UserStore>()(
       currentView: 'landing',
       selectedTheory: null,
       searchQuery: '',
+      focusedTheoryId: null,
+      guestMode: false,
 
       exploreTheory: (theoryId: string) => {
         set((state) => {
@@ -126,6 +134,8 @@ export const useUserStore = create<UserStore>()(
         });
       },
 
+      setGuestMode: (v) => set({ guestMode: v }),
+
       toggleAudio: () => set((state) => ({ audioEnabled: !state.audioEnabled })),
 
       setCurrentView: (view) => set({ currentView: view }),
@@ -139,6 +149,8 @@ export const useUserStore = create<UserStore>()(
       setSelectedTheory: (id) => set({ selectedTheory: id }),
 
       setSearchQuery: (query) => set({ searchQuery: query }),
+
+      setFocusedTheoryId: (id) => set({ focusedTheoryId: id }),
 
       startRabbitHole: (theoryId: string) => {
         set({ rabbitHoleChain: [theoryId], rabbitHoleNodeId: theoryId });
