@@ -1,6 +1,6 @@
 'use client';
 import { Suspense, lazy, useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { MessageSquare, Rabbit, X } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import NavBar from '@/components/layout/NavBar';
@@ -37,7 +37,7 @@ function LoadingSpinner() {
 }
 
 export default function AppShell() {
-  const { currentView, rabbitHoleChain, setCurrentView } = useUserStore();
+  const { currentView, rabbitHoleChain, setCurrentView, researchMode } = useUserStore();
   const [sidePanel, setSidePanel] = useState<'ai' | 'rabbit' | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const isLanding = currentView === 'landing';
@@ -145,9 +145,14 @@ export default function AppShell() {
   }, [setCurrentView]);
 
   return (
-    <div className="min-h-screen bg-[#000005] text-slate-200 overflow-hidden" style={{ maxWidth: '100vw', overflowX: 'hidden' }}>
-      {/* Global particle field for non-landing views */}
-      {!isLanding && <Suspense fallback={null}><ParticleField /></Suspense>}
+    <MotionConfig reducedMotion={researchMode ? 'always' : 'user'}>
+    <div
+      className="min-h-screen bg-[#000005] text-slate-200 overflow-hidden"
+      style={{ maxWidth: '100vw', overflowX: 'hidden' }}
+      data-research={researchMode ? 'true' : undefined}
+    >
+      {/* Global particle field — suppressed in research mode */}
+      {!isLanding && !researchMode && <Suspense fallback={null}><ParticleField /></Suspense>}
 
       {/* Landing Page */}
       <AnimatePresence mode="wait">
@@ -366,5 +371,6 @@ export default function AppShell() {
         )}
       </AnimatePresence>
     </div>
+    </MotionConfig>
   );
 }

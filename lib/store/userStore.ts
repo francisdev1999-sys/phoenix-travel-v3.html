@@ -56,8 +56,11 @@ interface UserStore {
   focusedTheoryId: string | null;
   /** Guest mode — browse-only, no contributions. Not persisted. */
   guestMode: boolean;
+  /** Research mode — suppresses particles/animations for focused reading */
+  researchMode: boolean;
 
   setGuestMode: (v: boolean) => void;
+  toggleResearchMode: () => void;
   exploreTheory: (theoryId: string) => void;
   discoverConnection: (fromId: string, toId: string) => void;
   toggleAudio: () => void;
@@ -104,6 +107,7 @@ export const useUserStore = create<UserStore>()(
       searchQuery: '',
       focusedTheoryId: null,
       guestMode: false,
+      researchMode: false,
 
       exploreTheory: (theoryId: string) => {
         set((state) => {
@@ -159,6 +163,8 @@ export const useUserStore = create<UserStore>()(
       },
 
       setGuestMode: (v) => set({ guestMode: v }),
+
+      toggleResearchMode: () => set((state) => ({ researchMode: !state.researchMode })),
 
       toggleAudio: () => set((state) => ({ audioEnabled: !state.audioEnabled })),
 
@@ -265,6 +271,7 @@ export const useUserStore = create<UserStore>()(
         audioEnabled:     state.audioEnabled,
         rabbitHoleChain:  state.rabbitHoleChain,
         rabbitHoleNodeId: state.rabbitHoleNodeId,
+        researchMode:     state.researchMode,
       }),
     }
   )

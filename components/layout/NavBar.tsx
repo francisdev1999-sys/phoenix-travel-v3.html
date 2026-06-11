@@ -5,6 +5,7 @@ import {
   Search, Globe, BarChart3, Clock, MapPin, Grid3X3, User,
   Volume2, VolumeX, Menu, X, LogIn, LogOut, Activity, BookMarked,
   ShieldCheck, Rabbit, Loader2, MoreHorizontal, Wrench, Trophy, UserCheck, Eye,
+  ScanText,
 } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import { useSession, signIn, signOut } from 'next-auth/react';
@@ -208,6 +209,7 @@ export default function NavBar() {
   const {
     currentView, setCurrentView, audioEnabled, toggleAudio,
     progress, setPendingRabbitHoleNodeId, guestMode, setGuestMode,
+    researchMode, toggleResearchMode,
   } = useUserStore();
   const { data: session, status } = useSession();
   const { mode: perfMode, setMode: setPerfMode } = usePerformanceStore();
@@ -506,6 +508,20 @@ export default function NavBar() {
               <span>{PERF_LABELS[perfMode]}</span>
             </button>
 
+            {/* Research Mode toggle */}
+            <button
+              onClick={toggleResearchMode}
+              title={researchMode ? 'Exit Research Mode' : 'Research Mode — hides particles & reduces animations'}
+              className={`hidden sm:flex items-center gap-1 p-2 rounded-lg transition-all ${
+                researchMode
+                  ? 'text-amber-300 bg-amber-900/30 border border-amber-500/30'
+                  : 'text-slate-400 hover:text-amber-400 hover:bg-amber-900/20'
+              }`}
+            >
+              <ScanText size={15} />
+              {researchMode && <span className="text-[10px] font-bold hidden xl:inline">Focus</span>}
+            </button>
+
             {/* Audio — hidden on xs */}
             <button
               onClick={toggleAudio}
@@ -632,7 +648,7 @@ export default function NavBar() {
             </div>
 
             {/* Mobile extras */}
-            <div className="px-3 pb-3 flex items-center gap-2 border-t border-purple-900/20 pt-2">
+            <div className="px-3 pb-3 flex items-center gap-2 border-t border-purple-900/20 pt-2 flex-wrap">
               <button
                 onClick={toggleAudio}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-cyan-400 bg-white/5 hover:bg-cyan-900/20 transition-all"
@@ -650,6 +666,17 @@ export default function NavBar() {
               >
                 <Activity size={13} />
                 {PERF_LABELS[perfMode]}
+              </button>
+              <button
+                onClick={toggleResearchMode}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs transition-all ${
+                  researchMode
+                    ? 'text-amber-300 bg-amber-900/30 border border-amber-500/30'
+                    : 'text-slate-400 bg-white/5 border border-white/10 hover:text-amber-400'
+                }`}
+              >
+                <ScanText size={13} />
+                {researchMode ? 'Focus On' : 'Focus'}
               </button>
               <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-purple-900/20 border border-purple-500/20 ml-auto">
                 <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />

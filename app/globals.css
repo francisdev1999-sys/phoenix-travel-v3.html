@@ -120,3 +120,19 @@ body {
 @media (max-width: 768px) {
   .hide-mobile { display: none !important; }
 }
+
+/* ── Research / Focus Mode ────────────────────────────────────────────────── */
+/* Kill all CSS keyframe animations and transitions when research mode is on.  */
+/* Framer Motion animations are suppressed separately via MotionConfig.        */
+[data-research="true"] *,
+[data-research="true"] *::before,
+[data-research="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Keep cursor transitions and scrollbar behaviour snappy but visible */
+[data-research="true"] {
+  scroll-behavior: auto;
+}
