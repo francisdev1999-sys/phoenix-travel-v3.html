@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useSession, signIn } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, Network, GitBranch, BookMarked, Activity, FileWarning, Plus, Loader2, Package, InboxIcon, Sparkles, Users, BarChart3, AlertOctagon, Brain, ShieldAlert, Search, Link2, MessageSquarePlus, Ticket, TrendingUp, ClipboardList } from 'lucide-react';
+import { ShieldCheck, Network, GitBranch, BookMarked, Activity, FileWarning, Plus, Loader2, Package, InboxIcon, Sparkles, Users, BarChart3, AlertOctagon, Brain, ShieldAlert, Search, Link2, MessageSquarePlus, Ticket, TrendingUp, ClipboardList, Database, CheckCircle2 } from 'lucide-react';
 import AdminStats from '@/components/admin/AdminStats';
 import ProposedNodeCard from '@/components/admin/ProposedNodeCard';
 import ProposedEdgeCard from '@/components/admin/ProposedEdgeCard';
@@ -46,6 +46,8 @@ export default function AdminPanel() {
   const [loadingEdges, setLoadingEdges] = useState(false);
   const [nodeFilter, setNodeFilter] = useState<string>('pending');
   const [edgeFilter, setEdgeFilter] = useState<string>('pending');
+  const [seeding, setSeeding]       = useState(false);
+  const [seedMsg, setSeedMsg]       = useState<string | null>(null);
 
   useEffect(() => {
     if (tab === 'nodes') {
@@ -75,6 +77,20 @@ export default function AdminPanel() {
     setLoadingEdges(true);
     fetch(`/api/edges/propose?status=${edgeFilter}`)
       .then(r => r.json()).then(setEdges).finally(() => setLoadingEdges(false));
+  };
+
+  const runSeed = async () => {
+    setSeeding(true);
+    setSeedMsg(null);
+    try {
+      const r = await fetch('/api/admin/seed', { method: 'POST' });
+      const d = await r.json();
+      setSeedMsg(d.message ?? 'Seed started — reload in ~30s.');
+    } catch {
+      setSeedMsg('Seed request failed.');
+    } finally {
+      setSeeding(false);
+    }
   };
 
   if (status === 'loading') {
@@ -168,7 +184,35 @@ export default function AdminPanel() {
           className="flex-1 overflow-y-auto p-6"
         >
           {tab === 'overview' && (
-            <AdminStats onTabSelect={t => setTab(t as Tab)} />
+            <div className="flex flex-col gap-6">
+              {/* Seed Database */}
+              <div className="p-4 rounded-xl border border-purple-900/30 bg-purple-950/20 flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <Database size={16} className="text-purple-400 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-bold text-white">Seed Database</p>
+                    <p className="text-xs text-slate-500">Populate the archive from static source data. Safe to run multiple times (upserts only).</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {seedMsg && (
+                    <div className="flex items-center gap-1.5 text-xs text-green-400">
+                      <CheckCircle2 size={13} />
+                      <span className="max-w-xs truncate">{seedMsg}</span>
+                    </div>
+                  )}
+                  <button
+                    onClick={runSeed}
+                    disabled={seeding}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-purple-700 hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    {seeding ? <Loader2 size={12} className="animate-spin" /> : <Database size={12} />}
+                    {seeding ? 'Starting…' : 'Run Seed'}
+                  </button>
+                </div>
+              </div>
+              <AdminStats onTabSelect={t => setTab(t as Tab)} />
+            </div>
           )}
 
           {tab === 'nodes' && (
