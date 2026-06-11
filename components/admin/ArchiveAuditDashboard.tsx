@@ -534,11 +534,39 @@ export default function ArchiveAuditDashboard() {
             </div>
           )}
 
-          {/* Empty complete */}
-          {activeRun?.status === 'complete' && findings.length === 0 && (
-            <div className="flex items-center gap-2 p-3 bg-green-900/20 border border-green-700/40 rounded-lg">
-              <CheckCircle size={14} className="text-green-400" />
-              <p className="text-xs text-green-300">No issues found matching this filter.</p>
+          {/* Archive healthy — completed run with zero total findings */}
+          {activeRun?.status === 'complete' && ((summary?.total as number) ?? 0) === 0 && (
+            <div className="flex flex-col items-center justify-center py-8 text-center space-y-3 border border-green-700/30 rounded-lg bg-green-900/10">
+              <CheckCircle size={32} className="text-green-400" />
+              <div>
+                <p className="text-sm font-semibold text-green-300">Archive is healthy</p>
+                <p className="text-xs text-slate-400 mt-1">All automated checks passed — no issues detected.</p>
+              </div>
+              {activeRun.completedAt && (
+                <p className="text-[10px] text-slate-500">
+                  Completed {new Date(activeRun.completedAt).toLocaleString()}
+                  {' · '}{activeRun.triggeredBy}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Filter returned nothing, but findings do exist */}
+          {activeRun?.status === 'complete' && ((summary?.total as number) ?? 0) > 0 && findings.length === 0 && (
+            <div className="flex items-center gap-2 p-3 bg-slate-800/60 border border-slate-700 rounded-lg">
+              <Eye size={14} className="text-slate-400" />
+              <p className="text-xs text-slate-400">No issues match the current filter. Clear filters to see all {(summary?.total as number)} findings.</p>
+            </div>
+          )}
+
+          {/* Failed run */}
+          {activeRun?.status === 'failed' && !runError && (
+            <div className="flex items-center gap-2 p-3 bg-red-900/20 border border-red-700/40 rounded-lg">
+              <XCircle size={14} className="text-red-400" />
+              <div>
+                <p className="text-xs text-red-300 font-medium">Audit failed or was interrupted</p>
+                <p className="text-[11px] text-red-400 mt-0.5">The background worker may have been restarted. Try running again.</p>
+              </div>
             </div>
           )}
 
