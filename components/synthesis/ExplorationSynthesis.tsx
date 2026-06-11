@@ -56,7 +56,7 @@ export default function ExplorationSynthesis({ result, loading, onClose, onExplo
       animate={{ opacity: 1, y: 0,  scale: 1 }}
       exit={{    opacity: 0, y: 20, scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-      className="fixed bottom-6 right-6 z-50 w-[420px] max-h-[75vh] flex flex-col rounded-2xl border border-purple-500/30 bg-slate-950/95 backdrop-blur-md shadow-2xl shadow-purple-900/30 overflow-hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 max-h-[80vh] flex flex-col rounded-t-2xl sm:rounded-2xl sm:bottom-6 sm:left-auto sm:right-6 sm:w-[420px] border border-purple-500/30 bg-slate-950/95 backdrop-blur-md shadow-2xl shadow-purple-900/30 overflow-hidden"
     >
       {/* Header */}
       <div className="flex items-center gap-2.5 px-4 py-3 border-b border-purple-900/30 flex-shrink-0">
