@@ -33,8 +33,8 @@ interface DBNeighbour {
     id: string;
     fromId: string;
     toId: string;
-    relationship: string;
-    description: string | null;
+    relationshipType: string;
+    explanation: string | null;
     confidenceScore: number;
   };
   neighbour: {
@@ -197,7 +197,7 @@ function NeighbourCard({ item, nodeId }: { item: DBNeighbour; nodeId: string }) 
         <EvidencePill level={neighbour.evidenceLevel} />
       </div>
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-[10px] text-slate-500 capitalize">{edge.relationship.replace(/_/g, ' ')}</span>
+        <span className="text-[10px] text-slate-500 capitalize">{(edge.relationshipType ?? '').replace(/_/g, ' ')}</span>
         {neighbour.category && (
           <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-slate-500">
             {neighbour.category.name}
@@ -205,8 +205,8 @@ function NeighbourCard({ item, nodeId }: { item: DBNeighbour; nodeId: string }) 
         )}
         <span className="text-[10px] text-slate-600">{Math.round(edge.confidenceScore * 100)}% conf.</span>
       </div>
-      {edge.description && (
-        <p className="text-xs text-slate-600 line-clamp-2">{edge.description}</p>
+      {edge.explanation && (
+        <p className="text-xs text-slate-600 line-clamp-2">{edge.explanation}</p>
       )}
     </button>
   );
