@@ -100,6 +100,12 @@ model User {
   activityEvents        UserActivityEvent[]
   moderationStatus      UserModerationStatus?
 
+  // Phase D — Private Beta
+  betaGroup         String?
+  betaFeedback      BetaFeedback[]
+  inviteRedemptions BetaInviteRedemption[]
+  usageEvents       UsageEvent[]
+
   @@index([role])
   @@index([trustScore])
   @@index([isBanned])
@@ -1156,4 +1162,83 @@ model ContradictionSuggestion {
   @@index([analysisId])
   @@index([existingNodeId])
   @@index([status])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRIVATE BETA PROGRAM  (Phase D)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model BetaFeedback {
+  id            String    @id @default(cuid())
+  userId        String?
+  category      String    // bug | usability | credibility | discovery | content | other
+  severity      String    // low | medium | high | critical
+  page          String    // current view/page when feedback was submitted
+  description   String    @db.Text
+  screenshotUrl String?
+  reproSteps    String?   @db.Text
+  status        String    @default("open")   // open | reviewing | resolved | dismissed
+  adminNotes    String?   @db.Text
+  resolvedAt    DateTime?
+  resolvedBy    String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([category])
+  @@index([severity])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model BetaInvite {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  email     String?
+  group     String    // researcher | archaeologist | historian | ufo_researcher | skeptic | journalist | student | curious
+  maxUses   Int       @default(1)
+  usedCount Int       @default(0)
+  expiresAt DateTime?
+  createdBy String
+  notes     String?
+  createdAt DateTime  @default(now())
+
+  redemptions BetaInviteRedemption[]
+
+  @@index([code])
+  @@index([group])
+  @@index([createdAt])
+}
+
+model BetaInviteRedemption {
+  id         String   @id @default(cuid())
+  inviteId   String
+  userId     String
+  redeemedAt DateTime @default(now())
+
+  invite BetaInvite @relation(fields: [inviteId], references: [id], onDelete: Cascade)
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([inviteId, userId])
+  @@index([inviteId])
+  @@index([userId])
+}
+
+model UsageEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  sessionId String?
+  eventType String   // search | search_click | graph_view | timeline_view | globe_view | source_view | node_submit | rabbit_hole | node_view | evidence_view | universe_view
+  meta      Json?
+  page      String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([eventType, createdAt])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([sessionId])
 }

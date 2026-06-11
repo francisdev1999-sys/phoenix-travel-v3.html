@@ -1,10 +1,11 @@
 'use client';
-import { Suspense, lazy, useState, useEffect, useRef } from 'react';
+import { Suspense, lazy, useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Rabbit, X } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import NavBar from '@/components/layout/NavBar';
 import LandingPage from '@/components/sections/LandingPage';
+import FeedbackWidget from '@/components/beta/FeedbackWidget';
 const ParticleField = lazy(() => import('@/components/effects/ParticleField'));
 
 const KnowledgeGraph = lazy(() => import('@/components/sections/KnowledgeGraph'));
@@ -52,6 +53,42 @@ export default function AppShell() {
   // Auto-close side panel when the user navigates to a different view
   useEffect(() => {
     setSidePanel(null);
+  }, [currentView]);
+
+  // Beta usage tracking — fire-and-forget on view change
+  const sessionIdRef = useRef<string>(
+    typeof window !== 'undefined'
+      ? (sessionStorage.getItem('nexus_sid') ?? (() => {
+          const s = Math.random().toString(36).slice(2);
+          sessionStorage.setItem('nexus_sid', s);
+          return s;
+        })())
+      : ''
+  );
+  const track = useCallback((eventType: string, meta?: Record<string, unknown>) => {
+    void fetch('/api/beta/track', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ eventType, page: currentView, sessionId: sessionIdRef.current, meta }),
+    }).catch(() => {/* fire-and-forget */});
+  }, [currentView]);
+
+  const VIEW_TO_EVENT: Record<string, string> = {
+    graph:          'graph_view',
+    timeline:       'timeline_view',
+    globe:          'globe_view',
+    sources:        'source_view',
+    universe:       'universe_view',
+    'evidence-board': 'evidence_view',
+    'rabbit-hole':  'rabbit_hole',
+  };
+  const prevViewRef = useRef<string>('');
+  useEffect(() => {
+    if (currentView === prevViewRef.current || currentView === 'landing') return;
+    prevViewRef.current = currentView;
+    const eventType = VIEW_TO_EVENT[currentView];
+    if (eventType) track(eventType);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentView]);
 
   const isInitialMountRef = useRef(true);
@@ -231,6 +268,8 @@ export default function AppShell() {
 
             {/* Floating action buttons — above disclaimer banner */}
             <div className="fixed bottom-12 right-4 flex flex-col gap-3 z-40">
+              {/* Beta Feedback button */}
+              <FeedbackWidget currentView={currentView} />
               {/* Rabbit Hole button */}
               <motion.button
                 whileHover={{ scale: 1.1 }}
