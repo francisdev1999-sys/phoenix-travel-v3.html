@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ZoomIn, ZoomOut, RotateCcw, Layers, Activity } from 'lucide-react';
 import { nodes as staticNodes, edges as staticEdges, GraphNode, GraphEdge, CATEGORY_COLORS, EVIDENCE_COLORS } from '@/lib/graph';
@@ -21,7 +21,7 @@ interface VisualNode {
 // Cell size must exceed max repulsion distance: (26+26)*3 = 156px → 160
 const REPEL_CELL = 160;
 
-export default function KnowledgeGraph() {
+function KnowledgeGraph() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const nodesRef = useRef<VisualNode[]>([]);
   const frameRef = useRef<number>(0);
@@ -64,6 +64,9 @@ export default function KnowledgeGraph() {
   useEffect(() => { hoveredIdRef.current = hoveredId; }, [hoveredId]);
 
   // Merge approved DB proposals on mount (non-blocking)
+  // Cap rendered nodes to 300 maximum (highest-degree first) for performance.
+  const MAX_RENDER_NODES = 300;
+
   useEffect(() => {
     fetch('/api/graph')
       .then(r => r.ok ? r.json() : null)
@@ -74,8 +77,25 @@ export default function KnowledgeGraph() {
         const newNodes = data.nodes.filter(n => !existingIds.has(n.id));
         const newEdges = data.edges.filter(e => !existingEdgeIds.has(e.id));
         if (newNodes.length === 0 && newEdges.length === 0) return;
-        graphNodesRef.current = [...staticNodes, ...newNodes];
-        graphEdgesRef.current = [...staticEdges, ...newEdges];
+
+        const combined = [...staticNodes, ...newNodes];
+        const combinedEdges = [...staticEdges, ...newEdges];
+
+        // Guard: cap total rendered nodes to MAX_RENDER_NODES, keeping highest-degree first
+        let capped = combined;
+        if (combined.length > MAX_RENDER_NODES) {
+          const degMap: Record<string, number> = {};
+          combinedEdges.forEach(e => {
+            degMap[e.from] = (degMap[e.from] ?? 0) + 1;
+            degMap[e.to]   = (degMap[e.to]   ?? 0) + 1;
+          });
+          capped = [...combined]
+            .sort((a, b) => (degMap[b.id] ?? 0) - (degMap[a.id] ?? 0))
+            .slice(0, MAX_RENDER_NODES);
+        }
+
+        graphNodesRef.current = capped;
+        graphEdgesRef.current = combinedEdges;
         const canvas = canvasRef.current;
         if (canvas) initGraph(canvas.width, canvas.height);
       })
@@ -482,7 +502,7 @@ export default function KnowledgeGraph() {
     }
   };
 
-  const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const pos = getCanvasPos(e.clientX, e.clientY);
     const vn = findNodeAt(pos.x, pos.y);
     if (vn) {
@@ -494,7 +514,8 @@ export default function KnowledgeGraph() {
     } else if (!draggingRef.current.panStart) {
       setSelectedNode(null);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNode, exploreTheory, discoverConnection]);
 
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
     e.preventDefault();
@@ -649,3 +670,5 @@ export default function KnowledgeGraph() {
     </div>
   );
 }
+
+export default React.memo(KnowledgeGraph);

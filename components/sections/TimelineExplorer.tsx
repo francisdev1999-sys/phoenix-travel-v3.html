@@ -32,26 +32,87 @@ const EVIDENCE_COLORS: Record<string, string> = {
 const formatYear = (year: number) =>
   year < 0 ? `${Math.abs(year).toLocaleString()} BCE` : `${year.toLocaleString()} CE`;
 
+interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+interface CoverageMeta {
+  totalPublished: number;
+  withDates: number;
+  withoutDates: number;
+  coveragePct: number;
+  byEra: Record<string, number>;
+}
+
+interface TimelineResponse {
+  entries: TimelineEntry[];
+  pagination: PaginationMeta;
+  coverage: CoverageMeta;
+}
+
 export default function TimelineExplorer() {
   const [events,     setEvents]     = useState<TimelineEntry[]>([]);
   const [loading,    setLoading]    = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [activeEras, setActiveEras] = useState<string[]>(
     ['ancient', 'classical', 'medieval', 'modern', 'contemporary'],
   );
   const [selected,   setSelected]   = useState<string | null>(null);
+  const [page,       setPage]       = useState(1);
+  const [hasNext,    setHasNext]    = useState(false);
+  const [coveragePct, setCoveragePct] = useState<number | null>(null);
+  // Track which era is currently being filtered (single-era fetch mode)
+  const [activeEraFilter, setActiveEraFilter] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const eventRefs    = useRef<Record<string, HTMLDivElement | null>>({});
 
   const { focusedTheoryId, setFocusedTheoryId } = useUserStore();
 
-  // Load live timeline from API
-  useEffect(() => {
-    fetch('/api/timeline')
-      .then(r => r.json())
-      .then((data: TimelineEntry[]) => setEvents(data))
-      .catch(() => {/* keep empty, show no-results state */})
-      .finally(() => setLoading(false));
+  const buildUrl = useCallback((p: number, era: string | null) => {
+    const params = new URLSearchParams({ page: String(p), limit: '50' });
+    if (era) params.set('era', era);
+    return `/api/timeline?${params.toString()}`;
   }, []);
+
+  // Load live timeline from API (paginated shape with fallback to flat array)
+  const loadPage = useCallback(async (p: number, era: string | null, append: boolean) => {
+    try {
+      const res = await fetch(buildUrl(p, era));
+      const data: TimelineResponse | TimelineEntry[] = await res.json();
+
+      // Handle both paginated response and legacy flat array
+      if (Array.isArray(data)) {
+        setEvents(data);
+        setHasNext(false);
+        setCoveragePct(null);
+      } else {
+        const entries = data.entries ?? [];
+        setEvents(prev => append ? [...prev, ...entries] : entries);
+        setHasNext(data.pagination?.hasNext ?? false);
+        setCoveragePct(data.coverage?.coveragePct ?? null);
+        setPage(data.pagination?.page ?? p);
+      }
+    } catch {
+      // keep existing state on error
+    }
+  }, [buildUrl]);
+
+  useEffect(() => {
+    setLoading(true);
+    loadPage(1, activeEraFilter, false).finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeEraFilter]);
+
+  const handleLoadMore = useCallback(async () => {
+    setLoadingMore(true);
+    await loadPage(page + 1, activeEraFilter, true);
+    setLoadingMore(false);
+  }, [loadPage, page, activeEraFilter]);
 
   // Globe sync — when another view sets focusedTheoryId, highlight the matching event
   useEffect(() => {
@@ -92,6 +153,11 @@ export default function TimelineExplorer() {
           <h2 className="text-xl font-black text-white flex items-center gap-2">
             <Clock size={20} className="text-purple-400" />
             Timeline Explorer
+            {coveragePct !== null && (
+              <span className="ml-2 text-[10px] font-normal px-2 py-0.5 rounded-full bg-purple-900/30 border border-purple-500/20 text-purple-300">
+                Timeline coverage: {coveragePct}%
+              </span>
+            )}
           </h2>
           <div className="flex items-center gap-3">
             {syncedEvent && (
@@ -290,6 +356,23 @@ export default function TimelineExplorer() {
                 );
               })}
             </div>
+
+            {/* Load More button */}
+            {hasNext && (
+              <div className="flex justify-center mt-8">
+                <button
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  className="flex items-center gap-2 px-5 py-2 rounded-full text-xs font-medium border border-purple-500/30 bg-purple-900/20 text-purple-300 hover:bg-purple-900/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loadingMore ? (
+                    <><Loader2 size={12} className="animate-spin" />Loading…</>
+                  ) : (
+                    'Load More'
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

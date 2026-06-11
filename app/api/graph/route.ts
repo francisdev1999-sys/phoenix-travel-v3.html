@@ -7,7 +7,7 @@ import { getViewportNodes, getFocusedViewport } from '@/lib/retrieval/graph';
  *
  * Returns graph data for the 3D visualization.
  *
- * Without ?focus: returns top 150 nodes by degree + edges between them.
+ * Without ?focus: returns top N nodes by degree + edges between them (default 150, max 300 via ?limit=).
  *   Suitable for the initial full-graph render.
  *
  * With ?focus=nodeId[&radius=2]: returns BFS subgraph around that node.
@@ -22,11 +22,12 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const focus  = searchParams.get('focus') ?? undefined;
   const radius = Math.min(parseInt(searchParams.get('radius') ?? '2', 10), 3);
+  const limit  = Math.min(parseInt(searchParams.get('limit') ?? '150', 10), 300);
 
   try {
     const data = focus
       ? await getFocusedViewport(focus, radius)
-      : await getViewportNodes(150);
+      : await getViewportNodes(limit);
 
     return NextResponse.json(data, {
       headers: {

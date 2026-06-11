@@ -86,7 +86,9 @@ export async function getViewportNodes(limit = 150) {
   const cached = viewportCache.get(cacheKey);
   if (cached) return cached as { nodes: object[]; edges: object[] };
 
-  // Top nodes by edge count (degree)
+  // Top nodes by edge count (degree).
+  // INNER JOIN on the degree subquery acts as a maxDegree >= 1 pre-filter:
+  // nodes with zero published edges (isolated draft-leftovers) are excluded.
   const topNodes = await prisma.$queryRaw<
     { id: string; title: string; categoryName: string; color: string | null;
       confidenceScore: number; evidenceLevel: string; icon: string | null; degree: number }[]
@@ -94,10 +96,10 @@ export async function getViewportNodes(limit = 150) {
     SELECT
       n."id", n."title", c."name" AS "categoryName", c."color",
       n."confidenceScore", n."evidenceLevel", n."icon",
-      COALESCE(ec."degree", 0)::int AS "degree"
+      ec."degree"::int AS "degree"
     FROM "Node" n
     JOIN "Category" c ON c."id" = n."categoryId"
-    LEFT JOIN (
+    JOIN (
       SELECT unnested."nodeId", COUNT(*)::int AS "degree"
       FROM (
         SELECT "fromId" AS "nodeId" FROM "Edge" WHERE "status" = 'published'
@@ -142,7 +144,10 @@ export async function getFocusedViewport(nodeId: string, radius = 2) {
     SELECT node_id FROM graph_bfs(${nodeId}, ${radius})
   `;
 
-  const reachableIds = [nodeId, ...bfsResults.map(r => r.node_id)];
+  // Hard cap: never exceed 300 nodes in a focused viewport
+  const MAX_FOCUSED = 300;
+  const allReachableIds = [nodeId, ...bfsResults.map(r => r.node_id)];
+  const reachableIds = allReachableIds.slice(0, MAX_FOCUSED);
 
   const [nodes, edges] = await Promise.all([
     prisma.node.findMany({
