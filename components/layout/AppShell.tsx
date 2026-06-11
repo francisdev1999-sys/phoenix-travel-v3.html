@@ -24,6 +24,7 @@ const AdminPanel        = lazy(() => import('@/components/sections/AdminPanel'))
 const RabbitHoleView    = lazy(() => import('@/components/sections/RabbitHoleView'));
 const NodeView          = lazy(() => import('@/components/sections/NodeView'));
 import Breadcrumb from '@/components/navigation/Breadcrumb';
+import CommandPalette from '@/components/navigation/CommandPalette';
 
 function LoadingSpinner() {
   return (
@@ -39,8 +40,21 @@ function LoadingSpinner() {
 export default function AppShell() {
   const { currentView, rabbitHoleChain, setCurrentView } = useUserStore();
   const [sidePanel, setSidePanel] = useState<'ai' | 'rabbit' | null>(null);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const isLanding = currentView === 'landing';
   const prevChainLenRef = useRef(rabbitHoleChain.length);
+
+  // Global Ctrl+K shortcut opens command palette
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setPaletteOpen(o => !o);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   // Auto-open the rabbit hole panel the moment a rabbit hole is started
   useEffect(() => {
@@ -339,6 +353,9 @@ export default function AppShell() {
                 <MessageSquare size={18} className="text-cyan-300" />
               </motion.button>
             </div>
+
+            {/* Command Palette */}
+            <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
 
             {/* Disclaimer banner */}
             <div className="fixed bottom-0 left-0 right-0 z-30 text-center py-1 bg-black/40 border-t border-purple-900/10">
