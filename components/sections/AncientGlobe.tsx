@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useState, useMemo, useEffect } from 'react';
+import { useRef, useState, useMemo, useEffect, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
@@ -8,6 +8,14 @@ import { Clock } from 'lucide-react';
 import { ancientSites } from '@/lib/data/sites';
 import { AncientSite } from '@/lib/types';
 import { useUserStore } from '@/lib/store/userStore';
+
+/** Maximum pins rendered on the globe at once */
+const GLOBE_LIMIT = 500;
+
+/** Validate that a coordinate value is a finite number within [min, max] */
+function isValidCoord(v: unknown, min: number, max: number): v is number {
+  return typeof v === 'number' && isFinite(v) && v >= min && v <= max;
+}
 
 const R = 3;
 
@@ -365,6 +373,44 @@ function RotatingGlobe({
   );
 }
 
+/** Inner canvas component — wrapped in Suspense by the parent for error isolation */
+function GlobeCanvas({
+  filteredSites,
+  onSelect,
+  focusTarget,
+}: {
+  filteredSites: AncientSite[];
+  onSelect: (s: AncientSite) => void;
+  focusTarget: [number, number] | null;
+}) {
+  try {
+    return (
+      <Canvas className="w-full h-full" camera={{ position: [0, 2, 7.5], fov: 48 }}>
+        <color attach="background" args={['#00000a']} />
+
+        <ambientLight intensity={0.8} />
+        <directionalLight position={[8, 5, 5]} intensity={1.4} color="#7090e0" />
+        <directionalLight position={[-5, -3, -5]} intensity={0.4} color="#3040aa" />
+        <pointLight position={[0, 8, 0]} intensity={0.5} color="#ffffff" />
+        <pointLight position={[0, -8, 0]} intensity={0.2} color="#3060ff" />
+
+        <RotatingGlobe filteredSites={filteredSites} onSelect={onSelect} focusTarget={focusTarget} />
+
+        <OrbitControls
+          enablePan={false}
+          minDistance={4.5}
+          maxDistance={14}
+          enableDamping
+          dampingFactor={0.06}
+          rotateSpeed={0.6}
+        />
+      </Canvas>
+    );
+  } catch {
+    return <div className="flex items-center justify-center h-full text-slate-500 text-sm">Globe unavailable</div>;
+  }
+}
+
 export default function AncientGlobe() {
   const [selectedSite, setSelectedSite] = useState<AncientSite | null>(null);
   const [filter, setFilter] = useState<string>('all');
@@ -401,19 +447,61 @@ export default function AncientGlobe() {
     { id: 'ancient_city', label: 'Ancient Cities', color: '#38bdf8' },
   ];
 
-  const filteredSites = filter === 'all' ? ancientSites : ancientSites.filter(s => s.type === filter);
+  const { filteredSites, totalBeforeLimit } = useMemo(() => {
+    // 1. Filter by selected type
+    const typeFiltered = filter === 'all'
+      ? ancientSites
+      : ancientSites.filter(s => s.type === filter);
+
+    // 2. Validate coordinates — skip any site with bad lat/lon
+    const valid = typeFiltered.filter(s => {
+      const [lat, lon] = s.coordinates;
+      return isValidCoord(lat, -90, 90) && isValidCoord(lon, -180, 180);
+    });
+
+    // 3. Deduplicate markers sharing the exact same lat/lon (within 0.001°).
+    //    We mutate a copy of coordinates so the original data is untouched.
+    const SNAP = 0.001;
+    const seen = new Map<string, number>(); // key → count of sites at that bucket
+    const deduped: AncientSite[] = valid.map(s => {
+      const lat0 = s.coordinates[0];
+      const lon0 = s.coordinates[1];
+      const key  = `${Math.round(lat0 / SNAP)},${Math.round(lon0 / SNAP)}`;
+      const idx  = seen.get(key) ?? 0;
+      seen.set(key, idx + 1);
+      if (idx === 0) return s;
+      // Offset duplicates slightly so they don't stack invisibly
+      return {
+        ...s,
+        coordinates: [lat0 + idx * 0.002, lon0 + idx * 0.002] as [number, number],
+      };
+    });
+
+    // 4. Cap at GLOBE_LIMIT
+    const totalBeforeLimit = deduped.length;
+    const capped = deduped.slice(0, GLOBE_LIMIT);
+
+    return { filteredSites: capped, totalBeforeLimit };
+  }, [filter]);
 
   return (
     <div className="h-full flex flex-col">
       <div className="flex-shrink-0 p-4 border-b border-purple-900/20">
         <div className="flex items-center justify-between gap-2 mb-3">
           <h2 className="text-lg font-black text-white">Ancient Sites Globe</h2>
-          {focusedTheoryId && ancientSites.some(s => s.relatedTheories.includes(focusedTheoryId)) && (
-            <div className="flex items-center gap-1.5 text-[10px] text-cyan-400 bg-cyan-900/20 border border-cyan-500/30 rounded-full px-2.5 py-1">
-              <Clock size={9} />
-              Synced with Timeline
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {totalBeforeLimit > GLOBE_LIMIT && (
+              <div className="text-[10px] text-slate-500 bg-slate-800/40 border border-slate-700/40 rounded-full px-2.5 py-1">
+                Showing {GLOBE_LIMIT} of {totalBeforeLimit} locations
+              </div>
+            )}
+            {focusedTheoryId && ancientSites.some(s => s.relatedTheories.includes(focusedTheoryId)) && (
+              <div className="flex items-center gap-1.5 text-[10px] text-cyan-400 bg-cyan-900/20 border border-cyan-500/30 rounded-full px-2.5 py-1">
+                <Clock size={9} />
+                Synced with Timeline
+              </div>
+            )}
+          </div>
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {siteTypes.map(type => (
@@ -434,26 +522,9 @@ export default function AncientGlobe() {
       </div>
 
       <div className="flex-1 relative min-h-0">
-        <Canvas camera={{ position: [0, 2, 7.5], fov: 48 }}>
-          <color attach="background" args={['#00000a']} />
-
-          <ambientLight intensity={0.8} />
-          <directionalLight position={[8, 5, 5]} intensity={1.4} color="#7090e0" />
-          <directionalLight position={[-5, -3, -5]} intensity={0.4} color="#3040aa" />
-          <pointLight position={[0, 8, 0]} intensity={0.5} color="#ffffff" />
-          <pointLight position={[0, -8, 0]} intensity={0.2} color="#3060ff" />
-
-          <RotatingGlobe filteredSites={filteredSites} onSelect={handleSiteSelect} focusTarget={focusTarget} />
-
-          <OrbitControls
-            enablePan={false}
-            minDistance={4.5}
-            maxDistance={14}
-            enableDamping
-            dampingFactor={0.06}
-            rotateSpeed={0.6}
-          />
-        </Canvas>
+        <Suspense fallback={<div className="flex items-center justify-center h-full text-slate-500 text-sm">Globe unavailable</div>}>
+          <GlobeCanvas filteredSites={filteredSites} onSelect={handleSiteSelect} focusTarget={focusTarget} />
+        </Suspense>
 
         <AnimatePresence>
           {selectedSite && (
