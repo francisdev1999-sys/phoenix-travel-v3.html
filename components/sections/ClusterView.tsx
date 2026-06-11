@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Loader2, ChevronRight, Search, SlidersHorizontal,
@@ -134,15 +134,19 @@ function NodeCard({ node, index, galaxySlug, galaxyName, clusterSlug, clusterNam
 
 type SortMode = 'confidence' | 'evidence' | 'title' | 'recent';
 
+const PAGE_SIZE = 25;
+
 export default function ClusterView() {
   const { navContext, navigateToNode } = useUserStore();
   const { galaxySlug, galaxyName, clusterSlug, clusterName } = navContext;
 
-  const [data, setData]       = useState<ClusterData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState(false);
-  const [sort, setSort]       = useState<SortMode>('confidence');
-  const [query, setQuery]     = useState('');
+  const [data, setData]           = useState<ClusterData | null>(null);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(false);
+  const [sort, setSort]           = useState<SortMode>('confidence');
+  const [query, setQuery]         = useState('');
+  const [displayCount, setDisplayCount] = useState(PAGE_SIZE);
+  const sentinelRef               = useRef<HTMLDivElement>(null);
 
   const load = useCallback((sortMode: SortMode) => {
     if (!clusterSlug) return;
@@ -156,9 +160,27 @@ export default function ClusterView() {
 
   useEffect(() => { load(sort); }, [load, sort]);
 
+  // Reset window when filter query changes
+  useEffect(() => { setDisplayCount(PAGE_SIZE); }, [query]);
+
   const filtered = data?.nodes.filter(n =>
     !query || n.title.toLowerCase().includes(query.toLowerCase()) || n.tags.some(t => t.toLowerCase().includes(query.toLowerCase()))
   ) ?? [];
+
+  const visible   = filtered.slice(0, displayCount);
+  const hasMore   = filtered.length > displayCount;
+
+  // Auto-expand via IntersectionObserver when sentinel scrolls into view
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || !hasMore) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setDisplayCount(c => c + PAGE_SIZE); },
+      { rootMargin: '200px' },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [hasMore, visible.length]);
 
   if (!clusterSlug) {
     return <div className="flex items-center justify-center h-full"><p className="text-xs text-slate-500">No cluster selected.</p></div>;
@@ -225,7 +247,7 @@ export default function ClusterView() {
           </p>
         ) : (
           <div className="space-y-1.5">
-            {filtered.map((node, i) => (
+            {visible.map((node, i) => (
               <NodeCard
                 key={node.id}
                 node={node}
@@ -236,12 +258,19 @@ export default function ClusterView() {
                 clusterName={clusterName ?? ''}
               />
             ))}
+
+            {/* Sentinel — IntersectionObserver triggers next page load */}
+            {hasMore && <div ref={sentinelRef} className="py-4 flex justify-center">
+              <Loader2 size={16} className="animate-spin text-purple-900" />
+            </div>}
           </div>
         )}
 
         {data && filtered.length > 0 && (
           <p className="text-[10px] text-slate-700 text-center pb-4">
-            {filtered.length} of {data.total} nodes · Click any node to open its research page
+            {visible.length} of {filtered.length} nodes shown
+            {filtered.length < data.total ? ` · ${data.total} total` : ''}
+            {' '}· Click any node to open its research page
           </p>
         )}
       </div>

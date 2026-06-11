@@ -289,10 +289,12 @@ export default function NodeView() {
   const { navContext, startRabbitHole, setCurrentView } = useUserStore();
   const nodeId = navContext.nodeId;
 
-  const [data, setData]       = useState<NodeResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState(false);
+  const [data, setData]           = useState<NodeResponse | null>(null);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const [showAllSources, setShowAllSources]       = useState(false);
+  const [showAllNeighbours, setShowAllNeighbours] = useState(false);
 
   useEffect(() => {
     if (!nodeId) return;
@@ -300,6 +302,8 @@ export default function NodeView() {
     setError(false);
     setData(null);
     setActiveTab('overview');
+    setShowAllSources(false);
+    setShowAllNeighbours(false);
     fetch(`/api/nodes/${nodeId}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(setData)
@@ -545,9 +549,17 @@ export default function NodeView() {
                     <p className="text-xs text-slate-600 italic">No relationships documented yet.</p>
                   ) : (
                     <div className="space-y-2">
-                      {neighbours.map(item => (
+                      {(showAllNeighbours ? neighbours : neighbours.slice(0, 15)).map(item => (
                         <NeighbourCard key={item.edge.id} item={item} nodeId={nodeId} />
                       ))}
+                      {neighbours.length > 15 && (
+                        <button
+                          onClick={() => setShowAllNeighbours(s => !s)}
+                          className="w-full text-xs text-purple-400 hover:text-purple-300 py-2 border border-purple-900/30 rounded-lg hover:border-purple-500/30 transition-all"
+                        >
+                          {showAllNeighbours ? 'Show fewer' : `Show all ${neighbours.length} connections`}
+                        </button>
+                      )}
                     </div>
                   )}
                 </>
@@ -563,11 +575,23 @@ export default function NodeView() {
                       <div className="text-xs text-slate-700 mt-1">Sources will appear here as the archive is expanded.</div>
                     </div>
                   ) : (
-                    <div className="space-y-3">
-                      {sources.map(src => (
-                        <DBSourceCard key={src.id} source={src} />
-                      ))}
-                    </div>
+                    <>
+                      <div className="space-y-3">
+                        {(showAllSources ? sources : sources.slice(0, 5)).map(src => (
+                          <DBSourceCard key={src.id} source={src} />
+                        ))}
+                      </div>
+                      {sources.length > 5 && (
+                        <button
+                          onClick={() => setShowAllSources(s => !s)}
+                          className="w-full text-xs text-purple-400 hover:text-purple-300 py-2 border border-purple-900/30 rounded-lg hover:border-purple-500/30 transition-all mt-1"
+                        >
+                          {showAllSources
+                            ? 'Show fewer sources'
+                            : `Show all ${sources.length} sources`}
+                        </button>
+                      )}
+                    </>
                   )}
                 </>
               )}
