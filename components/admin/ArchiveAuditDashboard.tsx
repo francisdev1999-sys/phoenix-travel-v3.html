@@ -268,8 +268,10 @@ export default function ArchiveAuditDashboard() {
   const [tab,       setTab]      = useState<'findings' | 'settings'>('findings');
   const [running,   setRunning]  = useState(false);
   const [runError,  setRunError] = useState<string | null>(null);
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [sevFilter,  setSevFilter]  = useState('all');
+  const [typeFilter,  setTypeFilter]  = useState('all');
+  const [sevFilter,   setSevFilter]   = useState('all');
+  const [fixingAll,   setFixingAll]   = useState(false);
+  const [fixAllResult, setFixAllResult] = useState<{ applied: number; failed: number } | null>(null);
   const pollRef     = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollCount   = useRef(0);
 
@@ -351,6 +353,24 @@ export default function ArchiveAuditDashboard() {
       body: JSON.stringify(s),
     });
     setSettings(s);
+  };
+
+  const fixAll = async () => {
+    if (!activeRun) return;
+    setFixingAll(true);
+    setFixAllResult(null);
+    try {
+      const r = await fetch('/api/admin/archive-audit/fix-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ runId: activeRun.id }),
+      });
+      const d = await r.json() as { applied: number; failed: number };
+      setFixAllResult(d);
+      await loadRun(activeRun.id);
+    } finally {
+      setFixingAll(false);
+    }
   };
 
   const allTypes: FindingType[] = ['orphan','stale_edge','weak_edge','missing_fields','duplicate','source_quality','ai_quality','category_mismatch'];
@@ -477,19 +497,40 @@ export default function ArchiveAuditDashboard() {
             </div>
           )}
 
-          {/* Filters */}
+          {/* Filters + Fix All */}
           {activeRun && findings.length > 0 && (
-            <div className="flex gap-2 flex-wrap">
-              <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
-                className="bg-slate-800 border border-slate-600 text-xs text-slate-300 rounded px-2 py-1 focus:outline-none focus:border-cyan-500">
-                <option value="all">All types</option>
-                {allTypes.map(t => <option key={t} value={t}>{FINDING_LABELS[t]}</option>)}
-              </select>
-              <select value={sevFilter} onChange={e => setSevFilter(e.target.value)}
-                className="bg-slate-800 border border-slate-600 text-xs text-slate-300 rounded px-2 py-1 focus:outline-none focus:border-cyan-500">
-                <option value="all">All severities</option>
-                {(['critical','high','medium','low'] as FindingSeverity[]).map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex gap-2 flex-wrap">
+                <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
+                  className="bg-slate-800 border border-slate-600 text-xs text-slate-300 rounded px-2 py-1 focus:outline-none focus:border-cyan-500">
+                  <option value="all">All types</option>
+                  {allTypes.map(t => <option key={t} value={t}>{FINDING_LABELS[t]}</option>)}
+                </select>
+                <select value={sevFilter} onChange={e => setSevFilter(e.target.value)}
+                  className="bg-slate-800 border border-slate-600 text-xs text-slate-300 rounded px-2 py-1 focus:outline-none focus:border-cyan-500">
+                  <option value="all">All severities</option>
+                  {(['critical','high','medium','low'] as FindingSeverity[]).map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              {(activeRun.findings ?? []).some(f => f.autoFixable && f.status === 'pending') && (
+                <button
+                  onClick={fixAll}
+                  disabled={fixingAll}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-green-700/40 hover:bg-green-700/70 text-green-300 text-xs font-semibold rounded transition-colors disabled:opacity-50"
+                >
+                  {fixingAll ? <RotateCcw size={12} className="animate-spin" /> : <Wrench size={12} />}
+                  {fixingAll ? 'Fixing…' : 'Fix All Auto-Fixable'}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Fix-all result banner */}
+          {fixAllResult && (
+            <div className="flex items-center gap-2 p-2 bg-green-900/20 border border-green-700/40 rounded text-xs text-green-300">
+              <CheckCircle size={12} />
+              Applied {fixAllResult.applied} fix{fixAllResult.applied !== 1 ? 'es' : ''}
+              {fixAllResult.failed > 0 ? ` · ${fixAllResult.failed} failed` : ''}
             </div>
           )}
 

@@ -15,7 +15,7 @@
 
 import { prisma } from '@/lib/db';
 
-const AUDIT_MODEL         = 'claude-haiku-4-5-20251001';
+const AUDIT_MODEL         = 'claude-haiku-4-5';
 const MAX_OUTPUT_TOKENS   = 800;
 const COST_PER_M_INPUT    = 0.80;
 const COST_PER_M_OUTPUT   = 4.00;

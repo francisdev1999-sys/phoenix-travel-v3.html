@@ -157,6 +157,15 @@ async function runSeed(): Promise<{ nodes: number; edges: number; galaxies: numb
     } catch { /* ignore */ }
   }
 
+  // Detach empty categories from galaxies so they don't appear in navigation
+  const emptyCategories = await prisma.category.findMany({
+    where: { nodes: { none: { status: 'published' } }, galaxyId: { not: null } },
+    select: { id: true },
+  });
+  for (const cat of emptyCategories) {
+    await prisma.category.update({ where: { id: cat.id }, data: { galaxyId: null } }).catch(() => {});
+  }
+
   // ── 5. Seed sources ──────────────────────────────────────────────────────
   const sourceMap = new Map<string, { src: ResearchSource; nodeIds: string[] }>();
   for (const [nodeId, sources] of Object.entries(NODE_SOURCES)) {
