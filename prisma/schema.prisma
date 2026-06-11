@@ -894,7 +894,7 @@ model UserModerationStatus {
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ARCHIVE AUDIT SYSTEM
+// SYSTEM CONFIG  (key-value store for runtime settings)
 // ─────────────────────────────────────────────────────────────────────────────
 
 model SystemConfig {
@@ -903,6 +903,10 @@ model SystemConfig {
   updatedAt DateTime @updatedAt
   updatedBy String?
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ARCHIVE AUDIT  (AI-powered archive quality audit runs and findings)
+// ─────────────────────────────────────────────────────────────────────────────
 
 model ArchiveAuditRun {
   id          String                @id @default(cuid())
@@ -921,7 +925,6 @@ model ArchiveAuditRun {
 model ArchiveAuditFinding {
   id          String          @id @default(cuid())
   runId       String
-  run         ArchiveAuditRun @relation(fields: [runId], references: [id], onDelete: Cascade)
   type        String
   severity    String
   status      String          @default("pending")
@@ -933,10 +936,12 @@ model ArchiveAuditFinding {
   afterState  Json            @default("{}")
   reasoning   String          @db.Text
   autoFixable Boolean         @default(false)
+  webSources  Json            @default("[]")
   reviewedBy  String?
   reviewedAt  DateTime?
   appliedAt   DateTime?
-  applyError  String?
+  applyError  String?         @db.Text
+  run         ArchiveAuditRun @relation(fields: [runId], references: [id], onDelete: Cascade)
 
   @@index([runId, status])
   @@index([type, severity])
