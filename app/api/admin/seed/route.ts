@@ -186,18 +186,19 @@ async function runSeed(): Promise<{ nodes: number; edges: number; galaxies: numb
         const nodeExists = await prisma.node.findUnique({ where: { id: nodeId }, select: { id: true } });
         if (!nodeExists) continue;
         try {
-          await prisma.sourceLink.upsert({
-            where: {
-              legacy_source_link_unique: {
-                sourceId: created.id, targetType: 'node',
-                targetId: nodeId, claimIndex: null as unknown as number,
-              },
-            },
-            create: { sourceId: created.id, targetType: 'node', targetId: nodeId, nodeId, linkType: src.link_type ?? 'supports' },
-            update: { nodeId, linkType: src.link_type ?? 'supports' },
+          // Avoid null-claimIndex upsert — PostgreSQL treats NULL != NULL in unique indexes
+          // so ON CONFLICT never fires. Use findFirst+create instead.
+          const existing = await prisma.sourceLink.findFirst({
+            where: { sourceId: created.id, nodeId },
+            select: { id: true },
           });
+          if (!existing) {
+            await prisma.sourceLink.create({
+              data: { sourceId: created.id, targetType: 'node', targetId: nodeId, nodeId, linkType: src.link_type ?? 'supports' },
+            });
+          }
           stats.links++;
-        } catch { /* duplicate */ }
+        } catch { /* skip */ }
       }
     } catch { stats.errors++; }
   }
