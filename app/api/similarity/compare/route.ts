@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { nodes, edges } from '@/lib/graph';
+import { loadNode, loadPublishedEdges } from '@/lib/similarity/db-loader';
 import { computeSimilarity } from '@/lib/similarity/engine';
 
 export async function GET(req: NextRequest) {
@@ -12,8 +12,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Query params "a" and "b" are required' }, { status: 400 });
   }
 
-  const nodeA = nodes.find(n => n.id === aId);
-  const nodeB = nodes.find(n => n.id === bId);
+  const [nodeA, nodeB, edges] = await Promise.all([
+    loadNode(aId),
+    loadNode(bId),
+    loadPublishedEdges(),
+  ]);
 
   if (!nodeA) return NextResponse.json({ error: `Node "${aId}" not found` }, { status: 404 });
   if (!nodeB) return NextResponse.json({ error: `Node "${bId}" not found` }, { status: 404 });
@@ -24,6 +27,8 @@ export async function GET(req: NextRequest) {
     result,
     nodeA,
     nodeB,
-    disclaimer: 'ADVISORY ONLY. This comparison does not constitute evidence of any connection between these nodes. Similarity scores must not be used to create graph edges or elevate evidence levels.',
+    disclaimer:
+      'ADVISORY ONLY. This comparison does not constitute evidence of any connection between these nodes. ' +
+      'Similarity scores must not be used to create graph edges or elevate evidence levels.',
   });
 }

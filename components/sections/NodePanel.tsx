@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, BookOpen, GitBranch, AlertCircle, Globe, Clock, Link2, HelpCircle, FileText, Rabbit, MapPin, ShieldAlert, Search } from 'lucide-react';
+import { X, BookOpen, GitBranch, AlertCircle, Globe, Clock, Link2, HelpCircle, FileText, Rabbit, MapPin, ShieldAlert, Search, Zap, Shuffle } from 'lucide-react';
 import {
   GraphNode, getEdgesForNode, getNode, getRelatedEdges, getTimelineNeighbors,
   getGeographicNeighbors, computeResearchScore, CATEGORY_COLORS, EVIDENCE_LABELS,
@@ -16,8 +16,10 @@ import ClaimBlock from '@/components/research/ClaimBlock';
 import NodeSourceStrength from '@/components/sources/NodeSourceStrength';
 import IntegrityScores from '@/components/integrity/IntegrityScores';
 import SimilarityPanel from '@/components/similarity/SimilarityPanel';
+import ContradictionsPanel from '@/components/similarity/ContradictionsPanel';
+import AlternativesPanel from '@/components/similarity/AlternativesPanel';
 
-type Tab = 'overview' | 'claims' | 'criticisms' | 'mainstream' | 'relationships' | 'sources' | 'questions' | 'integrity' | 'similar';
+type Tab = 'overview' | 'claims' | 'criticisms' | 'mainstream' | 'relationships' | 'sources' | 'questions' | 'integrity' | 'similar' | 'contradictions' | 'alternatives';
 
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: 'overview',       label: 'Overview',       icon: BookOpen },
@@ -27,8 +29,10 @@ const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: 'relationships',  label: 'Connections',    icon: Link2 },
   { id: 'sources',        label: 'Sources',        icon: FileText },
   { id: 'questions',      label: 'Questions',      icon: HelpCircle },
-  { id: 'integrity',      label: 'Balance',        icon: ShieldAlert },
-  { id: 'similar',        label: 'Similar',        icon: Search },
+  { id: 'integrity',       label: 'Balance',        icon: ShieldAlert },
+  { id: 'similar',         label: 'Similar',        icon: Search },
+  { id: 'contradictions',  label: 'Conflicts',      icon: Zap },
+  { id: 'alternatives',    label: 'Alternatives',   icon: Shuffle },
 ];
 
 interface Props {
@@ -298,6 +302,26 @@ export default function NodePanel({ node, onClose }: Props) {
                   It is a research discovery tool only — never a basis for connecting nodes.
                 </p>
                 <SimilarityPanel nodeId={node.id} />
+              </>
+            )}
+
+            {activeTab === 'contradictions' && (
+              <>
+                <p className="text-xs text-slate-500 italic mb-2">
+                  Nodes with conflicting evidence levels that share thematic overlap.
+                  Findings from one must not be used to validate the other without independent evidence.
+                </p>
+                <ContradictionsPanel nodeId={node.id} />
+              </>
+            )}
+
+            {activeTab === 'alternatives' && (
+              <>
+                <p className="text-xs text-slate-500 italic mb-2">
+                  Nodes offering potentially competing or alternative explanations for similar phenomena,
+                  drawn from independent source bases. Advisory only — not a basis for creating connections.
+                </p>
+                <AlternativesPanel nodeId={node.id} />
               </>
             )}
 

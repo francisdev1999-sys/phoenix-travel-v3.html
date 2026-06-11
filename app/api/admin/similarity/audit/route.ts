@@ -8,6 +8,6 @@ export async function GET() {
   if (!isAdminSession(session)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
-  const audit = runSimilarityAudit();
+  const audit = await runSimilarityAudit();
   return NextResponse.json(audit);
 }

@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { AlertTriangle, BarChart3, Loader2, RefreshCw, ShieldAlert, TrendingUp, Users } from 'lucide-react';
+import { AlertTriangle, BarChart3, CheckCircle, Loader2, RefreshCw, ShieldAlert, TrendingUp, Users } from 'lucide-react';
 import type { SimilarityAuditResult } from '@/lib/similarity/retroactive';
 import type { ContradictionPair } from '@/lib/similarity/engine';
 
@@ -21,13 +20,21 @@ function Stat({ label, value, sub }: { label: string; value: number | string; su
   );
 }
 
-export default function SimilarityAudit() {
-  const [audit, setAudit]     = useState<SimilarityAuditResult | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [rebuilding, setRebuilding] = useState(false);
-  const [rebuildMsg, setRebuildMsg] = useState<string | null>(null);
+interface RebuildStatus {
+  status:        'idle' | 'running' | 'complete' | 'failed';
+  totalNodes?:   number;
+  totalPairs?:   number;
+  upsertedPairs?:number;
+  message?:      string;
+}
 
-  const load = () => {
+export default function SimilarityAudit() {
+  const [audit, setAudit]         = useState<SimilarityAuditResult | null>(null);
+  const [loading, setLoading]     = useState(true);
+  const [rebuilding, setRebuilding] = useState(false);
+  const [rebuildStatus, setRebuildStatus] = useState<RebuildStatus | null>(null);
+
+  const loadAudit = () => {
     setLoading(true);
     fetch('/api/admin/similarity/audit')
       .then(r => r.json())
@@ -36,15 +43,26 @@ export default function SimilarityAudit() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, []);
+  const loadRebuildStatus = () => {
+    fetch('/api/admin/similarity/rebuild')
+      .then(r => r.json())
+      .then((d: { rebuildStatus: RebuildStatus }) => setRebuildStatus(d.rebuildStatus))
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    loadAudit();
+    loadRebuildStatus();
+  }, []);
 
   const triggerRebuild = () => {
     setRebuilding(true);
-    setRebuildMsg(null);
     fetch('/api/admin/similarity/rebuild', { method: 'POST' })
       .then(r => r.json())
-      .then((d: { message: string }) => setRebuildMsg(d.message))
-      .catch(() => setRebuildMsg('Error starting rebuild'))
+      .then((d: { rebuildStatus?: RebuildStatus }) => {
+        if (d.rebuildStatus) setRebuildStatus(d.rebuildStatus);
+      })
+      .catch(console.error)
       .finally(() => setRebuilding(false));
   };
 
@@ -70,26 +88,40 @@ export default function SimilarityAudit() {
         </div>
         <button
           onClick={triggerRebuild}
-          disabled={rebuilding}
+          disabled={rebuilding || rebuildStatus?.status === 'running'}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-purple-700 hover:bg-purple-600 disabled:opacity-50 transition-all"
         >
-          <RefreshCw size={11} className={rebuilding ? 'animate-spin' : ''} />
-          {rebuilding ? 'Rebuilding…' : 'Rebuild Cache'}
+          <RefreshCw size={11} className={(rebuilding || rebuildStatus?.status === 'running') ? 'animate-spin' : ''} />
+          {rebuilding || rebuildStatus?.status === 'running' ? 'Rebuilding…' : 'Rebuild Cache'}
         </button>
       </div>
 
-      {rebuildMsg && (
-        <p className="text-xs text-purple-400 p-3 rounded-xl bg-purple-900/10 border border-purple-500/20">
-          {rebuildMsg} The rebuild runs in the background and may take a few minutes.
-        </p>
+      {/* Rebuild status banner */}
+      {rebuildStatus && (
+        <div className={`p-3 rounded-xl border text-[10px] flex items-center gap-2
+          ${rebuildStatus.status === 'complete' ? 'border-green-500/20 bg-green-900/5 text-green-400' :
+            rebuildStatus.status === 'running'  ? 'border-purple-500/20 bg-purple-900/5 text-purple-400' :
+            rebuildStatus.status === 'failed'   ? 'border-red-500/20 bg-red-900/5 text-red-400' :
+            'border-slate-700/30 bg-white/2 text-slate-500'}`}>
+          {rebuildStatus.status === 'complete' && <CheckCircle size={11} />}
+          {rebuildStatus.status === 'running'  && <Loader2 size={11} className="animate-spin" />}
+          {rebuildStatus.status === 'failed'   && <AlertTriangle size={11} />}
+          <span className="font-bold capitalize">{rebuildStatus.status}</span>
+          {rebuildStatus.upsertedPairs != null && rebuildStatus.totalPairs != null && (
+            <span className="text-slate-400">
+              — {rebuildStatus.upsertedPairs.toLocaleString()} / {rebuildStatus.totalPairs.toLocaleString()} pairs
+            </span>
+          )}
+          {rebuildStatus.message && <span className="text-slate-500">{rebuildStatus.message}</span>}
+        </div>
       )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Stat label="Nodes" value={audit.node_count} />
         <Stat label="Graph Edges" value={audit.edge_count} />
-        <Stat label="Node Pairs" value={audit.pair_count} />
-        <Stat label="High-Sim Pairs" value={audit.high_similarity_pairs.length} sub="≥ 70% similarity" />
+        <Stat label="Computed Pairs" value={audit.computed_pairs} />
+        <Stat label="Cache Coverage" value={`${audit.coverage_pct}%`} sub="of all possible pairs" />
       </div>
 
       {/* Disclaimer */}
@@ -108,8 +140,7 @@ export default function SimilarityAudit() {
         </p>
         <p className="text-[10px] text-slate-400 mb-2">{audit.relationship_inflation_risk.description}</p>
         <div className="flex gap-4 text-[10px]">
-          <span className="text-slate-500">Current edges: <span className="text-white font-bold">{audit.relationship_inflation_risk.total_edges}</span></span>
-          <span className="text-amber-400">High-sim, no edge: <span className="font-bold">{audit.relationship_inflation_risk.high_sim_no_edge}</span></span>
+          <span className="text-amber-400">High-sim pairs with no edge: <span className="font-bold">{audit.relationship_inflation_risk.high_sim_no_edge}</span></span>
         </div>
       </div>
 
@@ -122,13 +153,13 @@ export default function SimilarityAudit() {
           <div className="flex flex-col gap-2">
             {audit.echo_chamber_clusters.map(c => (
               <div key={c.nodeId} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/3 border border-purple-900/20">
-                <span className="flex-1 text-xs text-white truncate">{c.title}</span>
+                <span className="flex-1 text-xs text-slate-400 font-mono truncate">{c.nodeId}</span>
                 <span className="text-[10px] text-amber-400 font-bold flex-shrink-0">{c.similar_count} similar nodes</span>
               </div>
             ))}
           </div>
           <p className="text-[9px] text-slate-600 mt-2 italic">
-            Nodes with many similar neighbors may indicate an over-represented perspective in the archive. Review for source diversity.
+            Nodes with many similar neighbors may indicate an over-represented perspective. Review for source diversity.
           </p>
         </div>
       )}
@@ -150,7 +181,7 @@ export default function SimilarityAudit() {
             ))}
           </div>
           <p className="text-[9px] text-slate-600 mt-2 italic">
-            These pairs may represent the same concept under different names. Review for consolidation — but do NOT merge without independent editorial review.
+            These pairs may represent the same concept. Do NOT merge without independent editorial review.
           </p>
         </div>
       )}
