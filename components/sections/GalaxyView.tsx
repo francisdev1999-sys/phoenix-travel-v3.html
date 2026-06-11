@@ -225,22 +225,27 @@ function GalaxyDetailView() {
 export default function GalaxyView() {
   const { currentView } = useUserStore();
 
-  // When on 'galaxy' view, show the selected galaxy's clusters
-  if (currentView === 'galaxy') return <GalaxyDetailView />;
-
-  // When on 'universe' view, show all galaxies
-  const [galaxies, setGalaxies]   = useState<GalaxyWithCounts[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState(false);
+  // ── All hooks must be called before any early return (React rules) ────────
+  const [galaxies, setGalaxies]     = useState<GalaxyWithCounts[]>([]);
+  const [loading, setLoading]       = useState(false);
+  const [error, setError]           = useState(false);
   const [cosmosMode, setCosmosMode] = useState(false);
 
   useEffect(() => {
+    // Only fetch when showing the universe grid
+    if (currentView !== 'universe') return;
+    setLoading(true);
+    setError(false);
     fetch('/api/galaxies')
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(setGalaxies)
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, []);
+  }, [currentView]);
+
+  // ── Conditional render AFTER all hooks ────────────────────────────────────
+  // When on 'galaxy' view, show the selected galaxy's clusters
+  if (currentView === 'galaxy') return <GalaxyDetailView />;
 
   if (loading) {
     return (

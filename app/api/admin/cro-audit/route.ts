@@ -49,34 +49,35 @@ export async function GET() {
         edgesTo:   { none: { status: 'published' } },
       },
     }),
-    // dead-ends (exactly 1 edge)
+    // dead-ends (exactly 1 edge) — wrap in subquery to avoid HAVING without GROUP BY
     prisma.$queryRaw<{ id: string; title: string; cnt: bigint }[]>`
-      SELECT n.id, n.title,
-             (SELECT COUNT(*) FROM "Edge" e
-              WHERE e.status='published' AND (e."fromId"=n.id OR e."toId"=n.id)) AS cnt
-      FROM "Node" n
-      WHERE n.status='published'
-      HAVING (SELECT COUNT(*) FROM "Edge" e
-              WHERE e.status='published' AND (e."fromId"=n.id OR e."toId"=n.id)) = 1
+      SELECT id, title, cnt FROM (
+        SELECT n.id, n.title,
+               (SELECT COUNT(*) FROM "Edge" e
+                WHERE e.status='published' AND (e."fromId"=n.id OR e."toId"=n.id))::bigint AS cnt
+        FROM "Node" n WHERE n.status='published'
+      ) t WHERE t.cnt = 1
       LIMIT 500
     `,
     // top 20 most-connected
     prisma.$queryRaw<{ id: string; title: string; cnt: bigint }[]>`
-      SELECT n.id, n.title,
-             (SELECT COUNT(*) FROM "Edge" e
-              WHERE e.status='published' AND (e."fromId"=n.id OR e."toId"=n.id)) AS cnt
-      FROM "Node" n WHERE n.status='published'
-      ORDER BY cnt DESC LIMIT 20
+      SELECT id, title, cnt FROM (
+        SELECT n.id, n.title,
+               (SELECT COUNT(*) FROM "Edge" e
+                WHERE e.status='published' AND (e."fromId"=n.id OR e."toId"=n.id))::bigint AS cnt
+        FROM "Node" n WHERE n.status='published'
+      ) t
+      ORDER BY t.cnt DESC LIMIT 20
     `,
-    // bottom 20 least-connected (but > 0)
+    // bottom 20 least-connected (> 0 edges)
     prisma.$queryRaw<{ id: string; title: string; cnt: bigint }[]>`
-      SELECT n.id, n.title,
-             (SELECT COUNT(*) FROM "Edge" e
-              WHERE e.status='published' AND (e."fromId"=n.id OR e."toId"=n.id)) AS cnt
-      FROM "Node" n WHERE n.status='published'
-      HAVING (SELECT COUNT(*) FROM "Edge" e
-              WHERE e.status='published' AND (e."fromId"=n.id OR e."toId"=n.id)) > 0
-      ORDER BY cnt ASC LIMIT 20
+      SELECT id, title, cnt FROM (
+        SELECT n.id, n.title,
+               (SELECT COUNT(*) FROM "Edge" e
+                WHERE e.status='published' AND (e."fromId"=n.id OR e."toId"=n.id))::bigint AS cnt
+        FROM "Node" n WHERE n.status='published'
+      ) t WHERE t.cnt > 0
+      ORDER BY t.cnt ASC LIMIT 20
     `,
     // top 20 strongest edges
     prisma.edge.findMany({
@@ -328,31 +329,40 @@ export async function GET() {
     `,
   ]);
 
-  // top 20 most complete & least complete nodes
-  const completenessRows = await prisma.$queryRaw<{
-    id: string; title: string;
-    has_claims: boolean; has_crit: boolean; has_main: boolean; has_src: boolean;
-  }[]>`
-    SELECT n.id, n.title,
-      (SELECT COUNT(*) FROM "Claim" c WHERE c."nodeId"=n.id) > 0 AS has_claims,
-      (SELECT COUNT(*) FROM "Criticism" cr WHERE cr."nodeId"=n.id) > 0 AS has_crit,
-      (n."mainstreamView" IS NOT NULL AND length(n."mainstreamView") > 10) AS has_main,
-      (SELECT COUNT(*) FROM "SourceLink" sl WHERE sl."nodeId"=n.id) > 0 AS has_src
-    FROM "Node" n WHERE n.status='published'
-    ORDER BY (
-      (CASE WHEN (SELECT COUNT(*) FROM "Claim" c WHERE c."nodeId"=n.id) > 0 THEN 1 ELSE 0 END) +
-      (CASE WHEN (SELECT COUNT(*) FROM "Criticism" cr WHERE cr."nodeId"=n.id) > 0 THEN 1 ELSE 0 END) +
-      (CASE WHEN n."mainstreamView" IS NOT NULL AND length(n."mainstreamView") > 10 THEN 1 ELSE 0 END) +
-      (CASE WHEN (SELECT COUNT(*) FROM "SourceLink" sl WHERE sl."nodeId"=n.id) > 0 THEN 1 ELSE 0 END)
-    ) DESC LIMIT 40
-  `;
+  // top 20 most complete AND least complete — two separate queries for accuracy
+  const [completenessTopRows, completenessBottomRows] = await Promise.all([
+    prisma.$queryRaw<{ id: string; title: string; score: bigint }[]>`
+      SELECT id, title, score FROM (
+        SELECT n.id, n.title,
+          (
+            (CASE WHEN (SELECT COUNT(*) FROM "Claim" c WHERE c."nodeId"=n.id) > 0 THEN 1 ELSE 0 END) +
+            (CASE WHEN (SELECT COUNT(*) FROM "Criticism" cr WHERE cr."nodeId"=n.id) > 0 THEN 1 ELSE 0 END) +
+            (CASE WHEN n."mainstreamView" IS NOT NULL AND length(n."mainstreamView") > 10 THEN 1 ELSE 0 END) +
+            (CASE WHEN (SELECT COUNT(*) FROM "SourceLink" sl WHERE sl."nodeId"=n.id) > 0 THEN 1 ELSE 0 END)
+          )::bigint AS score
+        FROM "Node" n WHERE n.status='published'
+      ) t ORDER BY t.score DESC LIMIT 20
+    `,
+    prisma.$queryRaw<{ id: string; title: string; score: bigint }[]>`
+      SELECT id, title, score FROM (
+        SELECT n.id, n.title,
+          (
+            (CASE WHEN (SELECT COUNT(*) FROM "Claim" c WHERE c."nodeId"=n.id) > 0 THEN 1 ELSE 0 END) +
+            (CASE WHEN (SELECT COUNT(*) FROM "Criticism" cr WHERE cr."nodeId"=n.id) > 0 THEN 1 ELSE 0 END) +
+            (CASE WHEN n."mainstreamView" IS NOT NULL AND length(n."mainstreamView") > 10 THEN 1 ELSE 0 END) +
+            (CASE WHEN (SELECT COUNT(*) FROM "SourceLink" sl WHERE sl."nodeId"=n.id) > 0 THEN 1 ELSE 0 END)
+          )::bigint AS score
+        FROM "Node" n WHERE n.status='published'
+      ) t ORDER BY t.score ASC LIMIT 20
+    `,
+  ]);
 
-  const completenessWithScore = completenessRows.map(r => ({
-    id: r.id, title: r.title,
-    completenessScore: [r.has_claims, r.has_crit, r.has_main, r.has_src].filter(Boolean).length * 25,
+  const top20MostComplete  = completenessTopRows.map(r => ({
+    id: r.id, title: r.title, completenessScore: Number(r.score) * 25,
   }));
-  const top20MostComplete  = completenessWithScore.slice(0, 20);
-  const top20LeastComplete = [...completenessWithScore].sort((a,b) => a.completenessScore - b.completenessScore).slice(0, 20);
+  const top20LeastComplete = completenessBottomRows.map(r => ({
+    id: r.id, title: r.title, completenessScore: Number(r.score) * 25,
+  }));
 
   const avgConf = avgConfRow[0]?.avg ?? 0;
   const claimsPct = totalNodes > 0 ? (withClaims / totalNodes) * 100 : 0;
