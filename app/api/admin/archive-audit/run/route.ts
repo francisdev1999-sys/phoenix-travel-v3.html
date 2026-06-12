@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
+import { after } from 'next/server';
 import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { runAudit, getOrCreateSettings } from '@/lib/audit/runner';
@@ -40,9 +41,9 @@ export async function POST() {
       },
     });
 
-    // Railway runs a persistent Node.js server — void fire-and-forget is more
-    // reliable than after() which can be cut short on response-lifecycle timeouts.
-    void runAudit(run.id, settings);
+    after(async () => {
+      await runAudit(run.id, settings);
+    });
 
     return NextResponse.json({ runId: run.id });
   } catch (err) {

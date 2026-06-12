@@ -92,8 +92,12 @@ export async function runAiAnalysis(
 
     let raw: RawAiFinding[] = [];
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20_000);
+
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
+        signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
@@ -112,6 +116,7 @@ export async function runAiAnalysis(
           ],
         }),
       });
+      clearTimeout(timeout);
 
       if (!res.ok) {
         const errText = await res.text();
