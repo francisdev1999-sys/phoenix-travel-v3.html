@@ -52,6 +52,8 @@ export default function AdminPanel() {
   const [embStats, setEmbStats]     = useState<{ totalPublished: number; hasEmbedding: number; missing: number; coveragePct: number; hasOpenAiKey: boolean } | null>(null);
   const [embGenerating, setEmbGenerating] = useState(false);
   const [embMsg, setEmbMsg]         = useState<string | null>(null);
+  const [scanning,  setScanning]    = useState(false);
+  const [scanMsg,   setScanMsg]     = useState<string | null>(null);
 
   useEffect(() => {
     if (tab === 'nodes') {
@@ -126,6 +128,25 @@ export default function AdminPanel() {
       setSeedMsg('Seed request failed.');
     } finally {
       setSeeding(false);
+    }
+  };
+
+  const runFullArchiveScan = async () => {
+    setScanning(true);
+    setScanMsg(null);
+    try {
+      const r = await fetch('/api/admin/discovery-runs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'trigger', maxNodes: 9999 }),
+      });
+      const d = await r.json() as { nodesChecked?: number; sourcesFound?: number; autoApproved?: number; pendingReview?: number; error?: string };
+      if (!r.ok) { setScanMsg(d.error ?? `Error ${r.status}`); return; }
+      setScanMsg(`Done — ${d.nodesChecked} nodes scanned, ${d.sourcesFound} sources found (${d.autoApproved} auto-approved, ${d.pendingReview} pending review)`);
+    } catch (e) {
+      setScanMsg(`Scan failed: ${String(e)}`);
+    } finally {
+      setScanning(false);
     }
   };
 
@@ -280,6 +301,36 @@ export default function AdminPanel() {
                   >
                     {embGenerating ? <Loader2 size={12} className="animate-spin" /> : <Cpu size={12} />}
                     {embGenerating ? 'Starting…' : embStats?.missing === 0 ? 'All Embedded' : `Generate ${embStats?.missing ?? '…'} Embeddings`}
+                  </button>
+                </div>
+              </div>
+
+              {/* Full Archive Source Scan */}
+              <div className="p-4 rounded-xl border border-emerald-900/30 bg-emerald-950/10 flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Search size={16} className="text-emerald-400 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-white">Full Archive Source Scan</p>
+                    <p className="text-xs text-slate-500">
+                      Search CrossRef, Semantic Scholar, arXiv, OpenAlex, Wikipedia & PubMed for every published node.
+                      Auto-approves high-credibility academic/government sources. Others go to Source Intel for review.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 flex-wrap">
+                  {scanMsg && (
+                    <div className={`flex items-center gap-1.5 text-xs max-w-xs ${scanMsg.startsWith('Done') ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {scanMsg.startsWith('Done') ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
+                      <span>{scanMsg}</span>
+                    </div>
+                  )}
+                  <button
+                    onClick={runFullArchiveScan}
+                    disabled={scanning}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap"
+                  >
+                    {scanning ? <Loader2 size={12} className="animate-spin" /> : <Search size={12} />}
+                    {scanning ? 'Scanning…' : 'Run Full Scan'}
                   </button>
                 </div>
               </div>
