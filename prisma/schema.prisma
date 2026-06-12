@@ -1262,3 +1262,20 @@ model UsageEvent {
   @@index([createdAt])
   @@index([sessionId])
 }
+
+model NewsItem {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  url         String   @unique
+  source      String
+  sourceUrl   String
+  category    String   // ufo | government | science | conspiracy | missing
+  publishedAt DateTime
+  fetchedAt   DateTime @default(now())
+  imageUrl    String?
+
+  @@index([publishedAt(sort: Desc)])
+  @@index([category])
+  @@index([fetchedAt])
+}

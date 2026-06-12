@@ -22,6 +22,7 @@ const SourceIngestion   = lazy(() => import('@/components/sections/SourceIngesti
 const AdminPanel        = lazy(() => import('@/components/sections/AdminPanel'));
 const RabbitHoleView    = lazy(() => import('@/components/sections/RabbitHoleView'));
 const NodeView          = lazy(() => import('@/components/sections/NodeView'));
+const IntelFeed         = lazy(() => import('@/components/sections/IntelFeed'));
 import Breadcrumb from '@/components/navigation/Breadcrumb';
 import CommandPalette from '@/components/navigation/CommandPalette';
 
@@ -258,6 +259,11 @@ export default function AppShell() {
                     {currentView === 'node' && (
                       <motion.div key="node" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="absolute inset-0 overflow-y-auto">
                         <NodeView />
+                      </motion.div>
+                    )}
+                    {currentView === 'intel-feed' && (
+                      <motion.div key="intel-feed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto">
+                        <IntelFeed />
                       </motion.div>
                     )}
                   </AnimatePresence>

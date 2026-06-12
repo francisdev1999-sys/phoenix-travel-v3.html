@@ -29,7 +29,7 @@ export type ViewType =
   | 'landing' | 'graph' | 'theory' | 'universe'
   | 'galaxy' | 'cluster' | 'node' | 'research-graph'
   | 'timeline' | 'evidence-board' | 'globe' | 'dashboard'
-  | 'diagnostics' | 'sources' | 'admin' | 'rabbit-hole';
+  | 'diagnostics' | 'sources' | 'admin' | 'rabbit-hole' | 'intel-feed';
 
 export interface NavContext {
   galaxySlug:  string | null;

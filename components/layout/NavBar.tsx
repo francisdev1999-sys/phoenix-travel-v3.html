@@ -5,7 +5,7 @@ import {
   Search, Globe, BarChart3, Clock, MapPin, Grid3X3, User,
   Volume2, VolumeX, Menu, X, LogIn, LogOut, Activity, BookMarked,
   ShieldCheck, Rabbit, Loader2, MoreHorizontal, Wrench, Trophy, UserCheck, Eye,
-  ScanText,
+  ScanText, Radio,
 } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import { useSession, signIn, signOut } from 'next-auth/react';
@@ -33,6 +33,7 @@ const NAV_PRIMARY = [
 ];
 // Always-visible tools (no auth required)
 const NAV_TOOLS_BASE = [
+  { id: 'intel-feed',  label: 'Intel Feed',  icon: Radio },
   { id: 'diagnostics', label: 'Diagnostics', icon: Activity },
   { id: 'sources',     label: 'Sources',     icon: BookMarked },
 ];
