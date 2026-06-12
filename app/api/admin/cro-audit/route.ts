@@ -231,7 +231,7 @@ export async function GET() {
       WHERE status='published'
         AND (
           ("dateEnd" IS NOT NULL AND "dateStart" IS NOT NULL AND "dateEnd" < "dateStart")
-          OR (year IS NOT NULL AND (year > 2100 OR year < -10000))
+          OR (year IS NOT NULL AND (year > 2100 OR year < -2000000))
         )
     `,
   ]);
@@ -599,6 +599,7 @@ export async function GET() {
            COUNT(n.id)::bigint AS cnt
     FROM "Category" c
     LEFT JOIN "Node" n ON n."categoryId"=c.id AND n.status='published'
+    WHERE c."galaxyId" IS NOT NULL
     GROUP BY c.id, c.name, c."galaxyId"
     ORDER BY cnt DESC
   `;

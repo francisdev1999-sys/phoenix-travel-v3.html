@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useSession, signIn } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, Network, GitBranch, BookMarked, Activity, FileWarning, Plus, Loader2, Package, InboxIcon, Sparkles, Users, BarChart3, AlertOctagon, Brain, ShieldAlert, Search, Link2, MessageSquarePlus, Ticket, TrendingUp, ClipboardList, Database, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Network, GitBranch, BookMarked, Activity, FileWarning, Plus, Loader2, Package, InboxIcon, Sparkles, Users, BarChart3, AlertOctagon, Brain, ShieldAlert, Search, Link2, MessageSquarePlus, Ticket, TrendingUp, ClipboardList, Database, CheckCircle2, Cpu, AlertCircle } from 'lucide-react';
 import AdminStats from '@/components/admin/AdminStats';
 import ProposedNodeCard from '@/components/admin/ProposedNodeCard';
 import ProposedEdgeCard from '@/components/admin/ProposedEdgeCard';
@@ -48,6 +48,9 @@ export default function AdminPanel() {
   const [edgeFilter, setEdgeFilter] = useState<string>('pending');
   const [seeding, setSeeding]       = useState(false);
   const [seedMsg, setSeedMsg]       = useState<string | null>(null);
+  const [embStats, setEmbStats]     = useState<{ totalPublished: number; hasEmbedding: number; missing: number; coveragePct: number; hasOpenAiKey: boolean } | null>(null);
+  const [embGenerating, setEmbGenerating] = useState(false);
+  const [embMsg, setEmbMsg]         = useState<string | null>(null);
 
   useEffect(() => {
     if (tab === 'nodes') {
@@ -77,6 +80,38 @@ export default function AdminPanel() {
     setLoadingEdges(true);
     fetch(`/api/edges/propose?status=${edgeFilter}`)
       .then(r => r.json()).then(setEdges).finally(() => setLoadingEdges(false));
+  };
+
+  useEffect(() => {
+    fetch('/api/admin/embeddings')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setEmbStats(d); })
+      .catch(() => {});
+  }, []);
+
+  const generateEmbeddings = async () => {
+    setEmbGenerating(true);
+    setEmbMsg(null);
+    try {
+      const r = await fetch('/api/admin/embeddings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'generate-all' }),
+      });
+      const d = await r.json() as { message?: string; error?: string; started?: boolean };
+      if (!r.ok) {
+        setEmbMsg(d.error ?? 'Failed to start embedding generation.');
+      } else {
+        setEmbMsg(d.message ?? 'Embedding generation started.');
+        setTimeout(() => {
+          fetch('/api/admin/embeddings').then(r => r.json()).then(setEmbStats).catch(() => {});
+        }, 5000);
+      }
+    } catch {
+      setEmbMsg('Request failed.');
+    } finally {
+      setEmbGenerating(false);
+    }
   };
 
   const runSeed = async () => {
@@ -211,6 +246,42 @@ export default function AdminPanel() {
                   </button>
                 </div>
               </div>
+              {/* Embeddings */}
+              <div className="p-4 rounded-xl border border-cyan-900/30 bg-cyan-950/10 flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Cpu size={16} className="text-cyan-400 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-white">Vector Embeddings</p>
+                    <p className="text-xs text-slate-500">
+                      {embStats
+                        ? embStats.missing === 0
+                          ? `${embStats.hasEmbedding}/${embStats.totalPublished} nodes embedded (100%)`
+                          : `${embStats.hasEmbedding}/${embStats.totalPublished} embedded — ${embStats.missing} missing (${embStats.coveragePct}%)`
+                        : 'Loading coverage…'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 flex-wrap">
+                  {embMsg && (
+                    <div className={`flex items-center gap-1.5 text-xs ${embMsg.includes('failed') || embMsg.includes('error') || embMsg.includes('OPENAI') ? 'text-red-400' : 'text-cyan-400'}`}>
+                      {embMsg.includes('failed') || embMsg.includes('OPENAI') ? <AlertCircle size={13} /> : <CheckCircle2 size={13} />}
+                      <span className="max-w-xs">{embMsg}</span>
+                    </div>
+                  )}
+                  {embStats && !embStats.hasOpenAiKey && (
+                    <span className="text-[11px] text-amber-400 bg-amber-900/20 px-2 py-0.5 rounded">OPENAI_API_KEY not set</span>
+                  )}
+                  <button
+                    onClick={generateEmbeddings}
+                    disabled={embGenerating || (embStats?.missing === 0) || !embStats?.hasOpenAiKey}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-cyan-700 hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    {embGenerating ? <Loader2 size={12} className="animate-spin" /> : <Cpu size={12} />}
+                    {embGenerating ? 'Starting…' : embStats?.missing === 0 ? 'All Embedded' : `Generate ${embStats?.missing ?? '…'} Embeddings`}
+                  </button>
+                </div>
+              </div>
+
               <AdminStats onTabSelect={t => setTab(t as Tab)} />
             </div>
           )}
