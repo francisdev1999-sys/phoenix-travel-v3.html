@@ -4,7 +4,41 @@ import { computeRabbitHoleFromDB } from '@/lib/retrieval/rabbit-hole';
 import { nodes as staticNodes, edges as staticEdges } from '@/lib/graph';
 import { computeRabbitHole } from '@/lib/rabbit-hole';
 import { getOrGenerateNarrative } from '@/lib/ai/rabbit-hole-narrative';
-import type { GraphNode, NodeCategory, EvidenceLevel, DatePrecision } from '@/lib/graph/types';
+import type { GraphNode, NodeCategory, EvidenceLevel, DatePrecision, ResearchSource } from '@/lib/graph/types';
+import type { SourceRecord } from '@/lib/source-types';
+
+const STATIC_DATE = '2024-01-01T00:00:00.000Z';
+
+function staticSourcesToRecords(nodeId: string, sources: ResearchSource[]): SourceRecord[] {
+  return sources.map(s => ({
+    id:               `static:${nodeId}:${s.id}`,
+    title:            s.title,
+    sourceType:       s.source_type,
+    author:           s.author ?? null,
+    publicationYear:  s.publication_year ?? null,
+    publisher:        null,
+    journal:          null,
+    volume:           null,
+    issue:            null,
+    pages:            null,
+    url:              s.url ?? null,
+    doi:              null,
+    isbn:             null,
+    abstract:         null,
+    notes:            s.notes ?? null,
+    language:         'en',
+    credibilityScore: s.credibility_score,
+    status:           'approved',
+    reviewNotes:      null,
+    reviewedAt:       null,
+    submittedBy:      null,
+    reviewedBy:       null,
+    createdAt:        STATIC_DATE,
+    updatedAt:        STATIC_DATE,
+    links:            [],
+    submitter:        null,
+  }));
+}
 
 type Params = { params: Promise<{ nodeId: string }> };
 
@@ -139,21 +173,42 @@ export async function GET(_req: NextRequest, { params }: Params) {
   // 42 bundled nodes.
   const memData = computeRabbitHole(nodeId, staticNodes, staticEdges);
   if (memData) {
+    // Seed sources from the static graph first so they always appear.
+    const staticNode = nodeMap.get(nodeId);
+    const staticSources: SourceRecord[] = staticNode?.sources?.length
+      ? staticSourcesToRecords(nodeId, staticNode.sources)
+      : [];
+
     // Also attempt to attach sources from DB, but don't fail if DB is down.
-    let sources: unknown[] = [];
+    let dbSources: unknown[] = [];
     let sourceCountMap: Record<string, number> = {};
     try {
       const dbData = await computeRabbitHoleFromDB(nodeId);
       if (dbData) {
         const d = dbData as unknown as Record<string, unknown>;
-        sources       = d.sources as unknown[] ?? [];
+        dbSources      = d.sources as unknown[] ?? [];
         sourceCountMap = d.sourceCountMap as Record<string, number> ?? {};
       }
     } catch {
-      // DB unavailable — serve static without sources
+      // DB unavailable — serve static without DB sources
     }
-    const enriched = enrichResponse({ ...memData, sources, sourceCountMap }, nodeMap);
-    const staticNode = nodeMap.get(nodeId);
+
+    // DB sources first (user-submitted & reviewed), then static curated sources.
+    // Deduplicate by id so a source that was also added via the DB form doesn't appear twice.
+    const dbIds = new Set((dbSources as Array<{ id?: string }>).map(s => s.id));
+    const mergedSources = [
+      ...dbSources,
+      ...staticSources.filter(s => !dbIds.has(s.id)),
+    ];
+
+    // Update sourceCountMap to reflect static sources for neighbour nodes too.
+    for (const n of staticNodes) {
+      if (n.sources?.length && !(n.id in sourceCountMap)) {
+        sourceCountMap[n.id] = n.sources.length;
+      }
+    }
+
+    const enriched = enrichResponse({ ...memData, sources: mergedSources, sourceCountMap }, nodeMap);
     if (staticNode) after(() => void buildNarrative(nodeId, staticNode, enriched));
     return NextResponse.json(enriched as object);
   }
