@@ -119,9 +119,13 @@ export default function SourceIntelligenceDashboard() {
   const triggerDiscovery = async () => {
     setRunning(true); setRunError(null);
     try {
-      const r = await fetch('/api/cron/source-discovery', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ maxNodes: 20 }) });
+      const r = await fetch('/api/admin/discovery-runs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'trigger', maxNodes: 20 }),
+      });
       const d = await r.json() as { error?: string };
-      if (!r.ok) { setRunError(d.error ?? `Error ${r.status}`); return; }
+      if (!r.ok) { setRunError(d.error ?? `Server error ${r.status}`); return; }
       await Promise.all([loadRuns(), loadSources()]);
     } catch (e) { setRunError(String(e)); }
     finally { setRunning(false); }
