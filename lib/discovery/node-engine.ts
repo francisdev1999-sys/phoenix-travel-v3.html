@@ -14,6 +14,7 @@
 import { prisma } from '@/lib/db';
 import { checkBudget, recordUsage } from '@/lib/budget/tracker';
 import { nodes as staticNodes } from '@/lib/graph';
+import { qualifiesForAutoApprove, promoteDiscoveredNode } from './node-promoter';
 
 const DISCOVERY_MODEL    = 'claude-haiku-4-5';
 const MAX_OUTPUT_TOKENS  = 1200;
@@ -288,6 +289,8 @@ export interface NodeDiscoveryResult {
   seedsChecked:  number;
   articlesFound: number;
   nodesProposed: number;
+  autoApproved:  number;
+  pendingReview: number;
   skipped:       number;
   totalCostUsd:  number;
 }
@@ -302,7 +305,7 @@ export async function runNodeDiscovery(opts: {
   const budget = await checkBudget();
   if (!budget.ok) {
     console.info('[node-discovery] Budget exceeded:', budget.reason);
-    return { seedsChecked: 0, articlesFound: 0, nodesProposed: 0, skipped: 0, totalCostUsd: 0 };
+    return { seedsChecked: 0, articlesFound: 0, nodesProposed: 0, autoApproved: 0, pendingReview: 0, skipped: 0, totalCostUsd: 0 };
   }
 
   // Build set of existing titles/slugs to avoid proposing duplicates
@@ -327,7 +330,8 @@ export async function runNodeDiscovery(opts: {
 
   const result: NodeDiscoveryResult = {
     seedsChecked: 0, articlesFound: 0,
-    nodesProposed: 0, skipped: 0, totalCostUsd: 0,
+    nodesProposed: 0, autoApproved: 0, pendingReview: 0,
+    skipped: 0, totalCostUsd: 0,
   };
 
   // Sample seeds randomly so we don't always hit the same ones
@@ -389,54 +393,69 @@ export async function runNodeDiscovery(opts: {
         finalSlug = `${proposal.slug}-${suffix++}`;
       }
 
-      const meta = CATEGORY_META[proposal.category] ?? { color: '#6b7280', icon: '📌' };
+      const meta      = CATEGORY_META[proposal.category] ?? { color: '#6b7280', icon: '📌' };
+      const autoApprove = qualifiesForAutoApprove({
+        relevanceScore:  scores.relevanceScore,
+        qualityScore:    scores.qualityScore,
+        noveltyScore:    scores.noveltyScore,
+        evidenceLevel:   proposal.evidence_level,
+        claimCount:      proposal.claims.length,
+        criticismCount:  proposal.criticisms.length,
+      });
+      const status = autoApprove ? 'auto_approved' : 'pending_review';
 
       try {
-        await prisma.discoveredNode.upsert({
+        const discoveredNodeData = {
+          slug:           finalSlug,
+          title:          proposal.title,
+          category:       proposal.category,
+          description:    proposal.description,
+          mainstreamView: proposal.mainstream_view ?? null,
+          evidenceLevel:  proposal.evidence_level,
+          confidenceScore:proposal.confidence_score,
+          color:          meta.color,
+          icon:           meta.icon,
+          year:           proposal.year ?? null,
+          tags:           proposal.tags,
+          claims:         proposal.claims,
+          criticisms:     proposal.criticisms,
+          openQuestions:  proposal.open_questions,
+          discoveryQuery: seed,
+          relatedNodeIds: relatedNodeTitles,
+          sourceUrl:      `https://en.wikipedia.org/wiki/${encodeURIComponent(article.title)}`,
+          relevanceScore: scores.relevanceScore,
+          qualityScore:   scores.qualityScore,
+          noveltyScore:   scores.noveltyScore,
+          aiCostUsd:      costUsd,
+          status,
+        };
+
+        const dn = await prisma.discoveredNode.upsert({
           where:  { slug: finalSlug },
-          update: {
-            title:          proposal.title,
-            description:    proposal.description,
-            mainstreamView: proposal.mainstream_view ?? null,
-            evidenceLevel:  proposal.evidence_level,
-            confidenceScore:proposal.confidence_score,
-            tags:           proposal.tags,
-            claims:         proposal.claims,
-            criticisms:     proposal.criticisms,
-            openQuestions:  proposal.open_questions,
-            year:           proposal.year ?? null,
-            color:          meta.color,
-            icon:           meta.icon,
-            relevanceScore: scores.relevanceScore,
-            qualityScore:   scores.qualityScore,
-            noveltyScore:   scores.noveltyScore,
-            aiCostUsd:      costUsd,
-          },
-          create: {
-            slug:           finalSlug,
-            title:          proposal.title,
-            category:       proposal.category,
-            description:    proposal.description,
-            mainstreamView: proposal.mainstream_view ?? null,
-            evidenceLevel:  proposal.evidence_level,
-            confidenceScore:proposal.confidence_score,
-            color:          meta.color,
-            icon:           meta.icon,
-            year:           proposal.year ?? null,
-            tags:           proposal.tags,
-            claims:         proposal.claims,
-            criticisms:     proposal.criticisms,
-            openQuestions:  proposal.open_questions,
-            discoveryQuery: seed,
-            relatedNodeIds: relatedNodeTitles,
-            sourceUrl:      `https://en.wikipedia.org/wiki/${encodeURIComponent(article.title)}`,
-            relevanceScore: scores.relevanceScore,
-            qualityScore:   scores.qualityScore,
-            noveltyScore:   scores.noveltyScore,
-            aiCostUsd:      costUsd,
-            status:         'pending_review',
-          },
+          update: { ...discoveredNodeData },
+          create: { ...discoveredNodeData },
         });
+
+        // Auto-approve: immediately promote to live graph node
+        if (autoApprove && !dn.promotedNodeId) {
+          try {
+            const nodeId = await promoteDiscoveredNode(dn);
+            await prisma.discoveredNode.update({
+              where: { id: dn.id },
+              data:  { promotedNodeId: nodeId, reviewedAt: new Date() },
+            });
+            result.autoApproved++;
+          } catch {
+            // If promotion fails, node stays in pending_review
+            await prisma.discoveredNode.update({
+              where: { id: dn.id },
+              data:  { status: 'pending_review' },
+            }).catch(() => {});
+            result.pendingReview++;
+          }
+        } else {
+          result.pendingReview++;
+        }
 
         existingSlugsSet.add(finalSlug);
         existingTitlesSet.add(proposal.title.toLowerCase());

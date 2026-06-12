@@ -454,11 +454,12 @@ export default function SourceIntelligenceDashboard() {
       {tab === 'nodes' && (
         <div className="space-y-3">
           {/* Node counts */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {[
-              { label: 'Pending', value: nodeCounts.pending_review ?? 0, color: '#facc15' },
-              { label: 'Approved', value: nodeCounts.approved ?? 0, color: '#4ade80' },
-              { label: 'Rejected', value: nodeCounts.rejected ?? 0, color: '#ef4444' },
+              { label: 'Pending',      value: nodeCounts.pending_review ?? 0,  color: '#facc15' },
+              { label: 'Auto-Approved',value: nodeCounts.auto_approved  ?? 0,  color: '#22c55e' },
+              { label: 'Confirmed',    value: nodeCounts.approved        ?? 0,  color: '#4ade80' },
+              { label: 'Rejected',     value: nodeCounts.rejected        ?? 0,  color: '#ef4444' },
             ].map(s => (
               <div key={s.label} className="p-2.5 rounded-xl bg-white/3 border border-white/6">
                 <p className="text-[10px] text-slate-500 mb-1">{s.label}</p>
@@ -469,13 +470,13 @@ export default function SourceIntelligenceDashboard() {
 
           {/* Controls */}
           <div className="flex gap-2 items-center flex-wrap">
-            <div className="flex gap-1.5">
-              {(['pending_review', 'approved', 'rejected', 'all'] as const).map(s => (
+            <div className="flex gap-1.5 flex-wrap">
+              {(['pending_review', 'auto_approved', 'approved', 'rejected', 'all'] as const).map(s => (
                 <button key={s} onClick={() => { setNodeStatusFilter(s); loadDiscoveredNodes(s); }}
                   className={`px-2.5 py-1 rounded-lg text-[10px] border transition-all ${
                     nodeStatusFilter === s ? 'bg-white/10 border-white/20 text-white' : 'bg-white/3 border-white/6 text-slate-600 hover:text-white'
                   }`}>
-                  {s.replace(/_/g, ' ')}
+                  {s.replace(/_/g, ' ')} {s !== 'all' && (nodeCounts[s] ?? 0) > 0 && `(${nodeCounts[s]})`}
                 </button>
               ))}
             </div>
@@ -598,6 +599,21 @@ export default function SourceIntelligenceDashboard() {
                     className="flex-1 py-2 rounded-lg text-xs font-semibold bg-red-900/40 border border-red-800/40 text-red-400 hover:bg-red-900/60 transition-colors">
                     ✗ Reject
                   </button>
+                </div>
+              )}
+              {selectedNode.status === 'auto_approved' && (
+                <div className="space-y-2 mt-1">
+                  <p className="text-[10px] text-emerald-400 text-center">✓ Auto-approved — already live in graph</p>
+                  <div className="flex gap-2">
+                    <button onClick={() => reviewDiscoveredNode(selectedNode.id, 'approve')}
+                      className="flex-1 py-2 rounded-lg text-xs bg-green-800/50 border border-green-700/50 text-green-300 hover:bg-green-800/70 transition-colors">
+                      ✓ Confirm
+                    </button>
+                    <button onClick={() => reviewDiscoveredNode(selectedNode.id, 'reject')}
+                      className="flex-1 py-2 rounded-lg text-xs bg-red-900/40 border border-red-800/40 text-red-400 hover:bg-red-900/60 transition-colors">
+                      ✗ Remove from Graph
+                    </button>
+                  </div>
                 </div>
               )}
             </motion.div>
