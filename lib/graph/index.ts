@@ -1,4 +1,5 @@
 import { nodes as rawNodes } from './nodes';
+import { expandedNodes } from './nodes-expanded';
 import { edges } from './edges';
 import { NODE_SOURCES } from './sources';
 import {
@@ -10,7 +11,7 @@ export * from './types';
 export { edges };
 
 // Nodes enriched with curated static sources
-export const nodes: GraphNode[] = rawNodes.map(n => ({
+export const nodes: GraphNode[] = [...rawNodes, ...expandedNodes].map(n => ({
   ...n,
   sources: NODE_SOURCES[n.id] ?? [],
 }));
