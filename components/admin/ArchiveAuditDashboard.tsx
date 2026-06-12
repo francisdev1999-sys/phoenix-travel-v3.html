@@ -547,8 +547,8 @@ export default function ArchiveAuditDashboard() {
             <div className="flex flex-col items-center justify-center py-8 text-center space-y-3 border border-green-700/30 rounded-lg bg-green-900/10">
               <CheckCircle size={32} className="text-green-400" />
               <div>
-                <p className="text-sm font-semibold text-green-300">Archive is healthy</p>
-                <p className="text-xs text-slate-400 mt-1">All automated checks passed — no issues detected.</p>
+                <p className="text-sm font-semibold text-green-300">All good — no major issues or findings</p>
+                <p className="text-xs text-slate-400 mt-1">All automated checks passed. The archive is in good shape.</p>
               </div>
               {activeRun.completedAt && (
                 <p className="text-[10px] text-slate-500">
