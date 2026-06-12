@@ -1,109 +1,67 @@
 import { prisma } from '@/lib/db';
 import {
-  checkOrphans,
-  checkStaleEdges,
-  checkWeakEdges,
-  checkMissingFields,
-  checkDuplicates,
-  checkSourceQuality,
+  checkOrphans, checkStaleEdges, checkWeakEdges,
+  checkMissingFields, checkDuplicates, checkSourceQuality,
 } from './rule-checks';
 import { runAiAnalysis } from './ai-analysis';
 import type { AuditSettings, AuditRunSummary } from './types';
 import { DEFAULT_AUDIT_SETTINGS } from './types';
 
 export async function runAudit(runId: string, settings: AuditSettings): Promise<void> {
-  // Hard 90-second ceiling — prevents any hung network call from blocking forever
-  const timer = setTimeout(async () => {
-    console.error('[audit-runner] hard timeout reached for run', runId);
-    await prisma.archiveAuditRun.update({
-      where: { id: runId },
-      data: { status: 'failed', completedAt: new Date() },
-    }).catch(() => {});
-  }, 90_000);
-
   try {
-    const checks = settings.checks;
+    const c = settings.checks;
 
-    // Run all rule-based checks in parallel
-    const [
-      orphans,
-      staleEdges,
-      weakEdges,
-      missingFields,
-      duplicates,
-      sourceQuality,
-    ] = await Promise.all([
-      checks.orphans       ? checkOrphans()                                     : Promise.resolve([]),
-      checks.staleEdges    ? checkStaleEdges()                                  : Promise.resolve([]),
-      checks.weakEdges     ? checkWeakEdges(settings.weakEdgeThreshold)         : Promise.resolve([]),
-      checks.missingFields ? checkMissingFields()                               : Promise.resolve([]),
-      checks.duplicates    ? checkDuplicates(settings.duplicateTitleThreshold)  : Promise.resolve([]),
-      checks.sourceQuality ? checkSourceQuality()                               : Promise.resolve([]),
-    ]);
+    // ── 1. Rule-based checks — parallel DB queries, always fast ──────────────
+    const [orphans, staleEdges, weakEdges, missingFields, duplicates, sourceQuality] =
+      await Promise.all([
+        c.orphans       ? checkOrphans()                                    : [],
+        c.staleEdges    ? checkStaleEdges()                                 : [],
+        c.weakEdges     ? checkWeakEdges(settings.weakEdgeThreshold)        : [],
+        c.missingFields ? checkMissingFields()                              : [],
+        c.duplicates    ? checkDuplicates(settings.duplicateTitleThreshold) : [],
+        c.sourceQuality ? checkSourceQuality()                              : [],
+      ]);
 
-    // AI checks — fetch nodes then analyze
+    const ruleFindings = [...orphans, ...staleEdges, ...weakEdges,
+                          ...missingFields, ...duplicates, ...sourceQuality];
+
+    // ── 2. AI analysis — optional, each batch has its own 20 s abort ─────────
     let aiFindings: Awaited<ReturnType<typeof runAiAnalysis>> = [];
-    if (checks.aiQuality || checks.categoryMismatch) {
+    if (c.aiQuality || c.categoryMismatch) {
       const nodes = await prisma.node.findMany({
-        where: { status: 'published' },
+        where:  { status: 'published' },
         select: {
-          id: true,
-          title: true,
-          description: true,
-          evidenceLevel: true,
-          confidenceScore: true,
-          mainstreamView: true,
+          id: true, title: true, description: true, evidenceLevel: true,
+          confidenceScore: true, mainstreamView: true,
           category: { select: { name: true } },
-          _count: { select: { claims: true, criticisms: true, tags: true } },
-          tags: { select: { tag: true } },
+          _count:   { select: { claims: true, criticisms: true, tags: true } },
+          tags:     { select: { tag: true } },
         },
         take: settings.maxNodesPerAiRun,
       });
       aiFindings = await runAiAnalysis(nodes, settings);
     }
 
-    // Merge all findings
-    const allRuleFindings = [
-      ...orphans,
-      ...staleEdges,
-      ...weakEdges,
-      ...missingFields,
-      ...duplicates,
-      ...sourceQuality,
-    ];
+    // ── 3. Cap and shape findings ─────────────────────────────────────────────
+    const cappedRule = ruleFindings.slice(0, Math.max(0, settings.maxFindingsPerRun - aiFindings.length));
 
-    // Cap at maxFindingsPerRun
-    const capped = allRuleFindings.slice(0, Math.max(0, settings.maxFindingsPerRun - aiFindings.length));
-
-    // Determine auto-approve status per finding
     const toCreate = [
-      ...capped.map(f => ({
+      ...cappedRule.map(f => ({
         runId,
-        type:        f.type,
-        severity:    f.severity,
-        status:      shouldAutoApprove(f.type, settings) ? 'approved' : 'pending',
-        nodeId:      f.nodeId ?? null,
-        edgeId:      f.edgeId ?? null,
-        title:       f.title,
-        description: f.description,
-        beforeState: f.beforeState,
-        afterState:  f.afterState,
-        reasoning:   f.reasoning,
-        autoFixable: f.autoFixable,
+        type: f.type, severity: f.severity,
+        status: shouldAutoApprove(f.type, settings) ? 'approved' : 'pending',
+        nodeId: f.nodeId ?? null, edgeId: f.edgeId ?? null,
+        title: f.title, description: f.description,
+        beforeState: f.beforeState, afterState: f.afterState,
+        reasoning: f.reasoning, autoFixable: f.autoFixable,
       })),
       ...aiFindings.map(f => ({
         runId,
-        type:        f.type,
-        severity:    f.severity,
-        status:      'pending' as const,
-        nodeId:      f.nodeId ?? null,
-        edgeId:      null,
-        title:       f.title,
-        description: f.description,
-        beforeState: f.beforeState,
-        afterState:  f.afterState,
-        reasoning:   f.reasoning,
-        autoFixable: false,
+        type: f.type, severity: f.severity, status: 'pending' as const,
+        nodeId: f.nodeId ?? null, edgeId: null,
+        title: f.title, description: f.description,
+        beforeState: f.beforeState, afterState: f.afterState,
+        reasoning: f.reasoning, autoFixable: false,
       })),
     ];
 
@@ -111,44 +69,36 @@ export async function runAudit(runId: string, settings: AuditSettings): Promise<
       await prisma.archiveAuditFinding.createMany({ data: toCreate });
     }
 
-    // Build summary
-    const byType: Record<string, number>     = {};
+    // ── 4. Build summary and mark complete ────────────────────────────────────
+    const byType:     Record<string, number> = {};
     const bySeverity: Record<string, number> = {};
     let autoFixable = 0;
-
     for (const f of toCreate) {
-      byType[f.type]         = (byType[f.type] ?? 0) + 1;
+      byType[f.type]         = (byType[f.type]         ?? 0) + 1;
       bySeverity[f.severity] = (bySeverity[f.severity] ?? 0) + 1;
       if (f.autoFixable) autoFixable++;
     }
 
-    const summary: AuditRunSummary = {
-      total:    toCreate.length,
-      byType,
-      bySeverity,
-      autoFixable,
-    };
+    const summary: AuditRunSummary = { total: toCreate.length, byType, bySeverity, autoFixable };
 
     await prisma.archiveAuditRun.update({
       where: { id: runId },
       data:  { status: 'complete', completedAt: new Date(), summary: summary as object },
     });
+
   } catch (err) {
-    console.error('[audit-runner] failed:', err);
+    console.error('[audit-runner] runAudit failed:', err);
     await prisma.archiveAuditRun.update({
       where: { id: runId },
       data:  { status: 'failed', completedAt: new Date() },
-    }).catch(() => {/* best-effort */});
-  } finally {
-    clearTimeout(timer);
+    }).catch(() => {});
   }
 }
 
-function shouldAutoApprove(type: string, settings: AuditSettings): boolean {
-  if (type === 'orphan'      && settings.autoApproveOrphans)    return true;
-  if (type === 'stale_edge'  && settings.autoApproveStaleEdges) return true;
-  if (type === 'weak_edge'   && settings.autoApproveWeakEdges)  return true;
-  return false;
+function shouldAutoApprove(type: string, s: AuditSettings): boolean {
+  return (type === 'orphan'     && s.autoApproveOrphans)
+      || (type === 'stale_edge' && s.autoApproveStaleEdges)
+      || (type === 'weak_edge'  && s.autoApproveWeakEdges);
 }
 
 export async function getOrCreateSettings(): Promise<AuditSettings> {
