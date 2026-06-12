@@ -39,7 +39,9 @@ export interface AuditRunSummary {
   bySeverity:  Record<string, number>;
   autoFixable: number;
   checksRan?:  Record<string, number>;  // check name → raw findings count before capping
-  aiSkipped?:  boolean;                 // true when AI enabled in settings but key is missing
+  aiSkipped?:  boolean;                 // true when AI enabled but key is missing
+  aiErrors?:   number;                  // batches that failed (wrong key, timeout, etc.)
+  aiLastError?: string;                 // last error message for diagnostics
 }
 
 export interface AuditRun {

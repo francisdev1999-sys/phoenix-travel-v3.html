@@ -3,7 +3,7 @@ import {
   checkOrphans, checkStaleEdges, checkWeakEdges,
   checkMissingFields, checkDuplicates, checkSourceQuality,
 } from './rule-checks';
-import { runAiAnalysis } from './ai-analysis';
+import { runAiAnalysis, type AiParsedFinding } from './ai-analysis';
 import type { AuditSettings, AuditRunSummary } from './types';
 import { DEFAULT_AUDIT_SETTINGS } from './types';
 
@@ -34,8 +34,10 @@ export async function runAudit(
       ? allRule.filter(f => f.nodeId === scope.nodeId)
       : allRule;
 
-    // ── 2. AI analysis — optional, each batch has its own 20 s abort ─────────
-    let aiFindings: Awaited<ReturnType<typeof runAiAnalysis>> = [];
+    // ── 2. AI analysis — optional, each batch has its own 30 s abort ─────────
+    let aiFindings: AiParsedFinding[] = [];
+    let aiErrors = 0;
+    let aiLastError: string | undefined;
     if (c.aiQuality || c.categoryMismatch) {
       const nodes = await prisma.node.findMany({
         where: scope.nodeId
@@ -50,7 +52,10 @@ export async function runAudit(
         },
         take: scope.nodeId ? 1 : settings.maxNodesPerAiRun,
       });
-      aiFindings = await runAiAnalysis(nodes, settings);
+      const result = await runAiAnalysis(nodes, settings);
+      aiFindings   = result.findings;
+      aiErrors     = result.errors;
+      aiLastError  = result.lastError;
     }
 
     // ── 3. Cap and shape findings ─────────────────────────────────────────────
@@ -103,7 +108,12 @@ export async function runAudit(
     const aiSkipped = aiEnabled && !process.env.ANTHROPIC_API_KEY;
     if (aiEnabled && !aiSkipped) checksRan.ai = aiFindings.length;
 
-    const summary: AuditRunSummary = { total: toCreate.length, byType, bySeverity, autoFixable, checksRan, aiSkipped };
+    const summary: AuditRunSummary = {
+      total: toCreate.length, byType, bySeverity, autoFixable,
+      checksRan, aiSkipped,
+      aiErrors: aiErrors || undefined,
+      aiLastError: aiLastError || undefined,
+    };
 
     await prisma.archiveAuditRun.update({
       where: { id: runId },

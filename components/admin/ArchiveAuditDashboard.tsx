@@ -767,7 +767,20 @@ export default function ArchiveAuditDashboard() {
                 {aiSkipped && (
                   <div className="flex items-start gap-2 p-2 bg-amber-900/20 border border-amber-700/30 rounded text-[11px] text-amber-300">
                     <AlertTriangle size={12} className="flex-shrink-0 mt-0.5" />
-                    <span>AI checks were <strong>skipped</strong> — <code className="text-amber-200">ANTHROPIC_API_KEY</code> is not set in Railway. Set it to enable AI quality analysis.</span>
+                    <span>AI checks were <strong>skipped</strong> — <code className="text-amber-200">ANTHROPIC_API_KEY</code> is not set in Railway.</span>
+                  </div>
+                )}
+
+                {/* AI errors (key set but calls failed) */}
+                {!aiSkipped && (summary?.aiErrors as number) > 0 && (
+                  <div className="flex items-start gap-2 p-2 bg-red-900/20 border border-red-700/30 rounded text-[11px] text-red-300">
+                    <XCircle size={12} className="flex-shrink-0 mt-0.5" />
+                    <span>
+                      AI analysis had <strong>{summary?.aiErrors as number} batch error{(summary?.aiErrors as number) > 1 ? 's' : ''}</strong> — API key may be invalid or the model returned an unexpected response.
+                      {(summary?.aiLastError as string) && (
+                        <code className="block mt-1 text-red-400 break-all">{summary?.aiLastError as string}</code>
+                      )}
+                    </span>
                   </div>
                 )}
 
