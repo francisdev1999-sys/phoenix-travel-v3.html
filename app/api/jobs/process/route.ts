@@ -92,13 +92,13 @@ async function embedNode(nodeId: string) {
 
   const embedding = await generateEmbedding(text);
   if (embedding === null) {
-    console.warn(`[embed-node] Skipped ${nodeId} — OPENAI_API_KEY not configured`);
+    console.warn(`[embed-node] Skipped ${nodeId} — VOYAGE_API_KEY not configured`);
     return;
   }
 
   await prisma.$executeRaw`
     INSERT INTO "NodeEmbedding" ("nodeId", "embedding", "model", "updatedAt")
-    VALUES (${nodeId}, ${embedding}::vector, 'text-embedding-3-small', NOW())
+    VALUES (${nodeId}, ${embedding}::vector, 'voyage-3', NOW())
     ON CONFLICT ("nodeId") DO UPDATE
     SET "embedding" = EXCLUDED."embedding",
         "model"     = EXCLUDED."model",
@@ -117,13 +117,13 @@ async function embedSource(sourceId: string) {
 
   const embedding = await generateEmbedding(text);
   if (embedding === null) {
-    console.warn(`[embed-source] Skipped ${sourceId} — OPENAI_API_KEY not configured`);
+    console.warn(`[embed-source] Skipped ${sourceId} — VOYAGE_API_KEY not configured`);
     return;
   }
 
   await prisma.$executeRaw`
     INSERT INTO "SourceEmbedding" ("sourceId", "embedding", "model", "updatedAt")
-    VALUES (${sourceId}, ${embedding}::vector, 'text-embedding-3-small', NOW())
+    VALUES (${sourceId}, ${embedding}::vector, 'voyage-3', NOW())
     ON CONFLICT ("sourceId") DO UPDATE
     SET "embedding" = EXCLUDED."embedding",
         "model"     = EXCLUDED."model",
@@ -159,29 +159,29 @@ async function rebuildAdjacency(nodeId: string) {
 
 // ── Embedding generation ──────────────────────────────────────────────────────
 
-// Returns null when OPENAI_API_KEY is not configured — callers must skip
+// Returns null when VOYAGE_API_KEY is not configured — callers must skip
 // the DB write in that case. Never returns a zero-vector placeholder, which
 // would silently corrupt cosine-similarity queries.
 async function generateEmbedding(text: string): Promise<string | null> {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.VOYAGE_API_KEY;
 
   if (!apiKey) return null;
 
-  const res = await fetch('https://api.openai.com/v1/embeddings', {
+  const res = await fetch('https://api.voyageai.com/v1/embeddings', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type':  'application/json',
     },
     body: JSON.stringify({
-      model: 'text-embedding-3-small',
-      input: text,
+      model: 'voyage-3',
+      input: [text],
     }),
   });
 
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`OpenAI embeddings API error ${res.status}: ${body}`);
+    throw new Error(`Voyage AI embeddings API error ${res.status}: ${body}`);
   }
 
   const json = await res.json() as { data: { embedding: number[] }[] };

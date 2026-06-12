@@ -21,7 +21,7 @@ export async function GET() {
   const missing = Math.max(0, totalPublished - hasEmbedding);
   const coveragePct =
     totalPublished > 0 ? Math.round((hasEmbedding / totalPublished) * 100) : 0;
-  const hasOpenAiKey = !!process.env.OPENAI_API_KEY;
+  const hasVoyageKey = !!process.env.VOYAGE_API_KEY;
 
   return NextResponse.json({
     totalPublished,
@@ -30,7 +30,7 @@ export async function GET() {
     coveragePct,
     pendingJobs,
     failedJobs,
-    hasOpenAiKey,
+    hasVoyageKey,
   });
 }
 
@@ -46,9 +46,9 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({})) as { action?: string };
 
   if (body?.action === 'generate-all') {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.VOYAGE_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ error: 'OPENAI_API_KEY is not set in environment variables' }, { status: 400 });
+      return NextResponse.json({ error: 'VOYAGE_API_KEY is not set in environment variables' }, { status: 400 });
     }
 
     // Count how many need embeddings
@@ -133,14 +133,14 @@ async function generateAllMissingEmbeddings(apiKey: string) {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 15_000);
 
-      const res = await fetch('https://api.openai.com/v1/embeddings', {
+      const res = await fetch('https://api.voyageai.com/v1/embeddings', {
         method: 'POST',
         signal: controller.signal,
         headers: {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ model: 'text-embedding-3-small', input: text }),
+        body: JSON.stringify({ model: 'voyage-3', input: [text] }),
       });
       clearTimeout(timeout);
 
@@ -156,7 +156,7 @@ async function generateAllMissingEmbeddings(apiKey: string) {
 
       await prisma.$executeRaw`
         INSERT INTO "NodeEmbedding" ("nodeId", "embedding", "model", "updatedAt")
-        VALUES (${node.id}, ${vecStr}::vector, 'text-embedding-3-small', NOW())
+        VALUES (${node.id}, ${vecStr}::vector, 'voyage-3', NOW())
         ON CONFLICT ("nodeId") DO UPDATE
         SET "embedding" = EXCLUDED."embedding",
             "model"     = EXCLUDED."model",

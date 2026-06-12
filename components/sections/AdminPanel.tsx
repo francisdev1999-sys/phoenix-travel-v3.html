@@ -49,7 +49,7 @@ export default function AdminPanel() {
   const [edgeFilter, setEdgeFilter] = useState<string>('pending');
   const [seeding, setSeeding]       = useState(false);
   const [seedMsg, setSeedMsg]       = useState<string | null>(null);
-  const [embStats, setEmbStats]     = useState<{ totalPublished: number; hasEmbedding: number; missing: number; coveragePct: number; hasOpenAiKey: boolean } | null>(null);
+  const [embStats, setEmbStats]     = useState<{ totalPublished: number; hasEmbedding: number; missing: number; coveragePct: number; hasVoyageKey: boolean } | null>(null);
   const [embGenerating, setEmbGenerating] = useState(false);
   const [embMsg, setEmbMsg]         = useState<string | null>(null);
   const [scanning,      setScanning]      = useState(false);
@@ -312,12 +312,12 @@ export default function AdminPanel() {
                       <span className="max-w-xs">{embMsg}</span>
                     </div>
                   )}
-                  {embStats && !embStats.hasOpenAiKey && (
-                    <span className="text-[11px] text-amber-400 bg-amber-900/20 px-2 py-0.5 rounded">OPENAI_API_KEY not set</span>
+                  {embStats && !embStats.hasVoyageKey && (
+                    <span className="text-[11px] text-amber-400 bg-amber-900/20 px-2 py-0.5 rounded">VOYAGE_API_KEY not set</span>
                   )}
                   <button
                     onClick={generateEmbeddings}
-                    disabled={embGenerating || (embStats?.missing === 0) || !embStats?.hasOpenAiKey}
+                    disabled={embGenerating || (embStats?.missing === 0) || !embStats?.hasVoyageKey}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-cyan-700 hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
                     {embGenerating ? <Loader2 size={12} className="animate-spin" /> : <Cpu size={12} />}
