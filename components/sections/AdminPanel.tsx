@@ -28,8 +28,9 @@ import BetaFeedbackAdmin from '@/components/admin/BetaFeedbackAdmin';
 import BetaInviteManager from '@/components/admin/BetaInviteManager';
 import BetaAnalytics from '@/components/admin/BetaAnalytics';
 import CROAuditDashboard from '@/components/admin/CROAuditDashboard';
+import SourceIntelligenceDashboard from '@/components/admin/SourceIntelligenceDashboard';
 
-type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports' | 'imports' | 'drafts' | 'suggestions' | 'users' | 'moderation' | 'platform' | 'intelligence' | 'integrity' | 'similarity' | 'ai-activity' | 'ai-audit' | 'source-enrichment' | 'beta-feedback' | 'beta-invites' | 'beta-analytics' | 'cro-audit';
+type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports' | 'imports' | 'drafts' | 'suggestions' | 'users' | 'moderation' | 'platform' | 'intelligence' | 'integrity' | 'similarity' | 'ai-activity' | 'ai-audit' | 'source-enrichment' | 'beta-feedback' | 'beta-invites' | 'beta-analytics' | 'cro-audit' | 'source-intel';
 
 export default function AdminPanel() {
   const { data: session, status } = useSession();
@@ -167,6 +168,7 @@ export default function AdminPanel() {
     { id: 'ai-audit',          label: 'Archive Audit',   icon: <ShieldCheck size={13} /> },
     { id: 'cro-audit',         label: 'CRO Audit',       icon: <ClipboardList size={13} /> },
     { id: 'source-enrichment', label: 'Link Enrichment', icon: <Link2 size={13} />       },
+    { id: 'source-intel',      label: 'Source Intel',   icon: <Cpu size={13} />          },
     { id: 'users',             label: 'Users',           icon: <Users size={13} />       },
     { id: 'moderation',        label: 'Moderation',      icon: <AlertOctagon size={13} />},
     { id: 'diagnostics',       label: 'Diagnostics',     icon: <Activity size={13} />    },
@@ -392,6 +394,7 @@ export default function AdminPanel() {
           {tab === 'ai-audit'          && <ArchiveAuditDashboard />}
           {tab === 'cro-audit'         && <CROAuditDashboard />}
           {tab === 'source-enrichment' && <SourceLinkEnrichment />}
+          {tab === 'source-intel'      && <SourceIntelligenceDashboard />}
           {tab === 'diagnostics'       && <GraphDiagnostics />}
           {tab === 'users'             && <UserManagement />}
           {tab === 'moderation'        && <ModerationQueue />}
