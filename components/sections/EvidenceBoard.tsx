@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Pin, FileText, MapPin, AlertTriangle } from 'lucide-react';
 import { useNodes } from '@/lib/graph/useNodes';
-import { nodes as staticNodes } from '@/lib/graph/nodes';
+import { nodes as staticNodes } from '@/lib/graph';
 import { GraphNode } from '@/lib/graph/types';
 
 const PIN_COLORS = ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#8b5cf6'];

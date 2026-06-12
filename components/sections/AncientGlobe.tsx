@@ -8,6 +8,7 @@ import { Clock } from 'lucide-react';
 import { ancientSites } from '@/lib/data/sites';
 import { AncientSite } from '@/lib/types';
 import { useUserStore } from '@/lib/store/userStore';
+import { useNodes } from '@/lib/graph/useNodes';
 
 /** Maximum pins rendered on the globe at once */
 const GLOBE_LIMIT = 500;
@@ -416,11 +417,37 @@ export default function AncientGlobe() {
   const [filter, setFilter] = useState<string>('all');
 
   const { focusedTheoryId, setFocusedTheoryId } = useUserStore();
+  const graphNodes = useNodes();
+
+  // Convert graph nodes with valid coordinates into AncientSite-compatible pins
+  const graphSites = useMemo<AncientSite[]>(() => {
+    return graphNodes
+      .filter(n => {
+        if (!n.coordinates) return false;
+        const [lat, lon] = n.coordinates;
+        return isValidCoord(lat, -90, 90) && isValidCoord(lon, -180, 180);
+      })
+      .map(n => ({
+        id: `graph-${n.id}`,
+        name: n.title,
+        coordinates: n.coordinates!,
+        type: 'mystery' as const,
+        description: n.description ?? n.title,
+        relatedTheories: [n.id],
+      }));
+  }, [graphNodes]);
+
+  // Merge ancientSites with graph-node-derived sites (static data takes priority on id collision)
+  const allSites = useMemo<AncientSite[]>(() => {
+    const map = new Map<string, AncientSite>(ancientSites.map(s => [s.id, s]));
+    graphSites.forEach(s => { if (!map.has(s.id)) map.set(s.id, s); });
+    return [...map.values()];
+  }, [graphSites]);
 
   // When Timeline (or any view) sets focusedTheoryId, find and highlight the matching site
   useEffect(() => {
     if (!focusedTheoryId) return;
-    const match = ancientSites.find(s => s.relatedTheories.includes(focusedTheoryId));
+    const match = allSites.find(s => s.relatedTheories.includes(focusedTheoryId));
     if (match) setSelectedSite(match);
   }, [focusedTheoryId]);
 
@@ -432,11 +459,11 @@ export default function AncientGlobe() {
   // Focus target: coords of the site matched by focusedTheoryId (or selected site)
   const focusTarget = useMemo<[number, number] | null>(() => {
     if (focusedTheoryId) {
-      const match = ancientSites.find(s => s.relatedTheories.includes(focusedTheoryId));
+      const match = allSites.find(s => s.relatedTheories.includes(focusedTheoryId));
       if (match) return match.coordinates;
     }
     return null;
-  }, [focusedTheoryId]);
+  }, [focusedTheoryId, allSites]);
 
   const siteTypes = [
     { id: 'all', label: 'All Sites', color: '#ffffff' },
@@ -450,8 +477,8 @@ export default function AncientGlobe() {
   const { filteredSites, totalBeforeLimit } = useMemo(() => {
     // 1. Filter by selected type
     const typeFiltered = filter === 'all'
-      ? ancientSites
-      : ancientSites.filter(s => s.type === filter);
+      ? allSites
+      : allSites.filter(s => s.type === filter);
 
     // 2. Validate coordinates — skip any site with bad lat/lon
     const valid = typeFiltered.filter(s => {
@@ -482,7 +509,7 @@ export default function AncientGlobe() {
     const capped = deduped.slice(0, GLOBE_LIMIT);
 
     return { filteredSites: capped, totalBeforeLimit };
-  }, [filter]);
+  }, [filter, allSites]);
 
   return (
     <div className="h-full flex flex-col">
@@ -495,7 +522,7 @@ export default function AncientGlobe() {
                 Showing {GLOBE_LIMIT} of {totalBeforeLimit} locations
               </div>
             )}
-            {focusedTheoryId && ancientSites.some(s => s.relatedTheories.includes(focusedTheoryId)) && (
+            {focusedTheoryId && allSites.some(s => s.relatedTheories.includes(focusedTheoryId)) && (
               <div className="flex items-center gap-1.5 text-[10px] text-cyan-400 bg-cyan-900/20 border border-cyan-500/30 rounded-full px-2.5 py-1">
                 <Clock size={9} />
                 Synced with Timeline

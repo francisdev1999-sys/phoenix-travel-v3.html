@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Rabbit, Search, RotateCcw, ChevronRight, MapPin, Clock, BookMarked, Network, Compass, X, Loader2, ExternalLink } from 'lucide-react';
 import { nodes as staticNodes } from '@/lib/graph';
 import { CATEGORY_COLORS, EVIDENCE_COLORS } from '@/lib/graph';
+import { useNodes } from '@/lib/graph/useNodes';
 import { formatYear, RELATIONSHIP_COLORS, RELATIONSHIP_LABELS, TIER_COLORS, scoreTier, type RabbitHoleData, type RHConnection, type RHPath } from '@/lib/rabbit-hole';
 import { useUserStore } from '@/lib/store/userStore';
 import ConnectionCard from '@/components/rabbit-hole/ConnectionCard';
@@ -26,10 +27,10 @@ interface ApiData extends RabbitHoleData {
 }
 
 // ── Node search ───────────────────────────────────────────────────────────────
-function NodeSearch({ onSelect }: { onSelect: (id: string) => void }) {
+function NodeSearch({ nodes, onSelect }: { nodes: GraphNode[]; onSelect: (id: string) => void }) {
   const [q, setQ] = useState('');
   const results = q.length >= 2
-    ? staticNodes.filter(n =>
+    ? nodes.filter(n =>
         n.title.toLowerCase().includes(q.toLowerCase()) ||
         n.id.includes(q.toLowerCase()) ||
         n.category.toLowerCase().includes(q.toLowerCase()),
@@ -75,15 +76,15 @@ function NodeSearch({ onSelect }: { onSelect: (id: string) => void }) {
 }
 
 // ── Breadcrumb ────────────────────────────────────────────────────────────────
-function Breadcrumb({ history, currentId, onNavigate }: {
-  history: string[]; currentId: string; onNavigate: (id: string, historyIndex: number) => void;
+function Breadcrumb({ nodes, history, currentId, onNavigate }: {
+  nodes: GraphNode[]; history: string[]; currentId: string; onNavigate: (id: string, historyIndex: number) => void;
 }) {
   const allIds = [...history, currentId];
   if (allIds.length <= 1) return null;
   return (
     <div className="flex items-center gap-1 overflow-x-auto pb-1 text-xs">
       {allIds.map((id, i) => {
-        const n = staticNodes.find(x => x.id === id);
+        const n = nodes.find(x => x.id === id);
         const isCurrent = i === allIds.length - 1;
         return (
           <div key={id + i} className="flex items-center gap-1 flex-shrink-0">
@@ -138,6 +139,7 @@ function NodeHeader({ node, score }: { node: GraphNode; score: number }) {
 
 // ── Main view ─────────────────────────────────────────────────────────────────
 export default function RabbitHoleView() {
+  const nodes = useNodes();
   const { rabbitHoleNodeId, setRabbitHoleNodeId, pendingRabbitHoleNodeId, setPendingRabbitHoleNodeId } = useUserStore();
   // Start from a pending node if the user navigated here via search/graph,
   // otherwise show the empty search prompt (don't auto-load stale persisted state).
@@ -277,13 +279,13 @@ export default function RabbitHoleView() {
         </div>
         <div className="flex-1 flex flex-col items-center justify-center gap-8 p-6">
           <div className="w-full max-w-md">
-            <NodeSearch onSelect={id => { setCurrentId(id); setRabbitHoleNodeId(id); }} />
+            <NodeSearch nodes={nodes} onSelect={id => { setCurrentId(id); setRabbitHoleNodeId(id); }} />
           </div>
           <div className="text-center">
             <p className="text-xs text-slate-600 mb-4">Or explore a featured starting point</p>
             <div className="flex flex-wrap justify-center gap-2">
               {['book-of-enoch', 'great-pyramid', 'gobekli-tepe', 'flood-narratives', 'dead-sea-scrolls', 'atlantis'].map(id => {
-                const n = staticNodes.find(x => x.id === id);
+                const n = nodes.find(x => x.id === id);
                 if (!n) return null;
                 return (
                   <button key={id} onClick={() => { setCurrentId(id); setRabbitHoleNodeId(id); }}
@@ -306,13 +308,13 @@ export default function RabbitHoleView() {
         <div className="flex items-center gap-3">
           <Rabbit size={16} className="text-purple-400 flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <NodeSearch onSelect={navigate} />
+            <NodeSearch nodes={nodes} onSelect={navigate} />
           </div>
           <button onClick={reset} className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-white flex-shrink-0 px-2 py-1.5 rounded-lg hover:bg-white/10 transition-all">
             <RotateCcw size={12} />Reset
           </button>
         </div>
-        <Breadcrumb history={history} currentId={currentId} onNavigate={goBack} />
+        <Breadcrumb nodes={nodes} history={history} currentId={currentId} onNavigate={goBack} />
       </div>
 
       {/* Content */}

@@ -1,17 +1,21 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { nodes as staticNodes } from '@/lib/graph/nodes';
+import { nodes as staticNodes } from '@/lib/graph';
 import { edges as staticEdges } from '@/lib/graph/edges';
 import type { GraphNode, GraphEdge } from '@/lib/graph/types';
 
 // ── Module-level cache ───────────────────────────────────────────────────────
-// One /api/graph fetch per browser session, shared across all hook instances.
-// Initial renders always use static data (no loading flash), DB-approved nodes
-// are merged in after the fetch and all mounted components re-render.
+// Initial renders use static data (no loading flash).
+// DB-approved nodes (including AI-discovered) are merged after fetch.
+// Data is considered stale after STALE_MS — the next mount triggers a refetch
+// so new nodes appear automatically without a full page reload.
+
+const STALE_MS = 5 * 60 * 1000; // 5 minutes
 
 let cachedNodes: GraphNode[] | null = null;
 let cachedEdges: GraphEdge[] | null = null;
 let fetchState: 'idle' | 'loading' | 'done' = 'idle';
+let lastFetched = 0;
 const nodeSubscribers = new Set<() => void>();
 const edgeSubscribers = new Set<() => void>();
 
@@ -54,7 +58,9 @@ function mergeEdges(base: GraphEdge[], dbEdges: GraphEdge[]): GraphEdge[] {
 }
 
 function loadGraph() {
-  if (fetchState !== 'idle') return;
+  const now = Date.now();
+  if (fetchState === 'loading') return;
+  if (fetchState === 'done' && now - lastFetched < STALE_MS) return;
   fetchState = 'loading';
 
   fetch('/api/graph')
@@ -66,6 +72,7 @@ function loadGraph() {
       if (data.edges?.length) {
         cachedEdges = mergeEdges(staticEdges, data.edges);
       }
+      lastFetched = Date.now();
       fetchState = 'done';
       nodeSubscribers.forEach(fn => fn());
       edgeSubscribers.forEach(fn => fn());
@@ -84,8 +91,8 @@ export function useNodes(): GraphNode[] {
     const refresh = () => setNodes(cachedNodes ?? staticNodes);
     nodeSubscribers.add(refresh);
 
-    if (fetchState === 'idle') loadGraph();
-    else if (fetchState === 'done' && cachedNodes) setNodes(cachedNodes);
+    loadGraph();
+    if (fetchState === 'done' && cachedNodes) setNodes(cachedNodes);
 
     return () => { nodeSubscribers.delete(refresh); };
   }, []);
@@ -100,8 +107,8 @@ export function useEdges(): GraphEdge[] {
     const refresh = () => setEdges(cachedEdges ?? staticEdges);
     edgeSubscribers.add(refresh);
 
-    if (fetchState === 'idle') loadGraph();
-    else if (fetchState === 'done' && cachedEdges) setEdges(cachedEdges);
+    loadGraph();
+    if (fetchState === 'done' && cachedEdges) setEdges(cachedEdges);
 
     return () => { edgeSubscribers.delete(refresh); };
   }, []);
