@@ -303,8 +303,9 @@ export default function ArchiveAuditDashboard() {
   const [pickedNode,  setPickedNode]  = useState<{ id: string; title: string } | null>(null);
   const nodeInputRef = useRef<HTMLInputElement>(null);
 
-  const pollRef   = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pollCount = useRef(0);
+  const pollRef      = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollCount    = useRef(0);
+  const autoLoaded   = useRef(false);
 
   useEffect(() => {
     fetch('/api/admin/archive-audit/settings')
@@ -330,13 +331,23 @@ export default function ArchiveAuditDashboard() {
     return () => clearTimeout(t);
   }, [nodeQuery, auditMode, pickedNode]);
 
-  const loadRuns = async () => {
+  const loadRuns = useCallback(async () => {
     const r = await fetch('/api/admin/archive-audit/runs');
-    if (r.ok) {
-      const d = await r.json() as { runs?: AuditRun[] };
-      setRuns(d.runs ?? []);
+    if (!r.ok) return;
+    const d = await r.json() as { runs?: AuditRun[] };
+    const list = d.runs ?? [];
+    setRuns(list);
+    // Auto-load the most recent run on first visit so results are never blank
+    if (!autoLoaded.current && list.length > 0) {
+      autoLoaded.current = true;
+      const recent = list[0];
+      const res = await fetch(`/api/admin/archive-audit/${recent.id}`).catch(() => null);
+      if (res?.ok) {
+        const run = await res.json() as AuditRun;
+        setActive(run);
+      }
     }
-  };
+  }, []);
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
@@ -351,13 +362,12 @@ export default function ArchiveAuditDashboard() {
       setRunError('Audit timed out — the background worker may have been interrupted. Try again.');
       return;
     }
-    const r = await fetch(`/api/admin/archive-audit/${id}`);
-    if (!r.ok) return;
+    const r = await fetch(`/api/admin/archive-audit/${id}`).catch(() => null);
+    if (!r?.ok) return;
     const run = await r.json() as AuditRun;
     setActive(run);
     if (run.status !== 'running') {
       stopPolling();
-      loadRuns();
     }
   }, [stopPolling]);
 
@@ -375,27 +385,40 @@ export default function ArchiveAuditDashboard() {
       body.nodeTitle = pickedNode.title;
     }
 
-    const r = await fetch('/api/admin/archive-audit/run', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    const j = await r.json().catch(() => ({})) as { runId?: string; error?: string };
+    try {
+      const r = await fetch('/api/admin/archive-audit/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const j = await r.json().catch(() => ({})) as { runId?: string; error?: string };
 
-    if (!r.ok) {
-      if (r.status === 409 && j.runId) {
-        pollCount.current = 0;
-        void loadRun(j.runId!);
-        pollRef.current = setInterval(() => loadRun(j.runId!), 3000);
-      } else {
-        setRunError(j.error ?? `Server error ${r.status}`);
-        stopPolling();
+      if (!r.ok) {
+        if (r.status === 409 && j.runId) {
+          // Already running — poll it
+          pollCount.current = 0;
+          void loadRun(j.runId!);
+          pollRef.current = setInterval(() => loadRun(j.runId!), 3000);
+        } else {
+          setRunError(j.error ?? `Server error ${r.status}`);
+          stopPolling();
+        }
+        return;
       }
-      return;
+
+      // Run completed synchronously — load results
+      if (j.runId) {
+        pollCount.current = 0;
+        await loadRun(j.runId);
+      }
+    } catch (err) {
+      // Network error or connection dropped (e.g. proxy timeout) while audit was running.
+      // The audit may have finished on the server — refresh the list and auto-display it.
+      console.warn('[audit] POST connection error, checking for completed run:', err);
+      await loadRuns();          // auto-loads most recent run via autoLoaded flag logic
+    } finally {
+      setRunning(false);
     }
-    if (j.runId) { await loadRun(j.runId); }
-    setRunning(false);
-    loadRuns();
   };
 
   const handleAction = async (id: string, action: 'approve' | 'deny') => {
@@ -782,10 +805,10 @@ export default function ArchiveAuditDashboard() {
           </div>
 
           {/* No run selected yet */}
-          {!activeRun && !running && !runError && (
+          {!activeRun && !running && !runError && runs.length === 0 && (
             <div className="flex flex-col items-center justify-center py-6 text-center">
               <AlertTriangle size={22} className="text-slate-600 mb-2" />
-              <p className="text-xs text-slate-400">Select an audit type above and click <strong className="text-slate-300">Run</strong>, or pick a past run to review.</p>
+              <p className="text-xs text-slate-400">No audits run yet. Select a type above and click <strong className="text-slate-300">Run</strong>.</p>
             </div>
           )}
         </div>
