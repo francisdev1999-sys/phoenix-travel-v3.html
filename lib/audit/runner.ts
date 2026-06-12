@@ -12,6 +12,15 @@ import type { AuditSettings, AuditRunSummary } from './types';
 import { DEFAULT_AUDIT_SETTINGS } from './types';
 
 export async function runAudit(runId: string, settings: AuditSettings): Promise<void> {
+  // Hard 90-second ceiling — prevents any hung network call from blocking forever
+  const timer = setTimeout(async () => {
+    console.error('[audit-runner] hard timeout reached for run', runId);
+    await prisma.archiveAuditRun.update({
+      where: { id: runId },
+      data: { status: 'failed', completedAt: new Date() },
+    }).catch(() => {});
+  }, 90_000);
+
   try {
     const checks = settings.checks;
 
@@ -130,6 +139,8 @@ export async function runAudit(runId: string, settings: AuditSettings): Promise<
       where: { id: runId },
       data:  { status: 'failed', completedAt: new Date() },
     }).catch(() => {/* best-effort */});
+  } finally {
+    clearTimeout(timer);
   }
 }
 

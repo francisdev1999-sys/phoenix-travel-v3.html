@@ -321,11 +321,15 @@ export default function ArchiveAuditDashboard() {
     setRunning(true);
     setActive(null);
     setRunError(null);
+    // POST now runs the audit synchronously — it returns only when complete (30-90s).
+    // Show "Audit running…" while waiting, then load results immediately on return.
     const r = await fetch('/api/admin/archive-audit/run', { method: 'POST' });
     const j = await r.json().catch(() => ({})) as { runId?: string; error?: string };
     if (!r.ok) {
       if (r.status === 409 && j.runId) {
+        // Already running — poll the existing run
         pollCount.current = 0;
+        void loadRun(j.runId!);
         pollRef.current = setInterval(() => loadRun(j.runId!), 3000);
       } else {
         setRunError(j.error ?? `Server error ${r.status}`);
@@ -333,8 +337,12 @@ export default function ArchiveAuditDashboard() {
       }
       return;
     }
-    pollCount.current = 0;
-    pollRef.current = setInterval(() => loadRun(j.runId!), 3000);
+    // Run completed — load results immediately, no polling needed
+    if (j.runId) {
+      await loadRun(j.runId);
+    }
+    setRunning(false);
+    loadRuns();
   };
 
   const handleAction = async (id: string, action: 'approve' | 'deny') => {

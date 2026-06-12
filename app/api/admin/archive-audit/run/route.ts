@@ -1,6 +1,5 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
-import { after } from 'next/server';
 import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { runAudit, getOrCreateSettings } from '@/lib/audit/runner';
@@ -12,7 +11,7 @@ export async function POST() {
       return NextResponse.json({ error: 'Admin only' }, { status: 403 });
     }
 
-    // Block if a run is already in progress
+    // Block if a fresh run is already in progress
     const existing = await prisma.archiveAuditRun.findFirst({
       where: { status: 'running' },
       select: { id: true, startedAt: true },
@@ -20,11 +19,9 @@ export async function POST() {
     });
     if (existing) {
       const ageMs = Date.now() - new Date(existing.startedAt).getTime();
-      // Only block if the run is fresh (< 10 min) — older ones are probably stuck
       if (ageMs < 10 * 60 * 1000) {
         return NextResponse.json({ error: 'An audit is already running', runId: existing.id }, { status: 409 });
       }
-      // Mark the stale run as failed so it doesn't block future runs
       await prisma.archiveAuditRun.update({
         where: { id: existing.id },
         data: { status: 'failed', completedAt: new Date() },
@@ -41,9 +38,10 @@ export async function POST() {
       },
     });
 
-    after(async () => {
-      await runAudit(run.id, settings);
-    });
+    // Run synchronously — Railway has no per-request timeout on persistent servers.
+    // after() and void are both unreliable here; awaiting directly is the only
+    // guarantee the work actually completes.
+    await runAudit(run.id, settings);
 
     return NextResponse.json({ runId: run.id });
   } catch (err) {
