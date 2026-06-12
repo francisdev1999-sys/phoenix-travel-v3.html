@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Play, RefreshCw, CheckCircle, XCircle, Settings, AlertTriangle,
-  ChevronDown, ChevronUp, Eye, RotateCcw, Wrench,
+  ChevronDown, ChevronUp, Eye, RotateCcw, Wrench, Globe, Zap, Target, Search, X,
 } from 'lucide-react';
 import type {
   AuditRun, AuditFinding, AuditSettings, FindingType, FindingSeverity,
@@ -15,6 +15,32 @@ import { FINDING_LABELS, SEVERITY_COLOR, DEFAULT_AUDIT_SETTINGS } from '@/lib/au
 const SEV_ORDER: Record<FindingSeverity, number> = {
   critical: 0, high: 1, medium: 2, low: 3,
 };
+
+type AuditMode = 'complete' | 'quick' | 'node';
+
+const AUDIT_MODES: { id: AuditMode; label: string; tag: string; desc: string; Icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
+  {
+    id: 'complete',
+    label: 'Complete Audit',
+    tag: 'Full DB + AI',
+    desc: 'All rule checks plus AI analysis across every published node. Most thorough — takes 30–90 s.',
+    Icon: Globe,
+  },
+  {
+    id: 'quick',
+    label: 'Quick Audit',
+    tag: 'Rules only',
+    desc: 'Orphans, stale edges, missing fields, duplicates — no AI. Fast, good for routine checks.',
+    Icon: Zap,
+  },
+  {
+    id: 'node',
+    label: 'Node Audit',
+    tag: 'Single node',
+    desc: 'Deep-audit one specific node: quality, sources, orphan status, duplicates, AI review.',
+    Icon: Target,
+  },
+];
 
 function SeverityBadge({ s }: { s: FindingSeverity }) {
   const c = SEVERITY_COLOR[s] ?? '#64748b';
@@ -60,7 +86,7 @@ function FindingCard({
     setBusy(false);
   };
 
-  const afterState = finding.afterState as Record<string, unknown>;
+  const afterState  = finding.afterState  as Record<string, unknown>;
   const beforeState = finding.beforeState as Record<string, unknown>;
 
   return (
@@ -91,7 +117,6 @@ function FindingCard({
 
       {open && (
         <div className="border-t border-slate-700 p-3 space-y-3">
-          {/* Before / After */}
           <div className="grid grid-cols-2 gap-2">
             <div>
               <p className="text-[10px] font-semibold text-red-400 uppercase mb-1">Before</p>
@@ -107,7 +132,6 @@ function FindingCard({
             </div>
           </div>
 
-          {/* Reasoning */}
           <div>
             <p className="text-[10px] font-semibold text-slate-400 uppercase mb-1">Reasoning</p>
             <p className="text-xs text-slate-300 bg-slate-900/50 rounded p-2">{finding.reasoning}</p>
@@ -117,7 +141,6 @@ function FindingCard({
             <p className="text-xs text-red-400 bg-red-900/20 rounded p-2">Apply error: {finding.applyError}</p>
           )}
 
-          {/* Actions */}
           {finding.status === 'pending' && (
             <div className="flex gap-2 pt-1">
               <button
@@ -272,8 +295,16 @@ export default function ArchiveAuditDashboard() {
   const [sevFilter,   setSevFilter]   = useState('all');
   const [fixingAll,   setFixingAll]   = useState(false);
   const [fixAllResult, setFixAllResult] = useState<{ applied: number; failed: number } | null>(null);
-  const pollRef     = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pollCount   = useRef(0);
+
+  // ── Audit mode + node selector ──────────────────────────────────────────────
+  const [auditMode,   setAuditMode]   = useState<AuditMode>('complete');
+  const [nodeQuery,   setNodeQuery]   = useState('');
+  const [nodeHits,    setNodeHits]    = useState<{ id: string; title: string }[]>([]);
+  const [pickedNode,  setPickedNode]  = useState<{ id: string; title: string } | null>(null);
+  const nodeInputRef = useRef<HTMLInputElement>(null);
+
+  const pollRef   = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollCount = useRef(0);
 
   useEffect(() => {
     fetch('/api/admin/archive-audit/settings')
@@ -282,6 +313,22 @@ export default function ArchiveAuditDashboard() {
       .catch(() => {});
     loadRuns();
   }, []);
+
+  // Debounced node search
+  useEffect(() => {
+    if (auditMode !== 'node' || !nodeQuery.trim() || pickedNode) {
+      setNodeHits([]);
+      return;
+    }
+    const t = setTimeout(async () => {
+      const r = await fetch(`/api/search/quick?q=${encodeURIComponent(nodeQuery)}`).catch(() => null);
+      if (r?.ok) {
+        const d = await r.json() as { nodes: { id: string; title: string }[] };
+        setNodeHits(d.nodes ?? []);
+      }
+    }, 280);
+    return () => clearTimeout(t);
+  }, [nodeQuery, auditMode, pickedNode]);
 
   const loadRuns = async () => {
     const r = await fetch('/api/admin/archive-audit/runs');
@@ -299,7 +346,6 @@ export default function ArchiveAuditDashboard() {
 
   const loadRun = useCallback(async (id: string) => {
     pollCount.current += 1;
-    // Stop after 120 polls (~6 min) so the spinner doesn't run forever
     if (pollCount.current > 120) {
       stopPolling();
       setRunError('Audit timed out — the background worker may have been interrupted. Try again.');
@@ -318,16 +364,26 @@ export default function ArchiveAuditDashboard() {
   useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, [stopPolling]);
 
   const startAudit = async () => {
+    if (auditMode === 'node' && !pickedNode) return;
     setRunning(true);
     setActive(null);
     setRunError(null);
-    // POST now runs the audit synchronously — it returns only when complete (30-90s).
-    // Show "Audit running…" while waiting, then load results immediately on return.
-    const r = await fetch('/api/admin/archive-audit/run', { method: 'POST' });
+
+    const body: Record<string, unknown> = { mode: auditMode };
+    if (auditMode === 'node' && pickedNode) {
+      body.nodeId    = pickedNode.id;
+      body.nodeTitle = pickedNode.title;
+    }
+
+    const r = await fetch('/api/admin/archive-audit/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
     const j = await r.json().catch(() => ({})) as { runId?: string; error?: string };
+
     if (!r.ok) {
       if (r.status === 409 && j.runId) {
-        // Already running — poll the existing run
         pollCount.current = 0;
         void loadRun(j.runId!);
         pollRef.current = setInterval(() => loadRun(j.runId!), 3000);
@@ -337,10 +393,7 @@ export default function ArchiveAuditDashboard() {
       }
       return;
     }
-    // Run completed — load results immediately, no polling needed
-    if (j.runId) {
-      await loadRun(j.runId);
-    }
+    if (j.runId) { await loadRun(j.runId); }
     setRunning(false);
     loadRuns();
   };
@@ -381,6 +434,13 @@ export default function ArchiveAuditDashboard() {
     }
   };
 
+  const clearPickedNode = () => {
+    setPickedNode(null);
+    setNodeQuery('');
+    setNodeHits([]);
+    setTimeout(() => nodeInputRef.current?.focus(), 50);
+  };
+
   const allTypes: FindingType[] = ['orphan','stale_edge','weak_edge','missing_fields','duplicate','source_quality','ai_quality','category_mismatch'];
 
   const findings = (activeRun?.findings ?? [])
@@ -390,27 +450,121 @@ export default function ArchiveAuditDashboard() {
 
   const summary = activeRun?.summary as Record<string, unknown> | undefined;
 
+  const runLabel = auditMode === 'complete' ? 'Complete Audit'
+    : auditMode === 'quick' ? 'Quick Audit'
+    : pickedNode ? `Node — ${pickedNode.title}` : 'Node Audit';
+
+  const canRun = !running && (auditMode !== 'node' || !!pickedNode);
+
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold text-white">Archive Audit</h2>
           <p className="text-xs text-slate-400 mt-0.5">AI-powered consistency and quality analysis — approve changes before they apply</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={loadRuns} className="p-1.5 hover:bg-slate-700 rounded transition-colors" title="Refresh">
-            <RefreshCw size={13} className="text-slate-400" />
-          </button>
-          <button
-            onClick={startAudit}
-            disabled={running}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-700/50 hover:bg-cyan-700/80 text-cyan-300 text-xs font-semibold rounded transition-colors disabled:opacity-60"
-          >
-            {running ? <RotateCcw size={13} className="animate-spin" /> : <Play size={13} />}
-            {running ? 'Running…' : 'Run Audit'}
-          </button>
+        <button onClick={loadRuns} className="p-1.5 hover:bg-slate-700 rounded transition-colors flex-shrink-0" title="Refresh">
+          <RefreshCw size={13} className="text-slate-400" />
+        </button>
+      </div>
+
+      {/* ── Audit Launcher ──────────────────────────────────────────────────── */}
+      <div className="rounded-lg border border-slate-700 bg-slate-800/40 p-3 space-y-3">
+        {/* Mode cards */}
+        <div className="grid grid-cols-3 gap-2">
+          {AUDIT_MODES.map(({ id, label, tag, desc, Icon }) => (
+            <button
+              key={id}
+              onClick={() => {
+                setAuditMode(id);
+                if (id !== 'node') { setPickedNode(null); setNodeQuery(''); setNodeHits([]); }
+              }}
+              className={`flex flex-col items-start gap-1.5 p-2.5 rounded-lg border text-left transition-all ${
+                auditMode === id
+                  ? 'border-cyan-500/60 bg-cyan-900/20'
+                  : 'border-slate-600 bg-slate-800/60 hover:border-slate-500 hover:bg-slate-700/40'
+              }`}
+            >
+              <div className="flex items-center gap-1.5">
+                <Icon size={14} className={auditMode === id ? 'text-cyan-400' : 'text-slate-500'} />
+                <span className={`text-xs font-semibold ${auditMode === id ? 'text-cyan-200' : 'text-slate-300'}`}>{label}</span>
+              </div>
+              <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                auditMode === id ? 'bg-cyan-800/50 text-cyan-300' : 'bg-slate-700 text-slate-500'
+              }`}>{tag}</span>
+              <p className="text-[10px] text-slate-500 leading-snug">{desc}</p>
+            </button>
+          ))}
         </div>
+
+        {/* Node search — only shown in node mode */}
+        {auditMode === 'node' && (
+          <div className="relative">
+            {pickedNode ? (
+              <div className="flex items-center gap-2 px-2.5 py-2 bg-cyan-900/20 border border-cyan-500/40 rounded-lg">
+                <Target size={13} className="text-cyan-400 flex-shrink-0" />
+                <span className="text-xs text-cyan-200 flex-1 truncate font-medium">{pickedNode.title}</span>
+                <button onClick={clearPickedNode} className="text-slate-400 hover:text-slate-200 flex-shrink-0">
+                  <X size={13} />
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 px-2.5 py-2 bg-slate-900/60 border border-slate-600 rounded-lg focus-within:border-cyan-500 transition-colors">
+                  <Search size={13} className="text-slate-500 flex-shrink-0" />
+                  <input
+                    ref={nodeInputRef}
+                    type="text"
+                    value={nodeQuery}
+                    onChange={e => setNodeQuery(e.target.value)}
+                    placeholder="Search for a node to audit…"
+                    className="flex-1 bg-transparent text-xs text-slate-200 placeholder-slate-500 focus:outline-none"
+                    autoFocus
+                  />
+                  {nodeQuery && (
+                    <button onClick={() => { setNodeQuery(''); setNodeHits([]); }} className="text-slate-500 hover:text-slate-300">
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
+                {nodeHits.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl z-20 overflow-hidden">
+                    {nodeHits.map(n => (
+                      <button
+                        key={n.id}
+                        onClick={() => { setPickedNode(n); setNodeHits([]); setNodeQuery(''); }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                      >
+                        <Target size={11} className="text-slate-500 flex-shrink-0" />
+                        {n.title}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {nodeQuery.length >= 2 && nodeHits.length === 0 && (
+                  <p className="text-[10px] text-slate-500 mt-1.5 pl-1">No nodes found for "{nodeQuery}"</p>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Run button */}
+        <button
+          onClick={startAudit}
+          disabled={!canRun}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-cyan-700/50 hover:bg-cyan-700/80 disabled:opacity-40 disabled:cursor-not-allowed text-cyan-200 text-sm font-semibold rounded-lg transition-colors"
+        >
+          {running
+            ? <><RotateCcw size={14} className="animate-spin" /> Running…</>
+            : <><Play size={14} /> Run {runLabel}</>
+          }
+        </button>
+
+        {auditMode === 'node' && !pickedNode && !running && (
+          <p className="text-[10px] text-slate-500 text-center -mt-1">Search for a node above to enable this button</p>
+        )}
       </div>
 
       {/* Tabs */}
@@ -578,19 +732,18 @@ export default function ArchiveAuditDashboard() {
             </div>
           )}
 
-          {/* Findings */}
+          {/* Findings list */}
           <div className="space-y-2">
             {findings.map(f => (
               <FindingCard key={f.id} finding={f} onAction={handleAction} />
             ))}
           </div>
 
-          {/* No run yet */}
+          {/* No run selected yet */}
           {!activeRun && !running && !runError && (
-            <div className="flex flex-col items-center justify-center py-10 text-center">
-              <AlertTriangle size={28} className="text-slate-600 mb-3" />
-              <p className="text-sm text-slate-400">No audit run selected.</p>
-              <p className="text-xs text-slate-500 mt-1">Click <strong className="text-slate-300">Run Audit</strong> to analyse the archive.</p>
+            <div className="flex flex-col items-center justify-center py-6 text-center">
+              <AlertTriangle size={22} className="text-slate-600 mb-2" />
+              <p className="text-xs text-slate-400">Select an audit type above and click <strong className="text-slate-300">Run</strong>, or pick a past run to review.</p>
             </div>
           )}
         </div>

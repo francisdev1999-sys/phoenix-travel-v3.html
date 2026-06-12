@@ -7,7 +7,11 @@ import { runAiAnalysis } from './ai-analysis';
 import type { AuditSettings, AuditRunSummary } from './types';
 import { DEFAULT_AUDIT_SETTINGS } from './types';
 
-export async function runAudit(runId: string, settings: AuditSettings): Promise<void> {
+export async function runAudit(
+  runId: string,
+  settings: AuditSettings,
+  scope: { mode?: string; nodeId?: string; nodeTitle?: string } = {},
+): Promise<void> {
   try {
     const c = settings.checks;
 
@@ -22,14 +26,21 @@ export async function runAudit(runId: string, settings: AuditSettings): Promise<
         c.sourceQuality ? checkSourceQuality()                              : [],
       ]);
 
-    const ruleFindings = [...orphans, ...staleEdges, ...weakEdges,
-                          ...missingFields, ...duplicates, ...sourceQuality];
+    const allRule = [...orphans, ...staleEdges, ...weakEdges,
+                     ...missingFields, ...duplicates, ...sourceQuality];
+
+    // Node audit: keep only findings that reference the targeted node
+    const ruleFindings = scope.nodeId
+      ? allRule.filter(f => f.nodeId === scope.nodeId)
+      : allRule;
 
     // ── 2. AI analysis — optional, each batch has its own 20 s abort ─────────
     let aiFindings: Awaited<ReturnType<typeof runAiAnalysis>> = [];
     if (c.aiQuality || c.categoryMismatch) {
       const nodes = await prisma.node.findMany({
-        where:  { status: 'published' },
+        where: scope.nodeId
+          ? { id: scope.nodeId, status: 'published' }
+          : { status: 'published' },
         select: {
           id: true, title: true, description: true, evidenceLevel: true,
           confidenceScore: true, mainstreamView: true,
@@ -37,7 +48,7 @@ export async function runAudit(runId: string, settings: AuditSettings): Promise<
           _count:   { select: { claims: true, criticisms: true, tags: true } },
           tags:     { select: { tag: true } },
         },
-        take: settings.maxNodesPerAiRun,
+        take: scope.nodeId ? 1 : settings.maxNodesPerAiRun,
       });
       aiFindings = await runAiAnalysis(nodes, settings);
     }
