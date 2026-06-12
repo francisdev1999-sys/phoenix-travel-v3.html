@@ -38,6 +38,8 @@ export interface AuditRunSummary {
   byType:      Record<string, number>;
   bySeverity:  Record<string, number>;
   autoFixable: number;
+  checksRan?:  Record<string, number>;  // check name → raw findings count before capping
+  aiSkipped?:  boolean;                 // true when AI enabled in settings but key is missing
 }
 
 export interface AuditRun {

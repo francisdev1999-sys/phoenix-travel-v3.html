@@ -697,21 +697,63 @@ export default function ArchiveAuditDashboard() {
           )}
 
           {/* Archive healthy — completed run with zero total findings */}
-          {activeRun?.status === 'complete' && ((summary?.total as number) ?? 0) === 0 && (
-            <div className="flex flex-col items-center justify-center py-8 text-center space-y-3 border border-green-700/30 rounded-lg bg-green-900/10">
-              <CheckCircle size={32} className="text-green-400" />
-              <div>
-                <p className="text-sm font-semibold text-green-300">All good — no major issues or findings</p>
-                <p className="text-xs text-slate-400 mt-1">All automated checks passed. The archive is in good shape.</p>
+          {activeRun?.status === 'complete' && ((summary?.total as number) ?? 0) === 0 && (() => {
+            const checksRan = summary?.checksRan as Record<string, number> | undefined;
+            const aiSkipped = summary?.aiSkipped as boolean | undefined;
+            const CHECK_NAMES: Record<string, string> = {
+              orphans: 'Orphan nodes', stale_edges: 'Stale edges', weak_edges: 'Weak edges',
+              missing_fields: 'Incomplete nodes', duplicates: 'Duplicates',
+              source_quality: 'Source quality', ai: 'AI analysis',
+            };
+            return (
+              <div className="space-y-3 border border-green-700/30 rounded-lg bg-green-900/10 p-4">
+                <div className="flex flex-col items-center text-center space-y-2">
+                  <CheckCircle size={28} className="text-green-400" />
+                  <div>
+                    <p className="text-sm font-semibold text-green-300">All good — no major issues or findings</p>
+                    <p className="text-xs text-slate-400 mt-0.5">All automated checks passed. The archive is in good shape.</p>
+                  </div>
+                  {activeRun.completedAt && (
+                    <p className="text-[10px] text-slate-500">
+                      {new Date(activeRun.completedAt).toLocaleString()} · {activeRun.triggeredBy}
+                    </p>
+                  )}
+                </div>
+
+                {/* Per-check breakdown */}
+                {checksRan && Object.keys(checksRan).length > 0 && (
+                  <div className="border-t border-green-800/40 pt-3">
+                    <p className="text-[10px] text-slate-500 uppercase font-semibold mb-2">Checks ran</p>
+                    <div className="grid grid-cols-2 gap-1">
+                      {Object.entries(checksRan).map(([key, count]) => (
+                        <div key={key} className="flex items-center justify-between gap-2 text-[11px] bg-slate-800/50 rounded px-2 py-1">
+                          <span className="flex items-center gap-1 text-slate-400">
+                            <CheckCircle size={9} className="text-green-500 flex-shrink-0" />
+                            {CHECK_NAMES[key] ?? key}
+                          </span>
+                          <span className={count > 0 ? 'text-amber-400 font-semibold' : 'text-slate-500'}>
+                            {count} found
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* AI skipped warning */}
+                {aiSkipped && (
+                  <div className="flex items-start gap-2 p-2 bg-amber-900/20 border border-amber-700/30 rounded text-[11px] text-amber-300">
+                    <AlertTriangle size={12} className="flex-shrink-0 mt-0.5" />
+                    <span>AI checks were <strong>skipped</strong> — <code className="text-amber-200">ANTHROPIC_API_KEY</code> is not set in Railway. Set it to enable AI quality analysis.</span>
+                  </div>
+                )}
+
+                {!checksRan && (
+                  <p className="text-[10px] text-slate-500 text-center">Run a new audit to see a per-check breakdown.</p>
+                )}
               </div>
-              {activeRun.completedAt && (
-                <p className="text-[10px] text-slate-500">
-                  Completed {new Date(activeRun.completedAt).toLocaleString()}
-                  {' · '}{activeRun.triggeredBy}
-                </p>
-              )}
-            </div>
-          )}
+            );
+          })()}
 
           {/* Filter returned nothing, but findings do exist */}
           {activeRun?.status === 'complete' && ((summary?.total as number) ?? 0) > 0 && findings.length === 0 && (

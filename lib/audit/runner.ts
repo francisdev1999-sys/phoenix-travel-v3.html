@@ -90,7 +90,20 @@ export async function runAudit(
       if (f.autoFixable) autoFixable++;
     }
 
-    const summary: AuditRunSummary = { total: toCreate.length, byType, bySeverity, autoFixable };
+    // Diagnostic: raw per-check counts (before capping)
+    const checksRan: Record<string, number> = {};
+    if (c.orphans)       checksRan.orphans       = orphans.length;
+    if (c.staleEdges)    checksRan.stale_edges    = staleEdges.length;
+    if (c.weakEdges)     checksRan.weak_edges     = weakEdges.length;
+    if (c.missingFields) checksRan.missing_fields = missingFields.length;
+    if (c.duplicates)    checksRan.duplicates     = duplicates.length;
+    if (c.sourceQuality) checksRan.source_quality = sourceQuality.length;
+
+    const aiEnabled = c.aiQuality || c.categoryMismatch;
+    const aiSkipped = aiEnabled && !process.env.ANTHROPIC_API_KEY;
+    if (aiEnabled && !aiSkipped) checksRan.ai = aiFindings.length;
+
+    const summary: AuditRunSummary = { total: toCreate.length, byType, bySeverity, autoFixable, checksRan, aiSkipped };
 
     await prisma.archiveAuditRun.update({
       where: { id: runId },
