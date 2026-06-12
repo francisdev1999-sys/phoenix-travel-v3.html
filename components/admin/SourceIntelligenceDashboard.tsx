@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Globe, CheckCircle2, Clock, XCircle, AlertTriangle,
   ExternalLink, RefreshCw, Play, Shield, TrendingUp, Database,
-  BookOpen, FlaskConical, Zap, ChevronRight, Filter,
+  BookOpen, FlaskConical, Zap, ChevronRight, Filter, Network,
 } from 'lucide-react';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -49,7 +49,32 @@ interface BudgetStatus {
   monthly: { spent: number; limit: number; stop: boolean };
 }
 
-type InnerTab = 'queue' | 'runs' | 'maturity' | 'domains';
+interface DiscoveredNode {
+  id: string;
+  slug: string;
+  title: string;
+  category: string;
+  description: string;
+  mainstreamView: string | null;
+  evidenceLevel: string;
+  confidenceScore: number;
+  color: string | null;
+  icon: string | null;
+  year: number | null;
+  tags: string[];
+  claims: string[];
+  criticisms: string[];
+  openQuestions: string[];
+  sourceUrl: string | null;
+  discoveryQuery: string | null;
+  relevanceScore: number;
+  qualityScore: number;
+  noveltyScore: number;
+  status: string;
+  discoveredAt: string;
+}
+
+type InnerTab = 'queue' | 'runs' | 'maturity' | 'domains' | 'nodes';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -89,6 +114,16 @@ export default function SourceIntelligenceDashboard() {
   const [runError,   setRunError]   = useState<string | null>(null);
   const [selected,   setSelected]   = useState<DiscoveredSource | null>(null);
 
+  // Node discovery state
+  const [discoveredNodes,  setDiscoveredNodes]  = useState<DiscoveredNode[]>([]);
+  const [nodeCounts,       setNodeCounts]       = useState<Record<string, number>>({});
+  const [nodeTotal,        setNodeTotal]        = useState(0);
+  const [nodeStatusFilter, setNodeStatusFilter] = useState('pending_review');
+  const [nodeLoading,      setNodeLoading]      = useState(false);
+  const [nodeRunning,      setNodeRunning]      = useState(false);
+  const [nodeRunError,     setNodeRunError]     = useState<string | null>(null);
+  const [selectedNode,     setSelectedNode]     = useState<DiscoveredNode | null>(null);
+
   const loadSources = useCallback(async (st = statusFilter, off = 0) => {
     setLoading(true);
     try {
@@ -113,7 +148,7 @@ export default function SourceIntelligenceDashboard() {
   }, []);
 
   useEffect(() => {
-    loadSources(); loadRuns(); loadMaturity();
+    loadSources(); loadRuns(); loadMaturity(); loadDiscoveredNodes();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const triggerDiscovery = async () => {
@@ -149,6 +184,39 @@ export default function SourceIntelligenceDashboard() {
   };
 
   const handleStatusFilter = (s: string) => { setStatusFilter(s); loadSources(s, 0); };
+
+  const loadDiscoveredNodes = useCallback(async (st = nodeStatusFilter, off = 0) => {
+    setNodeLoading(true);
+    try {
+      const r = await fetch(`/api/admin/discovered-nodes?status=${st}&limit=30&offset=${off}`);
+      if (!r.ok) return;
+      const d = await r.json() as { nodes: DiscoveredNode[]; total: number; counts: Record<string, number> };
+      setDiscoveredNodes(d.nodes); setNodeTotal(d.total); setNodeCounts(d.counts);
+    } finally { setNodeLoading(false); }
+  }, [nodeStatusFilter]);
+
+  const triggerNodeDiscovery = async () => {
+    setNodeRunning(true); setNodeRunError(null);
+    try {
+      const r = await fetch('/api/admin/discovered-nodes', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maxNodes: 10 }),
+      });
+      const d = await r.json() as { error?: string; nodesProposed?: number };
+      if (!r.ok) { setNodeRunError(d.error ?? `Server error ${r.status}`); return; }
+      await loadDiscoveredNodes();
+    } catch (e) { setNodeRunError(String(e)); }
+    finally { setNodeRunning(false); }
+  };
+
+  const reviewDiscoveredNode = async (id: string, action: 'approve' | 'reject', reason?: string) => {
+    await fetch(`/api/admin/discovered-nodes/${id}/review`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, reason }),
+    });
+    setSelectedNode(null);
+    await loadDiscoveredNodes(nodeStatusFilter);
+  };
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
@@ -208,6 +276,7 @@ export default function SourceIntelligenceDashboard() {
           { id: 'runs',     label: 'Discovery Runs',  icon: Play },
           { id: 'maturity', label: 'Research Maturity', icon: TrendingUp },
           { id: 'domains',  label: 'Domain Reputation', icon: Globe },
+          { id: 'nodes',    label: 'Node Discovery',    icon: Network },
         ] as const).map(t => {
           const Icon = t.icon;
           return (
@@ -380,6 +449,161 @@ export default function SourceIntelligenceDashboard() {
 
       {/* ── DOMAINS TAB ── */}
       {tab === 'domains' && <DomainReputationTab />}
+
+      {/* ── NODE DISCOVERY TAB ── */}
+      {tab === 'nodes' && (
+        <div className="space-y-3">
+          {/* Node counts */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: 'Pending', value: nodeCounts.pending_review ?? 0, color: '#facc15' },
+              { label: 'Approved', value: nodeCounts.approved ?? 0, color: '#4ade80' },
+              { label: 'Rejected', value: nodeCounts.rejected ?? 0, color: '#ef4444' },
+            ].map(s => (
+              <div key={s.label} className="p-2.5 rounded-xl bg-white/3 border border-white/6">
+                <p className="text-[10px] text-slate-500 mb-1">{s.label}</p>
+                <p className="text-xl font-bold" style={{ color: s.color }}>{s.value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Controls */}
+          <div className="flex gap-2 items-center flex-wrap">
+            <div className="flex gap-1.5">
+              {(['pending_review', 'approved', 'rejected', 'all'] as const).map(s => (
+                <button key={s} onClick={() => { setNodeStatusFilter(s); loadDiscoveredNodes(s); }}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] border transition-all ${
+                    nodeStatusFilter === s ? 'bg-white/10 border-white/20 text-white' : 'bg-white/3 border-white/6 text-slate-600 hover:text-white'
+                  }`}>
+                  {s.replace(/_/g, ' ')}
+                </button>
+              ))}
+            </div>
+            <button onClick={triggerNodeDiscovery} disabled={nodeRunning}
+              className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] bg-blue-700/40 border border-blue-600/50 text-blue-200 hover:bg-blue-700/60 disabled:opacity-50 transition-all">
+              {nodeRunning ? <RefreshCw size={11} className="animate-spin" /> : <Network size={11} />}
+              {nodeRunning ? 'Discovering…' : 'Discover Nodes'}
+            </button>
+          </div>
+          {nodeRunError && <p className="text-xs text-red-400 bg-red-900/20 border border-red-800/30 p-2 rounded-lg">{nodeRunError}</p>}
+
+          {nodeLoading && discoveredNodes.length === 0 && (
+            <div className="py-8 text-center text-slate-600 text-sm">
+              <RefreshCw size={18} className="animate-spin mx-auto mb-2" /> Loading…
+            </div>
+          )}
+
+          <div className="space-y-2">
+            {discoveredNodes.map(dn => (
+              <button key={dn.id} onClick={() => setSelectedNode(dn)}
+                className="w-full text-left p-3 rounded-xl bg-white/3 border border-white/6 hover:border-blue-700/40 hover:bg-blue-900/10 transition-all group">
+                <div className="flex items-start gap-2">
+                  <span className="text-xl leading-none mt-0.5">{dn.icon ?? '📌'}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className="text-sm font-semibold text-white group-hover:text-blue-200 truncate">{dn.title}</p>
+                      <span className="flex-none text-[9px] px-1.5 py-0.5 rounded-full border"
+                        style={{ color: dn.status === 'pending_review' ? '#facc15' : dn.status === 'approved' ? '#4ade80' : '#ef4444',
+                                 borderColor: dn.status === 'pending_review' ? '#854d0e' : dn.status === 'approved' ? '#166534' : '#7f1d1d' }}>
+                        {dn.status.replace(/_/g, ' ')}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 mb-1">{dn.category} {dn.year ? `· ${dn.year}` : ''}</p>
+                    <p className="text-[11px] text-slate-400 line-clamp-2">{dn.description}</p>
+                    <div className="flex gap-3 mt-1.5 text-[10px] text-slate-600">
+                      <span>Relevance {Math.round(dn.relevanceScore * 100)}%</span>
+                      <span>Quality {Math.round(dn.qualityScore * 100)}%</span>
+                      <span>Novelty {Math.round(dn.noveltyScore * 100)}%</span>
+                    </div>
+                  </div>
+                </div>
+              </button>
+            ))}
+            {!nodeLoading && discoveredNodes.length === 0 && (
+              <p className="text-sm text-slate-600 text-center py-8">
+                No discovered nodes yet. Click &quot;Discover Nodes&quot; to start.
+              </p>
+            )}
+          </div>
+
+          <p className="text-[10px] text-slate-600">{nodeTotal} total nodes in this status</p>
+        </div>
+      )}
+
+      {/* ── Node Detail Modal ── */}
+      <AnimatePresence>
+        {selectedNode && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
+            onClick={() => setSelectedNode(null)}>
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-[#0f1117] border border-white/10 rounded-2xl p-5 max-w-lg w-full max-h-[85vh] overflow-y-auto">
+              <div className="flex items-start gap-2 mb-3">
+                <span className="text-2xl">{selectedNode.icon ?? '📌'}</span>
+                <div>
+                  <h3 className="text-base font-bold text-white">{selectedNode.title}</h3>
+                  <p className="text-[11px] text-slate-500">{selectedNode.category} · <code className="text-blue-400">{selectedNode.slug}</code></p>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-300 mb-3 leading-relaxed">{selectedNode.description}</p>
+
+              {selectedNode.claims.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1.5">Claims</p>
+                  <ul className="space-y-1">
+                    {selectedNode.claims.map((c, i) => <li key={i} className="text-[11px] text-slate-400 flex gap-1.5"><span className="text-green-500 flex-none">✓</span>{c}</li>)}
+                  </ul>
+                </div>
+              )}
+
+              {selectedNode.criticisms.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1.5">Criticisms</p>
+                  <ul className="space-y-1">
+                    {selectedNode.criticisms.map((c, i) => <li key={i} className="text-[11px] text-slate-400 flex gap-1.5"><span className="text-red-400 flex-none">⚠</span>{c}</li>)}
+                  </ul>
+                </div>
+              )}
+
+              <div className="flex gap-3 text-[10px] text-slate-500 mb-3 flex-wrap">
+                <span>Evidence: <span className="text-white">{selectedNode.evidenceLevel.replace(/_/g, ' ')}</span></span>
+                <span>Confidence: <span className="text-white">{Math.round(selectedNode.confidenceScore * 100)}%</span></span>
+                {selectedNode.year && <span>Year: <span className="text-white">{selectedNode.year}</span></span>}
+              </div>
+
+              {selectedNode.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-3">
+                  {selectedNode.tags.map(t => (
+                    <span key={t} className="px-1.5 py-0.5 rounded-full text-[9px] bg-white/5 border border-white/10 text-slate-400">{t}</span>
+                  ))}
+                </div>
+              )}
+
+              {selectedNode.sourceUrl && (
+                <a href={selectedNode.sourceUrl} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-[10px] text-blue-400 hover:text-blue-300 mb-4">
+                  <ExternalLink size={10} /> Wikipedia source
+                </a>
+              )}
+
+              {selectedNode.status === 'pending_review' && (
+                <div className="flex gap-2 mt-1">
+                  <button onClick={() => reviewDiscoveredNode(selectedNode.id, 'approve')}
+                    className="flex-1 py-2 rounded-lg text-xs font-semibold bg-green-800/50 border border-green-700/50 text-green-300 hover:bg-green-800/70 transition-colors">
+                    ✓ Approve → Add to Graph
+                  </button>
+                  <button onClick={() => reviewDiscoveredNode(selectedNode.id, 'reject')}
+                    className="flex-1 py-2 rounded-lg text-xs font-semibold bg-red-900/40 border border-red-800/40 text-red-400 hover:bg-red-900/60 transition-colors">
+                    ✗ Reject
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Source Detail Modal ── */}
       <AnimatePresence>

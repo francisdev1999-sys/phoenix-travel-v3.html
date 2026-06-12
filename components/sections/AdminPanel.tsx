@@ -52,8 +52,10 @@ export default function AdminPanel() {
   const [embStats, setEmbStats]     = useState<{ totalPublished: number; hasEmbedding: number; missing: number; coveragePct: number; hasOpenAiKey: boolean } | null>(null);
   const [embGenerating, setEmbGenerating] = useState(false);
   const [embMsg, setEmbMsg]         = useState<string | null>(null);
-  const [scanning,  setScanning]    = useState(false);
-  const [scanMsg,   setScanMsg]     = useState<string | null>(null);
+  const [scanning,      setScanning]      = useState(false);
+  const [scanMsg,       setScanMsg]       = useState<string | null>(null);
+  const [nodeScanning,  setNodeScanning]  = useState(false);
+  const [nodeScanMsg,   setNodeScanMsg]   = useState<string | null>(null);
 
   useEffect(() => {
     if (tab === 'nodes') {
@@ -128,6 +130,25 @@ export default function AdminPanel() {
       setSeedMsg('Seed request failed.');
     } finally {
       setSeeding(false);
+    }
+  };
+
+  const runNodeDiscoveryScan = async () => {
+    setNodeScanning(true);
+    setNodeScanMsg(null);
+    try {
+      const r = await fetch('/api/admin/discovered-nodes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maxNodes: 15 }),
+      });
+      const d = await r.json() as { nodesProposed?: number; seedsChecked?: number; skipped?: number; error?: string };
+      if (!r.ok) { setNodeScanMsg(d.error ?? `Error ${r.status}`); return; }
+      setNodeScanMsg(`Done — ${d.seedsChecked} seeds checked, ${d.nodesProposed} node proposals created`);
+    } catch (e) {
+      setNodeScanMsg(`Failed: ${String(e)}`);
+    } finally {
+      setNodeScanning(false);
     }
   };
 
@@ -331,6 +352,36 @@ export default function AdminPanel() {
                   >
                     {scanning ? <Loader2 size={12} className="animate-spin" /> : <Search size={12} />}
                     {scanning ? 'Scanning…' : 'Run Full Scan'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Node Discovery Scan */}
+              <div className="p-4 rounded-xl border border-blue-900/30 bg-blue-950/10 flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Cpu size={16} className="text-blue-400 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-white">AI Node Discovery</p>
+                    <p className="text-xs text-slate-500">
+                      Uses AI to search Wikipedia for archive-relevant topics not yet in the graph.
+                      Proposals land in Source Intel → Node Discovery for admin review before going live.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 flex-wrap">
+                  {nodeScanMsg && (
+                    <div className={`flex items-center gap-1.5 text-xs max-w-xs ${nodeScanMsg.startsWith('Done') ? 'text-blue-400' : 'text-red-400'}`}>
+                      {nodeScanMsg.startsWith('Done') ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}
+                      <span>{nodeScanMsg}</span>
+                    </div>
+                  )}
+                  <button
+                    onClick={runNodeDiscoveryScan}
+                    disabled={nodeScanning}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-700 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap"
+                  >
+                    {nodeScanning ? <Loader2 size={12} className="animate-spin" /> : <Cpu size={12} />}
+                    {nodeScanning ? 'Discovering…' : 'Discover Nodes'}
                   </button>
                 </div>
               </div>
