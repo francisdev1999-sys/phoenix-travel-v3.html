@@ -29,8 +29,9 @@ import BetaInviteManager from '@/components/admin/BetaInviteManager';
 import BetaAnalytics from '@/components/admin/BetaAnalytics';
 import CROAuditDashboard from '@/components/admin/CROAuditDashboard';
 import SourceIntelligenceDashboard from '@/components/admin/SourceIntelligenceDashboard';
+import CleanupDashboard from '@/components/admin/CleanupDashboard';
 
-type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports' | 'imports' | 'drafts' | 'suggestions' | 'users' | 'moderation' | 'platform' | 'intelligence' | 'integrity' | 'similarity' | 'ai-activity' | 'ai-audit' | 'source-enrichment' | 'beta-feedback' | 'beta-invites' | 'beta-analytics' | 'cro-audit' | 'source-intel';
+type Tab = 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports' | 'imports' | 'drafts' | 'suggestions' | 'users' | 'moderation' | 'platform' | 'intelligence' | 'integrity' | 'similarity' | 'ai-activity' | 'ai-audit' | 'source-enrichment' | 'beta-feedback' | 'beta-invites' | 'beta-analytics' | 'cro-audit' | 'source-intel' | 'cleanup';
 
 export default function AdminPanel() {
   const { data: session, status } = useSession();
@@ -218,6 +219,7 @@ export default function AdminPanel() {
     { id: 'beta-feedback',      label: 'Beta Feedback',   icon: <MessageSquarePlus size={13} /> },
     { id: 'beta-invites',       label: 'Beta Invites',    icon: <Ticket size={13} /> },
     { id: 'beta-analytics',     label: 'Beta Analytics',  icon: <TrendingUp size={13} /> },
+    { id: 'cleanup',            label: 'AI Cleanup',      icon: <AlertCircle size={13} />, ownerOnly: true },
     { id: 'platform',          label: 'Platform',        icon: <BarChart3 size={13} />,  ownerOnly: true },
     { id: 'intelligence',      label: 'User Intel',      icon: <Brain size={13} />,      ownerOnly: true },
     { id: 'ai-activity',       label: 'AI Activity',     icon: <Sparkles size={13} />,   ownerOnly: true },
@@ -505,6 +507,7 @@ export default function AdminPanel() {
           {tab === 'beta-feedback'     && <BetaFeedbackAdmin />}
           {tab === 'beta-invites'      && <BetaInviteManager />}
           {tab === 'beta-analytics'    && <BetaAnalytics />}
+          {tab === 'cleanup'           && isOwner && <CleanupDashboard adminEmail={session.user?.email ?? ''} />}
           {tab === 'intelligence'      && isOwner && <UserIntelligenceDashboard />}
           {tab === 'ai-activity'       && isOwner && <AiActivityDashboard />}
         </motion.div>
