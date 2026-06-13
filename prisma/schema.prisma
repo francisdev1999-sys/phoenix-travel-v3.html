@@ -1044,11 +1044,12 @@ model CleanupFinding {
   reasons           Json
   risksIfKept       Json
   risksIfDeleted    Json
-  recommendedAction String
-  status            String          @default("open")
-  createdAt         DateTime        @default(now())
-  resolvedBy        String?
-  resolvedAt        DateTime?
+  recommendedAction    String
+  blacklistSuggestion  String?
+  status               String          @default("open")
+  createdAt            DateTime        @default(now())
+  resolvedBy           String?
+  resolvedAt           DateTime?
 
   auditRun CleanupAuditRun @relation(fields: [auditRunId], references: [id], onDelete: Cascade)
 }
