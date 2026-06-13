@@ -166,8 +166,8 @@ function KnowledgeGraph() {
         id: gNode.id,
         x: cx + Math.cos(angle) * radiusVariation,
         y: cy + Math.sin(angle) * radiusVariation,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
+        vx: 0,
+        vy: 0,
         node: gNode,
         radius: (degMap[gNode.id] ?? 0) >= 5 ? 26 : 18,
         pulsePhase: Math.random() * Math.PI * 2,
@@ -253,8 +253,8 @@ function KnowledgeGraph() {
         });
 
         if (draggingRef.current.nodeId !== vn.id) {
-          vn.vx *= 0.95;
-          vn.vy *= 0.95;
+          vn.vx *= 0.88;
+          vn.vy *= 0.88;
           vn.x += vn.vx;
           vn.y += vn.vy;
         }
@@ -263,8 +263,8 @@ function KnowledgeGraph() {
       // Convergence detection — pause physics when settled
       let ke = 0;
       vNodes.forEach(vn => { ke += vn.vx * vn.vx + vn.vy * vn.vy; });
-      if (ke < 0.005 * vNodes.length) {
-        if (++stableCountRef.current > 90) physicsActiveRef.current = false;
+      if (ke < 0.01 * vNodes.length) {
+        if (++stableCountRef.current > 60) physicsActiveRef.current = false;
       } else {
         stableCountRef.current = 0;
       }

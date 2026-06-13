@@ -1,7 +1,7 @@
 'use client';
 import { Suspense, lazy, useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
-import { MessageSquare, Rabbit, X } from 'lucide-react';
+import { MessageSquare, Rabbit, X, Globe2, Network } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import NavBar from '@/components/layout/NavBar';
 import LandingPage from '@/components/sections/LandingPage';
@@ -26,6 +26,50 @@ const IntelFeed         = lazy(() => import('@/components/sections/IntelFeed'));
 import Breadcrumb from '@/components/navigation/Breadcrumb';
 import CommandPalette from '@/components/navigation/CommandPalette';
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+  return isMobile;
+}
+
+function MobileGraphFallback() {
+  const { navigateToUniverse, navigateToGalaxy } = useUserStore();
+  return (
+    <div className="flex flex-col items-center justify-center h-full px-6 text-center gap-6">
+      <div className="w-16 h-16 rounded-full border border-purple-500/40 bg-purple-950/30 flex items-center justify-center">
+        <Network size={28} className="text-purple-400" />
+      </div>
+      <div className="space-y-2">
+        <h2 className="text-lg font-bold text-white">Research Graph</h2>
+        <p className="text-sm text-slate-400 max-w-xs">
+          The interactive graph works best on a larger screen. On mobile, browse by topic instead.
+        </p>
+      </div>
+      <div className="flex flex-col gap-3 w-full max-w-xs">
+        <button
+          onClick={navigateToUniverse}
+          className="flex items-center justify-center gap-2 w-full px-5 py-3.5 rounded-xl bg-purple-700 hover:bg-purple-600 text-white font-bold text-sm transition-all"
+        >
+          <Globe2 size={16} />
+          Browse Galaxies
+        </button>
+        <button
+          onClick={() => navigateToGalaxy('ancient-civilizations', 'Ancient Civilizations')}
+          className="flex items-center justify-center gap-2 w-full px-5 py-3.5 rounded-xl border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white font-semibold text-sm transition-all"
+        >
+          Start Exploring
+        </button>
+      </div>
+      <p className="text-xs text-slate-600">Rotate to landscape or open on desktop for the full graph experience.</p>
+    </div>
+  );
+}
+
 function LoadingSpinner() {
   return (
     <div className="flex-1 flex items-center justify-center">
@@ -39,6 +83,7 @@ function LoadingSpinner() {
 
 export default function AppShell() {
   const { currentView, rabbitHoleChain, setCurrentView, researchMode } = useUserStore();
+  const isMobile = useIsMobile();
   const [sidePanel, setSidePanel] = useState<'ai' | 'rabbit' | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const isLanding = currentView === 'landing';
@@ -198,7 +243,7 @@ export default function AppShell() {
                   <AnimatePresence mode="wait">
                     {currentView === 'graph' && (
                       <motion.div key="graph" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">
-                        <KnowledgeGraph />
+                        {isMobile ? <MobileGraphFallback /> : <KnowledgeGraph />}
                       </motion.div>
                     )}
                     {currentView === 'universe' && (
