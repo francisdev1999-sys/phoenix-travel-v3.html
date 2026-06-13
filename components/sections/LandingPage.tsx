@@ -184,9 +184,7 @@ export default function LandingPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
-    useUserStore.getState().searchQuery;
-    // Set search query and open universe (which handles search)
-    useUserStore.setState({ searchQuery: searchQuery.trim() });
+    useUserStore.getState().setSearchQuery(searchQuery.trim());
     navigateToUniverse();
   };
 
