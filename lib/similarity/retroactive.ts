@@ -73,7 +73,7 @@ export async function retroactiveSimilarityRebuild(): Promise<void> {
       await Promise.all(
         batch.map(b =>
           prisma.researchSimilarity.upsert({
-            where:  { nodeAId_nodeBId: { nodeAId: b.nodeAId, nodeBId: b.nodeBId } },
+            where:  { nodeAId_nodeBId: { nodeAId: b.nodeAId!, nodeBId: b.nodeBId! } },
             create: b,
             update: {
               overallSimilarity:      b.overallSimilarity,

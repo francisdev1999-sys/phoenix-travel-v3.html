@@ -6,6 +6,8 @@ datasource db {
   provider = "postgresql"
 }
 
+// ── Auth ──────────────────────────────────────────────────────────────────────
+
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -33,19 +35,6 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  createdAt     DateTime  @default(now())
-
-  accounts Account[]
-  sessions Session[]
-  progress UserProgress?
-}
-
 model VerificationToken {
   identifier String
   token      String   @unique
@@ -53,6 +42,536 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+model User {
+  id                String    @id @default(cuid())
+  name              String?
+  email             String?   @unique
+  emailVerified     DateTime?
+  image             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now()) @updatedAt
+  role              String    @default("user")
+  lastActiveAt      DateTime  @default(now())
+  trustScore        Float     @default(50)
+  activityScore     Float     @default(0)
+  rank              String    @default("New Seeker")
+  isBanned          Boolean   @default(false)
+  banReason         String?
+  banExpiresAt      DateTime?
+  warningCount      Int       @default(0)
+  submissionCount   Int       @default(0)
+  approvedCount     Int       @default(0)
+  rejectedCount     Int       @default(0)
+  betaGroup         String?
+  adminReviewStatus String?
+  adminReviewNote   String?
+
+  accounts              Account[]
+  sessions              Session[]
+  progress              UserProgress?
+  permissions           UserPermission?
+  trustEvents           UserTrustEvent[]
+  activityLogs          UserActivityLog[]
+  activityEvents        UserActivityEvent[]
+  moderationStatus      UserModerationStatus?
+  riskProfile           UserRiskProfile?
+  achievements          UserAchievement[]
+  earnedBadges          UserBadge[]  @relation("earnedBadges")
+  reports               Report[]              @relation("SubmittedReports")
+  reportedReports       Report[]              @relation("ReportedUser")
+  moderatedActions      ModerationAction[]    @relation("ModeratedUser")
+  moderatorActions      ModerationAction[]    @relation("ModeratorActions")
+  aiResearchReviews     AiResearchReview[]
+  proposedNodes         ProposedNode[]        @relation("SubmittedProposedNodes")
+  reviewedProposedNodes ProposedNode[]        @relation("ReviewedProposedNodes")
+  proposedEdges         ProposedEdge[]        @relation("SubmittedProposedEdges")
+  reviewedProposedEdges ProposedEdge[]        @relation("ReviewedProposedEdges")
+  submittedSources      Source[]              @relation("SubmittedSources")
+  reviewedSources       Source[]              @relation("ReviewedSources")
+  betaFeedbacks         BetaFeedback[]
+  betaRedemptions       BetaInviteRedemption[]
+  usageEvents           UsageEvent[]
+  nodeExplorations      NodeExploration[]
+  connectionDiscoveries ConnectionDiscovery[]
+}
+
+// ── Taxonomy ──────────────────────────────────────────────────────────────────
+
+model Galaxy {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  name        String
+  description String?
+  icon        String?
+  color       String?
+  order       Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now()) @updatedAt
+
+  categories  Category[]
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  name        String
+  description String?
+  color       String?
+  parentId    String?
+  galaxyId    String?
+
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[] @relation("CategoryHierarchy")
+  galaxy      Galaxy?    @relation(fields: [galaxyId], references: [id], onDelete: SetNull)
+  nodes       Node[]
+}
+
+// ── Core Graph ────────────────────────────────────────────────────────────────
+
+model Node {
+  id                String                   @id @default(cuid())
+  title             String
+  categoryId        String
+  description       String
+  mainstreamView    String?
+  evidenceLevel     String                   @default("speculative")
+  confidenceScore   Float                    @default(0.5)
+  color             String?
+  icon              String?
+  lat               Float?
+  lon               Float?
+  region            String?
+  country           String?
+  year              Int?
+  dateStart         Int?
+  dateEnd           Int?
+  datePrecision     String?
+  status            String                   @default("draft")
+  version           Int                      @default(1)
+  publishedAt       DateTime?
+  createdBy         String?
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @default(now()) @updatedAt
+  adminReviewStatus String?
+  adminReviewNote   String?
+  importBatchId     String?
+  search_vector     Unsupported("tsvector")?
+
+  category               Category                 @relation(fields: [categoryId], references: [id])
+  tags                   NodeTag[]
+  claims                 Claim[]
+  criticisms             Criticism[]
+  openQuestions          OpenQuestion[]
+  versions               NodeVersion[]
+  embedding              NodeEmbedding?
+  adjacencyCache         AdjacencyCache?
+  narrative              NodeNarrative?
+  edgesFrom              Edge[]                   @relation("EdgeFrom")
+  edgesTo                Edge[]                   @relation("EdgeTo")
+  sourceLinks            SourceLink[]
+  explorations           NodeExploration[]
+  outgoingConnections    ConnectionDiscovery[]     @relation("ConnectionFrom")
+  incomingConnections    ConnectionDiscovery[]     @relation("ConnectionTo")
+  aiResearchReviews      AiResearchReview[]
+  outgoingRelSuggestions RelationshipSuggestion[] @relation("RelSuggestionFrom")
+  incomingRelSuggestions RelationshipSuggestion[] @relation("RelSuggestionTo")
+  researchSimilaritiesA  ResearchSimilarity[]     @relation("NodeA")
+  researchSimilaritiesB  ResearchSimilarity[]     @relation("NodeB")
+  discoveredSources      DiscoveredSource[]
+  proposedEdgesFrom      ProposedEdge[]           @relation("ProposedEdgeFrom")
+  proposedEdgesTo        ProposedEdge[]           @relation("ProposedEdgeTo")
+  importBatch            ImportBatch?             @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
+}
+
+model NodeTag {
+  nodeId String
+  tag    String
+
+  node   Node   @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@id([nodeId, tag])
+}
+
+model Edge {
+  id               String   @id @default(cuid())
+  fromId           String
+  toId             String
+  relationshipType String
+  strengthScore    Float    @default(0.5)
+  confidenceScore  Float    @default(0.5)
+  explanation      String
+  evidenceBasis    String
+  sourceType       String
+  sourceCount      Int?
+  status           String   @default("draft")
+  importBatchId    String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @default(now()) @updatedAt
+
+  from        Node         @relation("EdgeFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  to          Node         @relation("EdgeTo", fields: [toId], references: [id], onDelete: Cascade)
+  importBatch ImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
+  sourceLinks SourceLink[]
+
+  @@unique([fromId, toId])
+}
+
+model Claim {
+  id         String       @id @default(cuid())
+  nodeId     String
+  text       String
+  orderIndex Int          @default(0)
+
+  node        Node         @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  sourceLinks SourceLink[]
+}
+
+model Criticism {
+  id         String       @id @default(cuid())
+  nodeId     String
+  text       String
+  orderIndex Int          @default(0)
+
+  node        Node         @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  sourceLinks SourceLink[]
+}
+
+model OpenQuestion {
+  id         String @id @default(cuid())
+  nodeId     String
+  text       String
+  orderIndex Int    @default(0)
+
+  node Node @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+}
+
+model NodeVersion {
+  id         String   @id @default(cuid())
+  nodeId     String
+  version    Int
+  snapshot   Json
+  changedBy  String?
+  changeNote String?
+  createdAt  DateTime @default(now())
+
+  node Node @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+}
+
+model NodeEmbedding {
+  nodeId    String                      @id
+  embedding Unsupported("vector(1024)")?
+  model     String                      @default("text-embedding-3-small")
+  updatedAt DateTime                    @default(now()) @updatedAt
+
+  node Node @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+}
+
+model AdjacencyCache {
+  nodeId   String   @id
+  hop1     Json
+  hop2     Json
+  cachedAt DateTime @default(now())
+
+  node Node @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+}
+
+model NodeNarrative {
+  nodeId        String   @id
+  narrative     String
+  model         String
+  promptVersion String   @default("1.0")
+  cachedAt      DateTime @default(now())
+
+  node Node @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+}
+
+// ── Sources ───────────────────────────────────────────────────────────────────
+
+model Source {
+  id                     String    @id @default(cuid())
+  title                  String
+  sourceType             String
+  author                 String?
+  publicationYear        Int?
+  publisher              String?
+  journal                String?
+  volume                 String?
+  issue                  String?
+  pages                  String?
+  url                    String?
+  doi                    String?   @unique
+  isbn                   String?
+  abstract               String?
+  notes                  String?
+  language               String    @default("en")
+  credibilityScore       Float     @default(0.5)
+  credibilityFactors     Json?
+  status                 String    @default("pending")
+  reviewNotes            String?
+  reviewedAt             DateTime?
+  submittedBy            String?
+  reviewedBy             String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @default(now()) @updatedAt
+  credibilityOverride    Float?
+  overriddenBy           String?
+  overrideReason         String?
+  sourceTrustExplanation String?
+  importBatchId          String?
+
+  submitter              User?                    @relation("SubmittedSources", fields: [submittedBy], references: [id], onDelete: SetNull)
+  reviewer               User?                    @relation("ReviewedSources", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  links                  SourceLink[]
+  embedding              SourceEmbedding?
+  analysis               SourceAnalysis?
+  potentialNodeSuggestions PotentialNodeSuggestion[]
+  contradictions         ContradictionSuggestion[]
+  importBatch            ImportBatch?             @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
+}
+
+model SourceLink {
+  id             String   @id @default(cuid())
+  sourceId       String
+  targetType     String?
+  targetId       String?
+  claimIndex     Int?
+  nodeId         String?
+  edgeId         String?
+  claimId        String?
+  criticismId    String?
+  linkType       String   @default("supports")
+  notes          String?
+  relevanceScore Float    @default(0.5)
+  createdAt      DateTime @default(now())
+
+  source    Source     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  node      Node?      @relation(fields: [nodeId], references: [id], onDelete: SetNull)
+  edge      Edge?      @relation(fields: [edgeId], references: [id], onDelete: SetNull)
+  claim     Claim?     @relation(fields: [claimId], references: [id], onDelete: SetNull)
+  criticism Criticism? @relation(fields: [criticismId], references: [id], onDelete: SetNull)
+
+  @@unique([sourceId, targetType, targetId, claimIndex], name: "legacy_source_link_unique")
+}
+
+model SourceEmbedding {
+  sourceId  String                      @id
+  embedding Unsupported("vector(1024)")?
+  model     String                      @default("text-embedding-3-small")
+  updatedAt DateTime                    @default(now()) @updatedAt
+
+  source Source @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+}
+
+// ── AI & Research ─────────────────────────────────────────────────────────────
+
+model AiResearchReview {
+  id            String   @id @default(cuid())
+  nodeId        String
+  model         String
+  promptVersion String
+  reviewJson    Json
+  inputTokens   Int      @default(0)
+  outputTokens  Int      @default(0)
+  estimatedCost Float    @default(0)
+  createdAt     DateTime @default(now())
+  createdBy     String?
+
+  node    Node  @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  creator User? @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+}
+
+model RelationshipSuggestion {
+  id                String    @id @default(cuid())
+  fromNodeId        String
+  toNodeId          String
+  relationshipType  String
+  reason            String
+  evidenceBasis     String
+  confidenceScore   Float     @default(0.5)
+  riskLevel         String    @default("medium")
+  signalBreakdown   Json      @default("{}")
+  status            String    @default("pending")
+  reviewedBy        String?
+  reviewerEmail     String?
+  reviewedAt        DateTime?
+  reviewNote        String?
+  promotedEdgeId    String?
+  triggeredByNodeId String?
+  generationMethod  String    @default("rule_based")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now()) @updatedAt
+
+  fromNode Node @relation("RelSuggestionFrom", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  toNode   Node @relation("RelSuggestionTo", fields: [toNodeId], references: [id], onDelete: Cascade)
+
+  @@unique([fromNodeId, toNodeId])
+}
+
+model ResearchSimilarity {
+  id                     String   @id @default(cuid())
+  nodeAId                String
+  nodeBId                String
+  overallSimilarity      Float    @default(0)
+  thematicSimilarity     Float    @default(0)
+  timelineSimilarity     Float    @default(0)
+  geographicSimilarity   Float    @default(0)
+  sourceSimilarity       Float    @default(0)
+  evidenceSimilarity     Float    @default(0)
+  entitySimilarity       Float    @default(0)
+  relationshipSimilarity Float    @default(0)
+  researchPotentialScore Float    @default(0)
+  confidence             Float    @default(0)
+  explanation            String   @default("")
+  criticAnalysis         Json     @default("[]")
+  breakdown              Json     @default("{}")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @default(now()) @updatedAt
+
+  nodeA Node @relation("NodeA", fields: [nodeAId], references: [id], onDelete: Cascade)
+  nodeB Node @relation("NodeB", fields: [nodeBId], references: [id], onDelete: Cascade)
+
+  @@unique([nodeAId, nodeBId])
+}
+
+// ── Source Intelligence ────────────────────────────────────────────────────────
+
+model SourceAnalysis {
+  id                 String    @id @default(cuid())
+  sourceId           String    @unique
+  status             String    @default("pending")
+  pipelineVersion    String    @default("1.0")
+  aiSummary          String?
+  relationshipHints  Json      @default("[]")
+  entityCount        Int       @default(0)
+  claimCount         Int       @default(0)
+  timelineCount      Int       @default(0)
+  locationCount      Int       @default(0)
+  nodeCount          Int       @default(0)
+  contradictionCount Int       @default(0)
+  processingError    String?
+  startedAt          DateTime?
+  completedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @default(now()) @updatedAt
+
+  source          Source                    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  entities        ExtractedEntity[]
+  claims          ExtractedClaim[]
+  locationRefs    LocationReference[]       @relation("locationRefs")
+  potentialNodes  PotentialNodeSuggestion[]
+  contradictions  ContradictionSuggestion[]
+  timelineRefs    TimelineReference[]       @relation("timelineRefs")
+}
+
+model ExtractedEntity {
+  id            String   @id @default(cuid())
+  analysisId    String
+  entityType    String
+  name          String
+  aliases       String[] @default([])
+  context       String
+  confidence    Float    @default(0.5)
+  matchedNodeId String?
+  createdAt     DateTime @default(now())
+
+  analysis SourceAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+}
+
+model ExtractedClaim {
+  id            String   @id @default(cuid())
+  analysisId    String
+  claimText     String
+  claimType     String
+  confidence    Float    @default(0.5)
+  supportedBy   String?
+  relatedNodeId String?
+  status        String   @default("pending")
+  createdAt     DateTime @default(now())
+
+  analysis SourceAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+}
+
+model TimelineReference {
+  id            String   @id @default(cuid())
+  analysisId    String
+  year          Int?
+  yearStart     Int?
+  yearEnd       Int?
+  datePrecision String?
+  description   String
+  period        String?
+  confidence    Float    @default(0.5)
+  rawText       String
+  relatedNodeId String?
+  createdAt     DateTime @default(now())
+
+  analysis SourceAnalysis @relation("timelineRefs", fields: [analysisId], references: [id], onDelete: Cascade)
+}
+
+model LocationReference {
+  id            String   @id @default(cuid())
+  analysisId    String
+  name          String
+  locationType  String
+  modernName    String?
+  lat           Float?
+  lon           Float?
+  confidence    Float    @default(0.5)
+  context       String
+  relatedNodeId String?
+  createdAt     DateTime @default(now())
+
+  analysis SourceAnalysis @relation("locationRefs", fields: [analysisId], references: [id], onDelete: Cascade)
+}
+
+model PotentialNodeSuggestion {
+  id                     String    @id @default(cuid())
+  analysisId             String
+  sourceId               String
+  suggestedTitle         String
+  suggestedCategory      String
+  suggestedDescription   String
+  suggestedEvidenceLevel String    @default("speculative")
+  suggestedConfidence    Float     @default(0.3)
+  suggestedTags          String[]  @default([])
+  suggestedYear          Int?
+  suggestedLocation      String?
+  reasoning              String
+  aiConfidence           Float     @default(0.5)
+  status                 String    @default("pending")
+  reviewedBy             String?
+  reviewedAt             DateTime?
+  appliedNodeId          String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @default(now()) @updatedAt
+
+  analysis SourceAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  source   Source         @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+}
+
+model ContradictionSuggestion {
+  id                String    @id @default(cuid())
+  analysisId        String
+  sourceId          String
+  existingNodeId    String
+  contradictionType String
+  description       String
+  sourceClaimText   String
+  nodeClaimText     String
+  severity          String    @default("moderate")
+  aiConfidence      Float     @default(0.5)
+  status            String    @default("pending")
+  reviewedBy        String?
+  reviewedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now()) @updatedAt
+
+  analysis SourceAnalysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  source   Source         @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+}
+
+// ── User System ───────────────────────────────────────────────────────────────
 
 model UserProgress {
   id                    String   @id @default(cuid())
@@ -69,6 +588,428 @@ model UserProgress {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+model UserPermission {
+  userId                  String   @id
+  canApproveSources       Boolean  @default(false)
+  canApproveRelationships Boolean  @default(false)
+  canApproveNodes         Boolean  @default(false)
+  canPublishNodes         Boolean  @default(false)
+  canAssignRoles          Boolean  @default(false)
+  canBanUsers             Boolean  @default(false)
+  canRunAiReview          Boolean  @default(false)
+  canViewPlatformHealth   Boolean  @default(false)
+  canViewTraffic          Boolean  @default(false)
+  canViewCosts            Boolean  @default(false)
+  canViewSecurityLogs     Boolean  @default(false)
+  updatedAt               DateTime @updatedAt
+  updatedBy               String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserTrustEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  delta     Float
+  reason    String
+  detail    String?
+  createdBy String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserActivityLog {
+  id         String   @id @default(cuid())
+  userId     String
+  actionType String
+  detail     Json?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserActivityEvent {
+  id            String   @id @default(cuid())
+  userId        String
+  eventType     String
+  path          String?
+  metadata      Json     @default("{}")
+  ipHash        String?
+  userAgentHash String?
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserModerationStatus {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  status    String   @default("active")
+  reason    String?
+  changedBy String?
+  changedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserRiskProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  riskScore        Float    @default(0)
+  riskLevel        String   @default("low")
+  spamScore        Float    @default(0)
+  botScore         Float    @default(0)
+  lastCalculatedAt DateTime @default(now())
+  reasons          Json     @default("[]")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserAchievement {
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+  xpAwarded     Int      @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, achievementId])
+}
+
+model Badge {
+  id          String      @id @default(cuid())
+  name        String
+  description String
+  icon        String
+  category    String
+
+  users UserBadge[]
+}
+
+model UserBadge {
+  userId    String
+  badgeId   String
+  awardedAt DateTime @default(now())
+  awardedBy String?
+
+  user  User  @relation("earnedBadges", fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, badgeId])
+}
+
+// ── User Interactions ─────────────────────────────────────────────────────────
+
+model NodeExploration {
+  userId     String
+  nodeId     String
+  exploredAt DateTime @default(now())
+  xpAwarded  Int      @default(30)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  node Node @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, nodeId])
+}
+
+model ConnectionDiscovery {
+  userId       String
+  fromNodeId   String
+  toNodeId     String
+  discoveredAt DateTime @default(now())
+
+  user     User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fromNode Node @relation("ConnectionFrom", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  toNode   Node @relation("ConnectionTo", fields: [toNodeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, fromNodeId, toNodeId])
+}
+
+// ── Submissions ────────────────────────────────────────────────────────────────
+
+model ProposedNode {
+  id             String    @id @default(cuid())
+  nodeId         String?
+  label          String
+  category       String
+  description    String
+  evidenceLevel  String    @default("speculative")
+  confidence     Float     @default(0.5)
+  claims         Json?
+  criticisms     Json?
+  openQuestions  Json?
+  mainstreamView String?
+  region         String?
+  country        String?
+  dateStart      Int?
+  dateEnd        Int?
+  tags           Json?
+  status         String    @default("pending")
+  reviewNotes    String?
+  reviewedAt     DateTime?
+  submittedBy    String?
+  reviewedBy     String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
+  aiAuditResult      Json?
+  aiAuditedAt        DateTime?
+  proposalSimilarity Json?
+
+  submitter User? @relation("SubmittedProposedNodes", fields: [submittedBy], references: [id], onDelete: SetNull)
+  reviewer  User? @relation("ReviewedProposedNodes", fields: [reviewedBy], references: [id], onDelete: SetNull)
+}
+
+model ProposedEdge {
+  id              String    @id @default(cuid())
+  fromNodeId      String
+  toNodeId        String
+  relationship    String
+  description     String
+  evidenceLevel   String    @default("speculative")
+  confidence      Float     @default(0.5)
+  strengthScore   Float     @default(0.5)
+  explanation     String?
+  historicalBasis String?
+  status          String    @default("pending")
+  reviewNotes     String?
+  reviewedAt      DateTime?
+  submittedBy     String?
+  reviewedBy      String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
+
+  fromNode  Node  @relation("ProposedEdgeFrom", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  toNode    Node  @relation("ProposedEdgeTo", fields: [toNodeId], references: [id], onDelete: Cascade)
+  submitter User? @relation("SubmittedProposedEdges", fields: [submittedBy], references: [id], onDelete: SetNull)
+  reviewer  User? @relation("ReviewedProposedEdges", fields: [reviewedBy], references: [id], onDelete: SetNull)
+}
+
+// ── Governance ────────────────────────────────────────────────────────────────
+
+model Report {
+  id             String    @id @default(cuid())
+  submittedBy    String
+  reportedUserId String?
+  entityType     String
+  entityId       String
+  reason         String
+  detail         String?
+  status         String    @default("open")
+  resolvedBy     String?
+  resolvedAt     DateTime?
+  resolveNote    String?
+  createdAt      DateTime  @default(now())
+
+  submitter    User  @relation("SubmittedReports", fields: [submittedBy], references: [id], onDelete: Cascade)
+  reportedUser User? @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: SetNull)
+}
+
+model ModerationAction {
+  id          String    @id @default(cuid())
+  userId      String
+  moderatorId String
+  actionType  String
+  reason      String
+  detail      Json?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  user      User @relation("ModeratedUser", fields: [userId], references: [id], onDelete: Cascade)
+  moderator User @relation("ModeratorActions", fields: [moderatorId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  userEmail  String?
+  action     String
+  entityType String
+  entityId   String
+  detail     Json?
+  createdAt  DateTime @default(now())
+}
+
+// ── Beta Program ──────────────────────────────────────────────────────────────
+
+model BetaFeedback {
+  id            String    @id @default(cuid())
+  userId        String?
+  category      String
+  severity      String
+  page          String
+  description   String
+  screenshotUrl String?
+  reproSteps    String?
+  status        String    @default("open")
+  adminNotes    String?
+  resolvedAt    DateTime?
+  resolvedBy    String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model BetaInvite {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  email     String?
+  group     String
+  maxUses   Int       @default(1)
+  usedCount Int       @default(0)
+  expiresAt DateTime?
+  createdBy String
+  notes     String?
+  createdAt DateTime  @default(now())
+
+  redemptions BetaInviteRedemption[]
+}
+
+model BetaInviteRedemption {
+  id         String   @id @default(cuid())
+  inviteId   String
+  userId     String
+  redeemedAt DateTime @default(now())
+
+  invite BetaInvite @relation(fields: [inviteId], references: [id], onDelete: Cascade)
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ── Discovery ─────────────────────────────────────────────────────────────────
+
+model DiscoveredSource {
+  id               String    @id @default(cuid())
+  nodeId           String
+  title            String
+  url              String
+  sourceType       String
+  author           String?
+  publicationYear  Int?
+  journal          String?
+  doi              String?
+  abstract         String?
+  domain           String
+  discoveryApi     String
+  discoveryQuery   String?
+  rawMetadata      Json?
+  credibilityScore Float     @default(0.5)
+  relevanceScore   Float     @default(0.5)
+  riskScore        Float     @default(0.5)
+  credibilityClass String    @default("uncertain")
+  autoApprove      Boolean   @default(false)
+  status           String    @default("pending_review")
+  promotedSourceId String?
+  reviewedBy       String?
+  reviewedAt       DateTime?
+  rejectionReason  String?
+  fetchedAt        DateTime  @default(now())
+
+  node Node @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@unique([nodeId, url])
+}
+
+model SourceDomainReputation {
+  id              String   @id @default(cuid())
+  domain          String   @unique
+  country         String?
+  institutionType String?
+  reputationScore Float    @default(0.5)
+  status          String   @default("normal")
+  approvalCount   Int      @default(0)
+  rejectionCount  Int      @default(0)
+  notes           String?  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+}
+
+model DiscoveryRun {
+  id            String    @id @default(cuid())
+  mode          String
+  targetNodeId  String?
+  status        String    @default("running")
+  nodesChecked  Int       @default(0)
+  sourcesFound  Int       @default(0)
+  autoApproved  Int       @default(0)
+  pendingReview Int       @default(0)
+  skipped       Int       @default(0)
+  aiCostUsd     Float     @default(0)
+  errorMessage  String?
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+}
+
+model DiscoveredNode {
+  id              String    @id @default(cuid())
+  slug            String    @unique
+  title           String
+  category        String
+  description     String
+  mainstreamView  String?
+  evidenceLevel   String    @default("speculative")
+  confidenceScore Float     @default(0.5)
+  color           String?
+  icon            String?
+  year            Int?
+  tags            Json      @default("[]")
+  claims          Json      @default("[]")
+  criticisms      Json      @default("[]")
+  openQuestions   Json      @default("[]")
+  discoveryQuery  String?
+  relatedNodeIds  Json      @default("[]")
+  sourceUrl       String?
+  relevanceScore  Float     @default(0.5)
+  qualityScore    Float     @default(0.5)
+  noveltyScore    Float     @default(0.5)
+  aiCostUsd       Float     @default(0)
+  status          String    @default("pending_review")
+  promotedNodeId  String?
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  rejectionReason String?
+  discoveredAt    DateTime  @default(now())
+}
+
+// ── Archive Audit ─────────────────────────────────────────────────────────────
+
+model ArchiveAuditRun {
+  id          String    @id @default(cuid())
+  status      String    @default("running")
+  triggeredBy String
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  summary     Json      @default("{}")
+  settings    Json      @default("{}")
+
+  findings ArchiveAuditFinding[]
+}
+
+model ArchiveAuditFinding {
+  id          String    @id @default(cuid())
+  runId       String
+  type        String
+  severity    String
+  status      String    @default("pending")
+  nodeId      String?
+  edgeId      String?
+  title       String
+  description String
+  beforeState Json      @default("{}")
+  afterState  Json      @default("{}")
+  reasoning   String
+  autoFixable Boolean   @default(false)
+  webSources  Json      @default("[]")
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  appliedAt   DateTime?
+  applyError  String?
+
+  run ArchiveAuditRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+}
+
+// ── Cleanup ────────────────────────────────────────────────────────────────────
 
 model CleanupAuditRun {
   id                      String           @id @default(cuid())
@@ -92,7 +1033,6 @@ model CleanupAuditRun {
 model CleanupFinding {
   id                String          @id @default(cuid())
   auditRunId        String
-  auditRun          CleanupAuditRun @relation(fields: [auditRunId], references: [id], onDelete: Cascade)
   itemType          String
   itemId            String
   title             String
@@ -107,6 +1047,8 @@ model CleanupFinding {
   createdAt         DateTime        @default(now())
   resolvedBy        String?
   resolvedAt        DateTime?
+
+  auditRun CleanupAuditRun @relation(fields: [auditRunId], references: [id], onDelete: Cascade)
 }
 
 model DiscoveryBlacklist {
@@ -125,4 +1067,103 @@ model DiscoveryWhitelist {
   reason    String
   createdBy String
   createdAt DateTime @default(now())
+}
+
+// ── Analytics & Events ────────────────────────────────────────────────────────
+
+model UsageEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  sessionId String?
+  eventType String
+  meta      Json?
+  page      String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model ResearchMaturityScore {
+  id              String   @id @default(cuid())
+  entityType      String
+  entityId        String
+  score           Float
+  sourceCount     Int      @default(0)
+  sourceDiversity Float    @default(0)
+  claimCount      Int      @default(0)
+  criticismCount  Int      @default(0)
+  openQuestions   Int      @default(0)
+  hasMainstream   Boolean  @default(false)
+  edgeCount       Int      @default(0)
+  details         Json?
+  calculatedAt    DateTime @default(now())
+
+  @@unique([entityType, entityId])
+}
+
+model AiBudget {
+  id               String   @id @default(cuid())
+  period           String
+  periodType       String
+  tokensIn         Int      @default(0)
+  tokensOut        Int      @default(0)
+  estimatedCostUsd Float    @default(0)
+  dailyLimitUsd    Float    @default(2.0)
+  monthlyLimitUsd  Float    @default(20.0)
+  emergencyStop    Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @default(now()) @updatedAt
+
+  @@unique([period, periodType])
+}
+
+model NewsItem {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  url         String   @unique
+  source      String
+  sourceUrl   String
+  category    String
+  publishedAt DateTime
+  fetchedAt   DateTime @default(now())
+  imageUrl    String?
+}
+
+model SystemConfig {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @default(now()) @updatedAt
+  updatedBy String?
+}
+
+model ImportBatch {
+  id               String    @id @default(cuid())
+  importedBy       String?
+  inputFormat      String    @default("json")
+  parsedCount      Int       @default(0)
+  acceptedCount    Int       @default(0)
+  rejectedCount    Int       @default(0)
+  warningCount     Int       @default(0)
+  validationReport Json
+  status           String    @default("committed")
+  rolledBackAt     DateTime?
+  rolledBackBy     String?
+  createdAt        DateTime  @default(now())
+
+  nodes   Node[]
+  edges   Edge[]
+  sources Source[]
+}
+
+model IngestionJob {
+  id          String    @id @default(cuid())
+  type        String
+  targetId    String
+  priority    Int       @default(50)
+  status      String    @default("pending")
+  attempts    Int       @default(0)
+  lastError   String?
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
 }
