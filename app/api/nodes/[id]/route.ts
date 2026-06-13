@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { auth, isAdminSession } from '@/lib/auth';
 import { EVIDENCE_LEVELS, isValidScore } from '@/lib/validation/enums';
 import { writeAuditLog } from '@/lib/audit';
+import { emit } from '@/lib/orchestration/emit';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -215,6 +216,13 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     userId, userEmail, action: 'edit', entityType: 'node', entityId: id,
     detail: { fields: Object.keys(b).filter(k => k !== 'changeNote'), changeNote },
   });
+
+  // Determine which orchestration event to emit based on new status
+  const newStatus = typeof b.status === 'string' ? b.status : node.status;
+  let eventType: 'node.updated' | 'node.published' | 'node.archived' = 'node.updated';
+  if (newStatus === 'published' && node.status !== 'published') eventType = 'node.published';
+  else if (newStatus === 'archived' && node.status !== 'archived') eventType = 'node.archived';
+  emit(eventType, { entityType: 'node', entityId: id, actorEmail: userEmail ?? undefined }).catch(() => {});
 
   const updated = await prisma.node.findUnique({
     where: { id },

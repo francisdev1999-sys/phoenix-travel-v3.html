@@ -1170,3 +1170,18 @@ model IngestionJob {
   createdAt   DateTime  @default(now())
   processedAt DateTime?
 }
+
+// ── Orchestration ─────────────────────────────────────────────────────────────
+
+model ArchiveEvent {
+  id         String   @id @default(cuid())
+  eventType  String
+  entityType String
+  entityId   String
+  actorEmail String?
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([eventType, createdAt])
+}

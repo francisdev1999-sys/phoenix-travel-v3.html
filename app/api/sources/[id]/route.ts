@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { computeCredibility } from '@/lib/source-credibility';
+import { emit } from '@/lib/orchestration/emit';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -95,6 +96,26 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       links: true,
     },
   });
+
+  // Emit orchestration event when source status changes to approved
+  const newStatus = body.status;
+  if (typeof newStatus === 'string' && newStatus !== source.status) {
+    const evtType = newStatus === 'approved' ? 'source.approved' : 'source.archived';
+    if (newStatus === 'approved' || newStatus === 'archived') {
+      emit(evtType, {
+        entityType: 'source',
+        entityId:   id,
+        actorEmail: session.user?.email ?? undefined,
+      }).catch(() => {});
+    }
+  } else {
+    // Content edit (no status change) — emit source.created as a lightweight signal
+    emit('source.created', {
+      entityType: 'source',
+      entityId:   id,
+      actorEmail: session.user?.email ?? undefined,
+    }).catch(() => {});
+  }
 
   return NextResponse.json(updated);
 }

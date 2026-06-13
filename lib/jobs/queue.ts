@@ -9,12 +9,25 @@
 
 import { prisma } from '@/lib/db';
 
-export type JobType = 'embed-node' | 'embed-source' | 'rebuild-adjacency';
+export type JobType =
+  | 'embed-node'
+  | 'embed-source'
+  | 'rebuild-adjacency'
+  | 'similarity-node'
+  | 'enrich-source'
+  | 'propagate-archive'
+  | 'suggest-relationships'
+  | 'update-maturity';
 
 export interface JobPayload {
-  'embed-node':          { nodeId: string };
-  'embed-source':        { sourceId: string };
-  'rebuild-adjacency':   { nodeId: string };
+  'embed-node':            { nodeId: string };
+  'embed-source':          { sourceId: string };
+  'rebuild-adjacency':     { nodeId: string };
+  'similarity-node':       { nodeId: string };
+  'enrich-source':         { sourceId: string };
+  'propagate-archive':     { nodeId: string };
+  'suggest-relationships': { nodeId: string };
+  'update-maturity':       { entityType: 'node' | 'source'; entityId: string };
 }
 
 // ── Enqueue ───────────────────────────────────────────────────────────────────
