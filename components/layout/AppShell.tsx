@@ -178,7 +178,7 @@ export default function AppShell() {
       'landing', 'graph', 'theory', 'universe',
       'galaxy', 'cluster', 'node', 'research-graph',
       'timeline', 'evidence-board', 'globe', 'dashboard',
-      'diagnostics', 'sources', 'admin', 'rabbit-hole',
+      'diagnostics', 'sources', 'admin', 'rabbit-hole', 'intel-feed',
     ];
 
     const handlePopState = (e: PopStateEvent) => {
@@ -242,7 +242,7 @@ export default function AppShell() {
               <div className="flex-1 overflow-hidden relative">
                 <Suspense fallback={<LoadingSpinner />}>
                   <AnimatePresence mode="wait">
-                    {currentView === 'graph' && (
+                    {(currentView === 'graph' || currentView === 'research-graph') && (
                       <motion.div key="graph" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">
                         {isMobile ? <MobileGraphFallback /> : <KnowledgeGraph />}
                       </motion.div>
