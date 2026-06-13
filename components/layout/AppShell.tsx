@@ -208,6 +208,7 @@ export default function AppShell() {
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8 }}
+            className="h-screen overflow-y-auto"
           >
             <LandingPage />
           </motion.div>

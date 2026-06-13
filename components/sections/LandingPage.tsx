@@ -111,20 +111,34 @@ const HOW_IT_WORKS = [
 ];
 
 // ── Subtle starfield (CSS-only, no canvas) ────────────────────────────────────
+// Positions pre-computed at module load time so SSR and client match exactly.
+
+const STARS = Array.from({ length: 60 }, (_, i) => {
+  // Use index-based deterministic values to avoid SSR/client mismatch
+  const t = (i * 137.508) % 360; // golden-angle spread
+  return {
+    width:   ((i * 17 + 3) % 15) / 10 + 0.5,
+    height:  ((i * 17 + 3) % 15) / 10 + 0.5,
+    top:     (i * 137.508) % 100,
+    left:    (i * 97.314 + 13) % 100,
+    opacity: ((i * 7 + 5) % 40) / 100 + 0.05,
+    t,
+  };
+});
 
 function Starfield() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {Array.from({ length: 60 }).map((_, i) => (
+      {STARS.map((s, i) => (
         <div
           key={i}
           className="absolute rounded-full bg-white"
           style={{
-            width:  Math.random() * 1.5 + 0.5 + 'px',
-            height: Math.random() * 1.5 + 0.5 + 'px',
-            top:    Math.random() * 100 + '%',
-            left:   Math.random() * 100 + '%',
-            opacity: Math.random() * 0.4 + 0.05,
+            width:   s.width + 'px',
+            height:  s.height + 'px',
+            top:     s.top + '%',
+            left:    s.left + '%',
+            opacity: s.opacity,
           }}
         />
       ))}
@@ -183,7 +197,7 @@ export default function LandingPage() {
   const fade = { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 } };
 
   return (
-    <div className="min-h-screen bg-[#000005] text-slate-200 overflow-y-auto overflow-x-hidden">
+    <div className="min-h-screen bg-[#000005] text-slate-200 overflow-x-hidden">
       <Starfield />
 
       {/* ── Minimal header ── */}
