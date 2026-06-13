@@ -402,7 +402,7 @@ export default function CleanupDashboard({ adminEmail }: { adminEmail: string })
       body: JSON.stringify({
         ids: deleteModal.ids,
         action: 'delete',
-        confirmation: deleteModal.confirmation,
+        confirmation: deleteModal.confirmation.trim().toUpperCase(),
         reason: deleteModal.reason,
       }),
     });
@@ -878,8 +878,12 @@ export default function CleanupDashboard({ adminEmail }: { adminEmail: string })
                 value={deleteModal.confirmation}
                 onChange={e => setDeleteModal(m => ({ ...m, confirmation: e.target.value }))}
                 placeholder="DELETE"
+                autoComplete="off"
                 className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2 font-mono placeholder-slate-600"
               />
+              {deleteModal.reason.trim().length < 5 && deleteModal.confirmation.trim().toUpperCase() === 'DELETE' && (
+                <p className="text-[10px] text-yellow-500 mt-1">Fill in the reason above (min 5 chars) to enable the button.</p>
+              )}
             </div>
 
             <div className="flex items-center gap-3 pt-1">
@@ -891,8 +895,8 @@ export default function CleanupDashboard({ adminEmail }: { adminEmail: string })
               </button>
               <button
                 onClick={confirmDelete}
-                disabled={deleteModal.confirmation !== 'DELETE' || deleteModal.reason.trim().length < 5 || deleteModal.loading}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-red-700 hover:bg-red-600 disabled:opacity-40 text-white text-xs font-bold transition-all"
+                disabled={deleteModal.confirmation.trim().toUpperCase() !== 'DELETE' || deleteModal.reason.trim().length < 5 || deleteModal.loading}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-red-700 hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all"
               >
                 <Trash2 size={12} />
                 {deleteModal.loading ? 'Deleting…' : 'Delete Permanently'}
