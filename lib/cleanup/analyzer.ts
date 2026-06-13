@@ -24,20 +24,30 @@ Respond with ONLY valid JSON, no markdown, no explanation:
   "blacklistSuggestion": null
 }`;
 
+// Support both GEMINI_API_KEY and GOOGLE_API_KEY
 export function checkApiKey(): string | null {
   return process.env.ANTHROPIC_API_KEY ?? null;
 }
 
 export function checkGeminiKey(): string | null {
-  return process.env.GEMINI_API_KEY ?? null;
+  return process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY ?? null;
 }
 
-// ── Claude call ───────────────────────────────────────────────────────────────
+function parseJson(text: string, provider: string): AnalysisResult {
+  const clean = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  try {
+    return JSON.parse(clean) as AnalysisResult;
+  } catch {
+    throw new Error(`${provider} returned invalid JSON: ${clean.slice(0, 200)}`);
+  }
+}
+
+// ── Claude ────────────────────────────────────────────────────────────────────
 
 async function callClaude(userMessage: string): Promise<AnalysisResult> {
   const key = checkApiKey();
   if (!key) throw new Error('ANTHROPIC_API_KEY not set');
-  const client = new Anthropic({ apiKey: key });
+  const client   = new Anthropic({ apiKey: key });
   const response = await client.messages.create({
     model:      'claude-haiku-4-5-20251001',
     max_tokens: 600,
@@ -45,51 +55,54 @@ async function callClaude(userMessage: string): Promise<AnalysisResult> {
     messages:   [{ role: 'user', content: userMessage }],
   });
   const text = response.content[0].type === 'text' ? response.content[0].text.trim() : '';
-  try {
-    return JSON.parse(text) as AnalysisResult;
-  } catch {
-    throw new Error(`Claude returned invalid JSON: ${text.slice(0, 200)}`);
-  }
+  return parseJson(text, 'Claude');
 }
 
-// ── Gemini fallback ───────────────────────────────────────────────────────────
+// ── Gemini (tries flash models in order) ─────────────────────────────────────
+
+const GEMINI_MODELS = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash-8b'];
 
 async function callGemini(userMessage: string): Promise<AnalysisResult> {
   const key = checkGeminiKey();
-  if (!key) throw new Error('GEMINI_API_KEY not set');
+  if (!key) throw new Error('GEMINI_API_KEY (or GOOGLE_API_KEY) not set');
+
   const genAI = new GoogleGenerativeAI(key);
-  const model = genAI.getGenerativeModel({
-    model:          'gemini-2.0-flash',
-    systemInstruction: SYSTEM_PROMPT,
-    generationConfig: { maxOutputTokens: 600, temperature: 0.1 },
-  });
-  const result = await model.generateContent(userMessage);
-  const text   = result.response.text().trim();
-  // Strip any markdown code fences Gemini may add
-  const clean  = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
-  try {
-    return JSON.parse(clean) as AnalysisResult;
-  } catch {
-    throw new Error(`Gemini returned invalid JSON: ${clean.slice(0, 200)}`);
+  let lastErr: Error = new Error('No Gemini model succeeded');
+
+  for (const modelName of GEMINI_MODELS) {
+    try {
+      const model = genAI.getGenerativeModel({
+        model:             modelName,
+        generationConfig:  { maxOutputTokens: 600, temperature: 0.1 },
+      });
+      const prompt = `${SYSTEM_PROMPT}\n\n${userMessage}`;
+      const result = await model.generateContent(prompt);
+      const text   = result.response.text().trim();
+      return parseJson(text, `Gemini(${modelName})`);
+    } catch (err) {
+      lastErr = err instanceof Error ? err : new Error(String(err));
+      console.warn(`[cleanup] Gemini model ${modelName} failed:`, lastErr.message);
+    }
   }
+  throw lastErr;
 }
 
 // ── With automatic fallback ───────────────────────────────────────────────────
 
 async function callAI(userMessage: string): Promise<AnalysisResult> {
-  // Try Claude first
   if (checkApiKey()) {
     try {
       return await callClaude(userMessage);
-    } catch (claudeErr) {
-      console.warn('[cleanup] Claude failed, trying Gemini fallback:', claudeErr);
+    } catch (err) {
+      console.warn('[cleanup] Claude failed, trying Gemini:', err instanceof Error ? err.message : err);
     }
   }
-  // Fall back to Gemini
   if (checkGeminiKey()) {
     return await callGemini(userMessage);
   }
-  throw new Error('No AI provider available — set ANTHROPIC_API_KEY or GEMINI_API_KEY in Railway');
+  throw new Error(
+    'No AI key available — set ANTHROPIC_API_KEY or GEMINI_API_KEY in Railway environment variables',
+  );
 }
 
 // ── Public exports ────────────────────────────────────────────────────────────

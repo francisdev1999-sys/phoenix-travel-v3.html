@@ -13,16 +13,17 @@ async function processBatch<T, R>(
   items: T[],
   fn: (item: T) => Promise<R>,
   batchSize: number,
-): Promise<(R | null)[]> {
-  const results: (R | null)[] = [];
+): Promise<{ result: R | null; error: string | null }[]> {
+  const out: { result: R | null; error: string | null }[] = [];
   for (let i = 0; i < items.length; i += batchSize) {
-    const batch = items.slice(i, i + batchSize);
+    const batch   = items.slice(i, i + batchSize);
     const settled = await Promise.allSettled(batch.map(fn));
     for (const s of settled) {
-      results.push(s.status === 'fulfilled' ? s.value : null);
+      if (s.status === 'fulfilled') out.push({ result: s.value, error: null });
+      else out.push({ result: null, error: s.reason instanceof Error ? s.reason.message : String(s.reason) });
     }
   }
-  return results;
+  return out;
 }
 
 export async function POST(req: NextRequest) {
@@ -72,11 +73,11 @@ export async function POST(req: NextRequest) {
   const results = await processBatch(candidates, analyzeSource, BATCH_SIZE);
 
   for (let i = 0; i < candidates.length; i++) {
-    const result    = results[i];
+    const { result, error: itemErr } = results[i];
     const candidate = candidates[i];
     if (!result) {
       errorCount++;
-      errors.push(`Failed to analyze: ${candidate.title}`);
+      errors.push(`"${candidate.title}": ${itemErr ?? 'unknown error'}`);
       continue;
     }
     try {
@@ -128,7 +129,7 @@ export async function POST(req: NextRequest) {
 
   if (allFailed) {
     return NextResponse.json(
-      { error: `All ${candidates.length} analyses failed. First error: ${errors[0]}`, run: completed },
+      { error: `All ${candidates.length} analyses failed. Error: ${errors[0]}`, run: completed },
       { status: 500 },
     );
   }
