@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSuperAdmin } from '@/lib/cleanup/admin-auth';
 import { runSourceRules } from '@/lib/cleanup/rules';
-import { analyzeSource, estimateCost, checkApiKey } from '@/lib/cleanup/analyzer';
+import { analyzeSource, estimateCost, checkApiKey, checkGeminiKey } from '@/lib/cleanup/analyzer';
 import { prisma } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 
@@ -29,9 +29,9 @@ export async function POST(req: NextRequest) {
   const { error, session } = await requireSuperAdmin();
   if (error) return error;
 
-  if (!checkApiKey()) {
+  if (!checkApiKey() && !checkGeminiKey()) {
     return NextResponse.json(
-      { error: 'ANTHROPIC_API_KEY is not configured. Set it in your Railway environment variables.' },
+      { error: 'No AI key configured. Set ANTHROPIC_API_KEY (Claude) or GEMINI_API_KEY (Gemini) in Railway environment variables.' },
       { status: 503 },
     );
   }

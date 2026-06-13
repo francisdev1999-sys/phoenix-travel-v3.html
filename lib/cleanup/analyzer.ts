@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { AnalysisResult, NodeCandidate, SourceCandidate } from './types';
 
 const SYSTEM_PROMPT = `You are the Nexus Archive quality auditor. Your job is to protect the credibility of an archive focused on conspiracy theories, ancient mysteries, alternative history, folklore, mythology, and unexplained phenomena.
@@ -27,21 +28,22 @@ export function checkApiKey(): string | null {
   return process.env.ANTHROPIC_API_KEY ?? null;
 }
 
-function getClient(): Anthropic {
-  const key = checkApiKey();
-  if (!key) throw new Error('ANTHROPIC_API_KEY environment variable is not set');
-  return new Anthropic({ apiKey: key });
+export function checkGeminiKey(): string | null {
+  return process.env.GEMINI_API_KEY ?? null;
 }
 
+// ── Claude call ───────────────────────────────────────────────────────────────
+
 async function callClaude(userMessage: string): Promise<AnalysisResult> {
-  const client = getClient();
+  const key = checkApiKey();
+  if (!key) throw new Error('ANTHROPIC_API_KEY not set');
+  const client = new Anthropic({ apiKey: key });
   const response = await client.messages.create({
     model:      'claude-haiku-4-5-20251001',
     max_tokens: 600,
     system:     SYSTEM_PROMPT,
     messages:   [{ role: 'user', content: userMessage }],
   });
-
   const text = response.content[0].type === 'text' ? response.content[0].text.trim() : '';
   try {
     return JSON.parse(text) as AnalysisResult;
@@ -49,6 +51,48 @@ async function callClaude(userMessage: string): Promise<AnalysisResult> {
     throw new Error(`Claude returned invalid JSON: ${text.slice(0, 200)}`);
   }
 }
+
+// ── Gemini fallback ───────────────────────────────────────────────────────────
+
+async function callGemini(userMessage: string): Promise<AnalysisResult> {
+  const key = checkGeminiKey();
+  if (!key) throw new Error('GEMINI_API_KEY not set');
+  const genAI = new GoogleGenerativeAI(key);
+  const model = genAI.getGenerativeModel({
+    model:          'gemini-2.0-flash',
+    systemInstruction: SYSTEM_PROMPT,
+    generationConfig: { maxOutputTokens: 600, temperature: 0.1 },
+  });
+  const result = await model.generateContent(userMessage);
+  const text   = result.response.text().trim();
+  // Strip any markdown code fences Gemini may add
+  const clean  = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  try {
+    return JSON.parse(clean) as AnalysisResult;
+  } catch {
+    throw new Error(`Gemini returned invalid JSON: ${clean.slice(0, 200)}`);
+  }
+}
+
+// ── With automatic fallback ───────────────────────────────────────────────────
+
+async function callAI(userMessage: string): Promise<AnalysisResult> {
+  // Try Claude first
+  if (checkApiKey()) {
+    try {
+      return await callClaude(userMessage);
+    } catch (claudeErr) {
+      console.warn('[cleanup] Claude failed, trying Gemini fallback:', claudeErr);
+    }
+  }
+  // Fall back to Gemini
+  if (checkGeminiKey()) {
+    return await callGemini(userMessage);
+  }
+  throw new Error('No AI provider available — set ANTHROPIC_API_KEY or GEMINI_API_KEY in Railway');
+}
+
+// ── Public exports ────────────────────────────────────────────────────────────
 
 export async function analyzeNode(candidate: NodeCandidate): Promise<AnalysisResult> {
   const msg = `Analyze this node:
@@ -64,7 +108,7 @@ Flagged by rules because: ${candidate.flagReasons.join('; ')}
 
 Return JSON only. Set itemId to "${candidate.id}".`;
 
-  const result = await callClaude(msg);
+  const result    = await callAI(msg);
   result.itemId   = candidate.id;
   result.itemType = 'node';
   return result;
@@ -83,7 +127,7 @@ Flagged by rules because: ${candidate.flagReasons.join('; ')}
 
 Return JSON only. Set itemType to "source" and itemId to "${candidate.id}".`;
 
-  const result = await callClaude(msg);
+  const result    = await callAI(msg);
   result.itemId   = candidate.id;
   result.itemType = 'source';
   return result;
