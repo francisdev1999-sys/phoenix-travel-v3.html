@@ -29,7 +29,7 @@ export async function runNodeRules(): Promise<NodeCandidate[]> {
   const whitelistKeywords = whitelistRows.map(w => w.value.toLowerCase());
 
   const nodes = await prisma.node.findMany({
-    where: { status: { not: 'archived' } },
+    where: { status: 'published' },  // drafts/pending are not yet ready for cleanup review
     select: {
       id: true,
       title: true,
@@ -113,7 +113,7 @@ export async function runSourceRules(): Promise<SourceCandidate[]> {
   const blockedDomains = [...SPAM_DOMAINS, ...blacklistDomains.map(b => b.value.toLowerCase())];
 
   const sources = await prisma.source.findMany({
-    where: { status: { not: 'archived' } },
+    where: { status: { in: ['approved', 'published'] } },
     select: {
       id: true,
       title: true,

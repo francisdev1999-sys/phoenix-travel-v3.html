@@ -23,22 +23,31 @@ Respond with ONLY valid JSON, no markdown, no explanation:
   "blacklistSuggestion": null
 }`;
 
+export function checkApiKey(): string | null {
+  return process.env.ANTHROPIC_API_KEY ?? null;
+}
+
 function getClient(): Anthropic {
-  if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY is not set');
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const key = checkApiKey();
+  if (!key) throw new Error('ANTHROPIC_API_KEY environment variable is not set');
+  return new Anthropic({ apiKey: key });
 }
 
 async function callClaude(userMessage: string): Promise<AnalysisResult> {
   const client = getClient();
   const response = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
+    model:      'claude-haiku-4-5-20251001',
     max_tokens: 600,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: userMessage }],
+    system:     SYSTEM_PROMPT,
+    messages:   [{ role: 'user', content: userMessage }],
   });
 
   const text = response.content[0].type === 'text' ? response.content[0].text.trim() : '';
-  return JSON.parse(text) as AnalysisResult;
+  try {
+    return JSON.parse(text) as AnalysisResult;
+  } catch {
+    throw new Error(`Claude returned invalid JSON: ${text.slice(0, 200)}`);
+  }
 }
 
 export async function analyzeNode(candidate: NodeCandidate): Promise<AnalysisResult> {
@@ -56,7 +65,7 @@ Flagged by rules because: ${candidate.flagReasons.join('; ')}
 Return JSON only. Set itemId to "${candidate.id}".`;
 
   const result = await callClaude(msg);
-  result.itemId = candidate.id;
+  result.itemId   = candidate.id;
   result.itemType = 'node';
   return result;
 }
@@ -75,13 +84,13 @@ Flagged by rules because: ${candidate.flagReasons.join('; ')}
 Return JSON only. Set itemType to "source" and itemId to "${candidate.id}".`;
 
   const result = await callClaude(msg);
-  result.itemId = candidate.id;
+  result.itemId   = candidate.id;
   result.itemType = 'source';
   return result;
 }
 
 export function estimateCost(count: number): number {
-  const inputCost = (count * 400 / 1_000_000) * 0.25;
+  const inputCost  = (count * 400 / 1_000_000) * 0.25;
   const outputCost = (count * 150 / 1_000_000) * 1.25;
   return Math.round((inputCost + outputCost) * 10000) / 10000;
 }
