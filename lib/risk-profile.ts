@@ -132,7 +132,7 @@ export async function computeAndSaveRiskProfile(userId: string): Promise<RiskRes
   const h1ago = new Date(now.getTime() - 60 * 60 * 1000);
   const d1ago = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-  const [user, events1h, submittedAll, submittedRecent] = await Promise.all([
+  const [user, events1h, submittedRecent, confirmedSpamCount] = await Promise.all([
     prisma.user.findUnique({
       where:  { id: userId },
       select: { role: true, trustScore: true, isBanned: true, createdAt: true,
@@ -142,8 +142,8 @@ export async function computeAndSaveRiskProfile(userId: string): Promise<RiskRes
       where:   { userId, createdAt: { gte: h1ago } },
       select:  { path: true },
     }),
-    prisma.proposedNode.count({ where: { submittedBy: userId, status: 'rejected' } }),
     prisma.proposedNode.count({ where: { submittedBy: userId, createdAt: { gte: d1ago } } }),
+    prisma.proposedNode.count({ where: { submittedBy: userId, isSpam: true } }),
   ]);
 
   if (!user) return { riskScore: 0, riskLevel: 'low', spamScore: 0, botScore: 0, reasons: [] };
@@ -165,7 +165,7 @@ export async function computeAndSaveRiskProfile(userId: string): Promise<RiskRes
     recentEvents1h:       events1h.length,
     distinctPaths1h:      distinctPaths,
     maxSamePathRepeats:   maxSamePathRepeat,
-    confirmedSpamCount:   0, // TODO: wire real spam flags when ProposedNode.isSpam added
+    confirmedSpamCount:   confirmedSpamCount,
     reportCount:          0,
     role:                 user.role,
     trustScore:           user.trustScore,

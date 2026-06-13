@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "ProposedNode" ADD COLUMN "isSpam" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "ProposedNode" ADD COLUMN "reportCount" INTEGER NOT NULL DEFAULT 0;

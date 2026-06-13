@@ -756,6 +756,8 @@ model ProposedNode {
   aiAuditResult      Json?
   aiAuditedAt        DateTime?
   proposalSimilarity Json?
+  isSpam             Boolean   @default(false)
+  reportCount        Int       @default(0)
 
   submitter User? @relation("SubmittedProposedNodes", fields: [submittedBy], references: [id], onDelete: SetNull)
   reviewer  User? @relation("ReviewedProposedNodes", fields: [reviewedBy], references: [id], onDelete: SetNull)
