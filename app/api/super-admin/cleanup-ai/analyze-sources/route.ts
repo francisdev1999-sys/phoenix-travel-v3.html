@@ -1,20 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSuperAdmin } from '@/lib/cleanup/admin-auth';
 import { runSourceRules } from '@/lib/cleanup/rules';
-import { analyzeSource, estimateCost } from '@/lib/cleanup/analyzer';
+import { analyzeSource, estimateCost, checkApiKey, checkGeminiKey } from '@/lib/cleanup/analyzer';
 import { prisma } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 
-const MAX_CANDIDATES = 100;
-const QUICK_LIMIT    = 20;
+const MAX_CANDIDATES = 20;
+const QUICK_LIMIT    = 5;
+const BATCH_SIZE     = 3;
+
+async function processBatch<T, R>(
+  items: T[],
+  fn: (item: T) => Promise<R>,
+  batchSize: number,
+): Promise<{ result: R | null; error: string | null }[]> {
+  const out: { result: R | null; error: string | null }[] = [];
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch   = items.slice(i, i + batchSize);
+    const settled = await Promise.allSettled(batch.map(fn));
+    for (const s of settled) {
+      if (s.status === 'fulfilled') out.push({ result: s.value, error: null });
+      else out.push({ result: null, error: s.reason instanceof Error ? s.reason.message : String(s.reason) });
+    }
+  }
+  return out;
+}
 
 export async function POST(req: NextRequest) {
   const { error, session } = await requireSuperAdmin();
   if (error) return error;
 
-  const body    = await req.json().catch(() => ({}));
-  const mode    = body.mode === 'quick' ? 'quick' : 'full';
-  const dryRun  = body.dryRun === true;
+  if (!checkApiKey() && !checkGeminiKey()) {
+    return NextResponse.json(
+      { error: 'No AI key configured. Set ANTHROPIC_API_KEY (Claude) or GEMINI_API_KEY (Gemini) in Railway environment variables.' },
+      { status: 503 },
+    );
+  }
+
+  const body   = await req.json().catch(() => ({}));
+  const mode   = body.mode === 'quick' ? 'quick' : 'full';
+  const dryRun = body.dryRun === true;
 
   const allCandidates = await runSourceRules();
   const limit         = mode === 'quick' ? QUICK_LIMIT : MAX_CANDIDATES;
@@ -34,7 +59,7 @@ export async function POST(req: NextRequest) {
     data: {
       mode: 'source',
       status: 'running',
-      triggeredBy: session!.user!.email!,
+      triggeredBy:        session!.user!.email!,
       candidatesScanned:  allCandidates.length,
       candidatesSentToAI: candidates.length,
       estimatedCost,
@@ -42,10 +67,20 @@ export async function POST(req: NextRequest) {
   });
 
   let keepCount = 0, reviewCount = 0, archiveCount = 0, deleteCount = 0, blacklistCount = 0;
+  let errorCount = 0;
+  const errors: string[] = [];
 
-  for (const candidate of candidates) {
+  const results = await processBatch(candidates, analyzeSource, BATCH_SIZE);
+
+  for (let i = 0; i < candidates.length; i++) {
+    const { result, error: itemErr } = results[i];
+    const candidate = candidates[i];
+    if (!result) {
+      errorCount++;
+      errors.push(`"${candidate.title}": ${itemErr ?? 'unknown error'}`);
+      continue;
+    }
     try {
-      const result = await analyzeSource(candidate);
       await prisma.cleanupFinding.create({
         data: {
           auditRunId:          run.id,
@@ -62,28 +97,42 @@ export async function POST(req: NextRequest) {
           blacklistSuggestion: result.blacklistSuggestion ?? null,
         },
       });
-      if      (result.classification === 'KEEP')               keepCount++;
-      else if (result.classification === 'REVIEW')             reviewCount++;
-      else if (result.classification === 'ARCHIVE_CANDIDATE')  archiveCount++;
-      else if (result.classification === 'DELETE_CANDIDATE')   deleteCount++;
+      if      (result.classification === 'KEEP')                keepCount++;
+      else if (result.classification === 'REVIEW')              reviewCount++;
+      else if (result.classification === 'ARCHIVE_CANDIDATE')   archiveCount++;
+      else if (result.classification === 'DELETE_CANDIDATE')    deleteCount++;
       else if (result.classification === 'BLACKLIST_CANDIDATE') blacklistCount++;
     } catch (err) {
-      console.error(`Source analysis failed for ${candidate.id}:`, err);
+      errorCount++;
+      errors.push(`DB write failed for ${candidate.title}: ${String(err)}`);
     }
   }
+
+  const allFailed   = errorCount === candidates.length && candidates.length > 0;
+  const finalStatus = allFailed ? 'failed' : 'completed';
 
   const completed = await prisma.cleanupAuditRun.update({
     where: { id: run.id },
     data: {
-      status:                  'completed',
+      status:                  finalStatus,
       completedAt:             new Date(),
       keepCount,
       reviewCount,
       archiveCandidateCount:   archiveCount,
       deleteCandidateCount:    deleteCount,
       blacklistCandidateCount: blacklistCount,
+      reportJson:              errors.length > 0
+        ? { errors, errorCount, successCount: candidates.length - errorCount }
+        : undefined,
     },
   });
+
+  if (allFailed) {
+    return NextResponse.json(
+      { error: `All ${candidates.length} analyses failed. Error: ${errors[0]}`, run: completed },
+      { status: 500 },
+    );
+  }
 
   return NextResponse.json(completed);
 }

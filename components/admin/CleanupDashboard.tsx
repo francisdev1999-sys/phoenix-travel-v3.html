@@ -55,6 +55,13 @@ const STATUS_ICON: Record<string, React.ReactNode> = {
   failed:    <XCircle size={13} className="text-red-400" />,
 };
 
+const STATUS_LABEL: Record<string, string> = {
+  completed: 'text-green-400',
+  running:   'text-blue-400',
+  pending:   'text-yellow-400',
+  failed:    'text-red-400',
+};
+
 const BLACKLIST_TYPES = ['title', 'keyword', 'domain', 'category', 'entity_type'];
 
 // ── Helper ────────────────────────────────────────────────────────────────────
@@ -338,7 +345,10 @@ export default function CleanupDashboard({ adminEmail }: { adminEmail: string })
         : '/api/super-admin/cleanup-ai/analyze-sources';
       const res = await fetch(ep, { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode: runMode }) });
-      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json().catch(() => ({})) as { error?: string };
+      if (!res.ok) {
+        setError(data.error ?? `Error ${res.status}`);
+      }
       await loadRuns(); await loadFindings();
     } catch (e) { setError(e instanceof Error ? e.message : 'Failed to trigger run'); }
     finally { setTriggering(false); }
@@ -778,6 +788,9 @@ export default function CleanupDashboard({ adminEmail }: { adminEmail: string })
                   {STATUS_ICON[run.status] ?? <Clock size={13} className="text-slate-500" />}
                   <div className="text-left">
                     <span className="text-sm text-white font-medium capitalize">{run.mode} audit</span>
+                    <span className={`ml-2 text-xs font-semibold ${STATUS_LABEL[run.status] ?? 'text-slate-500'}`}>
+                      {run.status}
+                    </span>
                     <span className="ml-2 text-xs text-slate-500">{new Date(run.startedAt).toLocaleString()}</span>
                   </div>
                 </div>
@@ -792,7 +805,16 @@ export default function CleanupDashboard({ adminEmail }: { adminEmail: string })
                 </div>
               </button>
               {expandedRun === run.id && (
-                <div className="border-t border-slate-800 px-4 py-3">
+                <div className="border-t border-slate-800 px-4 py-3 space-y-3">
+                  {run.status === 'failed' && (
+                    <div className="flex items-start gap-2 p-3 bg-red-900/20 border border-red-700/30 rounded-lg text-xs text-red-300">
+                      <AlertTriangle size={13} className="shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-semibold mb-1">Run failed — all AI analyses errored</p>
+                        <p className="text-red-400">Most likely cause: <span className="font-mono">ANTHROPIC_API_KEY</span> is not set in Railway environment variables. Go to Railway → your service → Variables and add it.</p>
+                      </div>
+                    </div>
+                  )}
                   <div className="grid grid-cols-5 gap-2 text-xs text-center">
                     {[
                       { label: 'Keep',      value: run.keepCount,               color: 'text-green-400' },
@@ -807,7 +829,7 @@ export default function CleanupDashboard({ adminEmail }: { adminEmail: string })
                       </div>
                     ))}
                   </div>
-                  <div className="mt-3 text-xs text-slate-600 text-right">
+                  <div className="text-xs text-slate-600 text-right">
                     {run.completedAt && `Completed ${new Date(run.completedAt).toLocaleString()}`}
                     {' · '}{run._count?.findings ?? 0} findings stored
                   </div>

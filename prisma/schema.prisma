@@ -455,13 +455,13 @@ model SourceAnalysis {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @default(now()) @updatedAt
 
-  source        Source                    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
-  entities      ExtractedEntity[]
-  claims        ExtractedClaim[]
-  locationRefs  LocationReference[] @relation("locationRefs")
+  source          Source                    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  entities        ExtractedEntity[]
+  claims          ExtractedClaim[]
+  locationRefs    LocationReference[]       @relation("locationRefs")
   potentialNodes  PotentialNodeSuggestion[]
   contradictions  ContradictionSuggestion[]
-  timelineRefs    TimelineReference[] @relation("timelineRefs")
+  timelineRefs    TimelineReference[]       @relation("timelineRefs")
 }
 
 model ExtractedEntity {
@@ -922,7 +922,7 @@ model SourceDomainReputation {
   status          String   @default("normal")
   approvalCount   Int      @default(0)
   rejectionCount  Int      @default(0)
-  notes           String?
+  notes           String?  
   createdAt       DateTime @default(now())
   updatedAt       DateTime @default(now()) @updatedAt
 }
@@ -1169,4 +1169,19 @@ model IngestionJob {
   lastError   String?
   createdAt   DateTime  @default(now())
   processedAt DateTime?
+}
+
+// ── Orchestration ─────────────────────────────────────────────────────────────
+
+model ArchiveEvent {
+  id         String   @id @default(cuid())
+  eventType  String
+  entityType String
+  entityId   String
+  actorEmail String?
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([eventType, createdAt])
 }
