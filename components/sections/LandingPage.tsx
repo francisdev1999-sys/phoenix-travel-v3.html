@@ -1,244 +1,434 @@
 'use client';
-import { useEffect, useRef, useState, lazy, Suspense } from 'react';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
-import { ChevronDown, Compass, Zap } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { motion } from 'framer-motion';
+import {
+  Search, ArrowRight, BookOpen, Network, Globe2,
+  Landmark, Rocket, ShieldAlert, Atom, Brain, Scroll, Compass,
+  Star, Clock, TrendingUp, ChevronRight, LogIn,
+} from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
-
-const TunnelEffect  = lazy(() => import('@/components/effects/TunnelEffect'));
-const ParticleField = lazy(() => import('@/components/effects/ParticleField'));
 import { useNodes, useEdges } from '@/lib/graph/useNodes';
-import { ancientSites } from '@/lib/data/sites';
+import { useSession, signIn } from 'next-auth/react';
 
-const GLYPHS = ['⬡', '◈', '⊕', '△', '◇', '✦', '⟁', '⬟', '✧', '⊗', '⌬', '⎔'];
+// ── Static galaxy catalogue ───────────────────────────────────────────────────
+// Shown as cards even before the API responds; slugs are corrected by the
+// API fetch below if they differ.
+
+const GALAXY_CARDS = [
+  {
+    slug:  'ancient-civilizations',
+    name:  'Ancient Civilizations',
+    icon:  Landmark,
+    color: 'from-amber-900/50 to-amber-950/30',
+    border:'border-amber-700/30',
+    glow:  'hover:shadow-amber-900/30',
+    desc:  'Lost cities, megalithic structures, forgotten empires and their secrets.',
+  },
+  {
+    slug:  'ufo-uap',
+    name:  'UFO & UAP',
+    icon:  Rocket,
+    color: 'from-cyan-900/50 to-cyan-950/30',
+    border:'border-cyan-700/30',
+    glow:  'hover:shadow-cyan-900/30',
+    desc:  'Documented sightings, government disclosures and aerial anomalies.',
+  },
+  {
+    slug:  'government-programs',
+    name:  'Government Programs',
+    icon:  ShieldAlert,
+    color: 'from-slate-800/60 to-slate-900/40',
+    border:'border-slate-600/30',
+    glow:  'hover:shadow-slate-700/30',
+    desc:  'Classified operations, black sites and intelligence history.',
+  },
+  {
+    slug:  'mythology',
+    name:  'Mythology & Religion',
+    icon:  Scroll,
+    color: 'from-purple-900/50 to-purple-950/30',
+    border:'border-purple-700/30',
+    glow:  'hover:shadow-purple-900/30',
+    desc:  'Gods, creation myths, religious texts and their real-world echoes.',
+  },
+  {
+    slug:  'historical-mysteries',
+    name:  'Historical Mysteries',
+    icon:  Compass,
+    color: 'from-orange-900/50 to-orange-950/30',
+    border:'border-orange-700/30',
+    glow:  'hover:shadow-orange-900/30',
+    desc:  'Unsolved events, vanished peoples and unexplained artifacts.',
+  },
+  {
+    slug:  'science-anomalies',
+    name:  'Science & Anomalies',
+    icon:  Atom,
+    color: 'from-green-900/50 to-green-950/30',
+    border:'border-green-700/30',
+    glow:  'hover:shadow-green-900/30',
+    desc:  'Physics anomalies, forbidden archaeology and fringe science.',
+  },
+  {
+    slug:  'secret-societies',
+    name:  'Secret Societies',
+    icon:  Network,
+    color: 'from-rose-900/50 to-rose-950/30',
+    border:'border-rose-700/30',
+    glow:  'hover:shadow-rose-900/30',
+    desc:  'Hidden orders, oaths of secrecy and their documented influence.',
+  },
+  {
+    slug:  'human-psychology',
+    name:  'Human Psychology',
+    icon:  Brain,
+    color: 'from-violet-900/50 to-violet-950/30',
+    border:'border-violet-700/30',
+    glow:  'hover:shadow-violet-900/30',
+    desc:  'Mass delusion, perception manipulation and consciousness research.',
+  },
+];
+
+const HOW_IT_WORKS = [
+  {
+    icon:  Globe2,
+    step:  '01',
+    title: 'Browse Galaxies',
+    desc:  'Enter a topic galaxy — Ancient Civilizations, UFO/UAP, Mythology — and discover all research nodes within it.',
+  },
+  {
+    icon:  BookOpen,
+    step:  '02',
+    title: 'Read Research Nodes',
+    desc:  'Every topic is a structured node: sources, claims, criticisms, timelines, maps and evidence ratings.',
+  },
+  {
+    icon:  Network,
+    step:  '03',
+    title: 'Follow the Connections',
+    desc:  'Hidden links connect topics across galaxies. Start a rabbit hole and see how deep it goes.',
+  },
+];
+
+// ── Subtle starfield (CSS-only, no canvas) ────────────────────────────────────
+
+function Starfield() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {Array.from({ length: 60 }).map((_, i) => (
+        <div
+          key={i}
+          className="absolute rounded-full bg-white"
+          style={{
+            width:  Math.random() * 1.5 + 0.5 + 'px',
+            height: Math.random() * 1.5 + 0.5 + 'px',
+            top:    Math.random() * 100 + '%',
+            left:   Math.random() * 100 + '%',
+            opacity: Math.random() * 0.4 + 0.05,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
+  const { navigateToUniverse, navigateToGalaxy, setCurrentView } = useUserStore();
   const nodes = useNodes();
   const edges = useEdges();
-  const setCurrentView = useUserStore((s) => s.setCurrentView);
-  const [glyphIndex, setGlyphIndex] = useState(0);
-  const [titleVisible, setTitleVisible] = useState(false);
-  const [subtitleVisible, setSubtitleVisible] = useState(false);
-  const [buttonsVisible, setButtonsVisible] = useState(false);
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const springX = useSpring(mouseX, { stiffness: 30, damping: 30 });
-  const springY = useSpring(mouseY, { stiffness: 30, damping: 30 });
-  const containerRef = useRef<HTMLDivElement>(null);
+  const { data: session } = useSession();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [galaxies, setGalaxies]       = useState<{ id: string; slug: string; name: string }[]>([]);
+  const interestRef = useRef<HTMLElement>(null);
 
+  // Fetch live galaxy list to get correct slugs
   useEffect(() => {
-    const handleWheel = (e: WheelEvent) => {
-      if (e.deltaY > 30) setCurrentView('graph');
-    };
-    window.addEventListener('wheel', handleWheel, { passive: true });
-    return () => window.removeEventListener('wheel', handleWheel);
-  }, [setCurrentView]);
-
-  useEffect(() => {
-    const timer1 = setTimeout(() => setTitleVisible(true), 600);
-    const timer2 = setTimeout(() => setSubtitleVisible(true), 1400);
-    const timer3 = setTimeout(() => setButtonsVisible(true), 2200);
-    return () => { clearTimeout(timer1); clearTimeout(timer2); clearTimeout(timer3); };
+    fetch('/api/galaxies')
+      .then(r => r.ok ? r.json() : [])
+      .then((data: { id: string; slug: string; name: string }[]) => {
+        if (Array.isArray(data) && data.length > 0) setGalaxies(data);
+      })
+      .catch(() => {});
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setGlyphIndex((i) => (i + 1) % GLYPHS.length);
-    }, 1200);
-    return () => clearInterval(interval);
-  }, []);
+  // Resolve a static card slug to a real slug from the API (best-effort)
+  const resolveSlug = (staticSlug: string, name: string) => {
+    const match = galaxies.find(g =>
+      g.slug === staticSlug ||
+      g.name.toLowerCase().includes(name.split(' ')[0].toLowerCase())
+    );
+    return match ? { slug: match.slug, name: match.name } : { slug: staticSlug, name };
+  };
 
-  useEffect(() => {
-    const handleMouse = (e: MouseEvent) => {
-      const el = containerRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width - 0.5) * 40;
-      const y = ((e.clientY - rect.top) / rect.height - 0.5) * 40;
-      mouseX.set(x);
-      mouseY.set(y);
-    };
-    window.addEventListener('mousemove', handleMouse);
-    return () => window.removeEventListener('mousemove', handleMouse);
-  }, [mouseX, mouseY]);
+  const handleCardClick = (staticSlug: string, staticName: string) => {
+    const { slug, name } = resolveSlug(staticSlug, staticName);
+    navigateToGalaxy(slug, name);
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    useUserStore.getState().searchQuery;
+    // Set search query and open universe (which handles search)
+    useUserStore.setState({ searchQuery: searchQuery.trim() });
+    navigateToUniverse();
+  };
+
+  const scrollToInterests = () => {
+    interestRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const fade = { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 } };
 
   return (
-    <div ref={containerRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#000005]">
-      {/* Background layers — lazy to avoid blocking first paint */}
-      <Suspense fallback={null}>
-        <TunnelEffect />
-        <ParticleField />
-      </Suspense>
+    <div className="min-h-screen bg-[#000005] text-slate-200 overflow-y-auto overflow-x-hidden">
+      <Starfield />
 
-      {/* Vignette */}
-      <div className="fixed inset-0 pointer-events-none z-10"
-        style={{ background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,5,0.8) 100%)' }} />
+      {/* ── Minimal header ── */}
+      <header className="sticky top-0 z-50 flex items-center justify-between px-4 sm:px-8 py-3 bg-[#000005]/90 backdrop-blur-md border-b border-white/5">
+        <div className="flex items-center gap-2">
+          <span className="text-purple-400 text-lg">✦</span>
+          <span className="font-black text-white tracking-tight text-sm uppercase">Nexus Archive</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {!session ? (
+            <button
+              onClick={() => signIn('google')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white border border-slate-700 hover:border-slate-500 transition-all"
+            >
+              <LogIn size={13} />
+              Sign In
+            </button>
+          ) : (
+            <button
+              onClick={navigateToUniverse}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-700 hover:bg-purple-600 text-white transition-all"
+            >
+              Enter Archive <ArrowRight size={12} />
+            </button>
+          )}
+        </div>
+      </header>
 
-      {/* Content */}
-      <div className="relative z-20 flex flex-col items-center justify-center text-center px-4 gap-8">
+      {/* ── Hero ── */}
+      <section className="relative flex flex-col items-center justify-center text-center px-4 pt-20 pb-16 sm:pt-28 sm:pb-20">
+        <motion.div {...fade} transition={{ duration: 0.6 }} className="space-y-6 max-w-3xl mx-auto">
 
-        {/* Rotating glyph ring */}
-        <motion.div
-          style={{ rotateX: springY, rotateY: springX }}
-          className="relative w-40 h-40 flex items-center justify-center"
-        >
-          <div className="absolute inset-0 rounded-full border border-purple-500/30 animate-rotate-slow" />
-          <div className="absolute inset-3 rounded-full border border-cyan-500/20 animate-[rotate-slow_15s_linear_infinite_reverse]" />
-          <div className="absolute inset-6 rounded-full border border-purple-400/20 animate-rotate-slow" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-purple-500/30 bg-purple-950/30 text-purple-300 text-xs font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+            Research Archive · Open Access
+          </div>
 
-          {[0, 60, 120, 180, 240, 300].map((deg) => (
-            <div
-              key={deg}
-              className="absolute w-1.5 h-1.5 rounded-full bg-purple-400"
-              style={{
-                top: '50%',
-                left: '50%',
-                transform: `rotate(${deg}deg) translateX(60px) translateY(-50%)`,
-              }}
-            />
-          ))}
+          <h1 className="text-5xl sm:text-7xl font-black tracking-tight leading-none text-white">
+            The Nexus{' '}
+            <span className="bg-gradient-to-r from-purple-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent">
+              Archive
+            </span>
+          </h1>
 
-          <motion.div
-            key={glyphIndex}
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.5 }}
-            className="text-4xl text-purple-300 text-glow-purple z-10"
-          >
-            {GLYPHS[glyphIndex]}
-          </motion.div>
+          <p className="text-lg sm:text-xl text-slate-300 font-light max-w-2xl mx-auto leading-relaxed">
+            Research-grade exploration of unexplained phenomena, ancient mysteries, and the hidden connections between them.
+          </p>
 
-          <div className="absolute inset-8 rounded-full bg-purple-900/30 blur-xl" />
+          {/* Search bar */}
+          <form onSubmit={handleSearch} className="flex items-center gap-2 max-w-lg mx-auto w-full">
+            <div className="flex-1 flex items-center gap-2 bg-slate-900 border border-slate-700 hover:border-slate-500 focus-within:border-purple-500 rounded-xl px-4 py-3 transition-all">
+              <Search size={15} className="text-slate-500 shrink-0" />
+              <input
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search theories, events, people, phenomena…"
+                className="flex-1 bg-transparent text-sm text-white placeholder-slate-500 outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              className="px-5 py-3 rounded-xl bg-purple-700 hover:bg-purple-600 text-white text-sm font-semibold transition-all"
+            >
+              Search
+            </button>
+          </form>
+
+          {/* Topic pills */}
+          <div className="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
+            {GALAXY_CARDS.map(g => (
+              <button
+                key={g.slug}
+                onClick={() => handleCardClick(g.slug, g.name)}
+                className="px-3 py-1 rounded-full text-xs font-medium border border-slate-700 hover:border-purple-500/60 bg-slate-900/50 hover:bg-purple-950/40 text-slate-400 hover:text-purple-300 transition-all"
+              >
+                {g.name}
+              </button>
+            ))}
+          </div>
+
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={navigateToUniverse}
+              className="flex items-center gap-2 px-8 py-3.5 rounded-xl bg-purple-700 hover:bg-purple-600 text-white font-bold text-sm transition-all shadow-lg shadow-purple-900/40"
+            >
+              <Globe2 size={16} />
+              Explore Archive
+              <ArrowRight size={14} />
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={scrollToInterests}
+              className="flex items-center gap-2 px-8 py-3.5 rounded-xl border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white font-semibold text-sm transition-all"
+            >
+              Browse Topics
+              <ChevronRight size={14} />
+            </motion.button>
+          </div>
+
+          <p className="text-xs text-slate-600 max-w-md mx-auto">
+            All content is presented as theories and open questions — not established facts. Critical thinking is encouraged.
+          </p>
         </motion.div>
+      </section>
 
-        {titleVisible && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: 'easeOut' }}
-            className="space-y-2"
-            style={{ rotateX: springY, rotateY: springX }}
-          >
-            <div className="text-xs tracking-[0.6em] text-cyan-400/70 font-light uppercase mb-4">
-              CLASSIFIED ARCHIVE — LEVEL OMEGA
+      {/* ── Stats bar ── */}
+      <motion.section
+        {...fade}
+        transition={{ duration: 0.6, delay: 0.15 }}
+        className="border-y border-white/5 bg-white/[0.02] py-6"
+      >
+        <div className="flex items-center justify-center flex-wrap gap-8 sm:gap-16 max-w-3xl mx-auto px-4">
+          {[
+            { icon: BookOpen, label: 'Research Nodes',  value: `${nodes.length}+` },
+            { icon: Network,  label: 'Connections',     value: `${edges.length}+` },
+            { icon: Star,     label: 'Topic Galaxies',  value: '9' },
+            { icon: Clock,    label: 'Years Covered',   value: '10,000' },
+          ].map(({ icon: Icon, label, value }) => (
+            <div key={label} className="flex flex-col items-center gap-1">
+              <Icon size={16} className="text-purple-400/60" />
+              <div className="text-2xl font-black text-white">{value}</div>
+              <div className="text-xs text-slate-500 tracking-wide">{label}</div>
             </div>
-            <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight leading-none">
-              <span className="text-white text-glow-purple">THE NEXUS</span>
-              <br />
-              <span className="bg-gradient-to-r from-purple-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent animate-flicker">
-                ARCHIVE
-              </span>
-            </h1>
+          ))}
+        </div>
+      </motion.section>
 
-            <div className="flex items-center justify-center gap-3 mt-4">
-              <div className="h-px w-16 bg-gradient-to-r from-transparent to-purple-500" />
-              <span className="text-purple-400 text-sm">✦</span>
-              <div className="h-px w-16 bg-gradient-to-l from-transparent to-purple-500" />
+      {/* ── Galaxy grid ── */}
+      <section className="max-w-5xl mx-auto px-4 py-16 sm:py-20">
+        <motion.div {...fade} transition={{ duration: 0.5, delay: 0.1 }}>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-2xl font-bold text-white">Explore by Galaxy</h2>
+              <p className="text-sm text-slate-500 mt-1">Each galaxy is a self-contained research domain</p>
             </div>
-          </motion.div>
-        )}
-
-        {subtitleVisible && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="max-w-lg"
-          >
-            <p className="text-lg sm:text-xl text-slate-300 font-light leading-relaxed">
-              &quot;What if history is more mysterious than we think?&quot;
-            </p>
-            <p className="text-sm text-slate-500 mt-3 leading-relaxed">
-              An interactive archive of theories, ancient mysteries, alternative interpretations,
-              and the hidden connections between unexplained phenomena.
-            </p>
-            <p className="text-xs text-purple-400/60 mt-2 italic">
-              All content presented as theories and open questions — not established facts.
-            </p>
-          </motion.div>
-        )}
-
-        {buttonsVisible && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="flex flex-col sm:flex-row gap-4 mt-4"
-          >
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => setCurrentView('graph')}
-              className="group relative px-8 py-4 rounded-xl font-bold text-sm tracking-widest uppercase overflow-hidden"
+            <button
+              onClick={navigateToUniverse}
+              className="hidden sm:flex items-center gap-1.5 text-xs text-purple-400 hover:text-purple-300 font-semibold"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-700 to-purple-600 group-hover:from-purple-600 group-hover:to-cyan-600 transition-all duration-500" />
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 glow-purple" />
-              <div className="relative flex items-center gap-2">
-                <Compass size={16} />
-                Enter The Archive
-              </div>
-            </motion.button>
+              View all <ArrowRight size={12} />
+            </button>
+          </div>
 
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => setCurrentView('universe')}
-              className="group relative px-8 py-4 rounded-xl font-bold text-sm tracking-widest uppercase overflow-hidden border border-cyan-500/30 hover:border-cyan-400/60 transition-colors"
-            >
-              <div className="absolute inset-0 bg-cyan-950/30 group-hover:bg-cyan-900/40 transition-all" />
-              <div className="relative flex items-center gap-2 text-cyan-300">
-                <Zap size={16} />
-                Begin Exploration
-              </div>
-            </motion.button>
-          </motion.div>
-        )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {GALAXY_CARDS.map((g, i) => {
+              const Icon = g.icon;
+              return (
+                <motion.button
+                  key={g.slug}
+                  onClick={() => handleCardClick(g.slug, g.name)}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.06 }}
+                  whileHover={{ y: -2 }}
+                  className={`group relative text-left p-4 rounded-xl bg-gradient-to-br ${g.color} border ${g.border} hover:shadow-lg ${g.glow} transition-all duration-200`}
+                >
+                  <Icon size={22} className="text-slate-400 group-hover:text-white mb-3 transition-colors" />
+                  <div className="font-bold text-sm text-white mb-1.5 leading-snug">{g.name}</div>
+                  <div className="text-xs text-slate-500 group-hover:text-slate-400 leading-relaxed transition-colors line-clamp-2">{g.desc}</div>
+                  <ChevronRight size={13} className="absolute bottom-3 right-3 text-slate-600 group-hover:text-purple-400 transition-colors" />
+                </motion.button>
+              );
+            })}
+          </div>
+        </motion.div>
+      </section>
 
-        {buttonsVisible && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.5 }}
-            className="flex items-center gap-8 mt-8"
-          >
-            {[
-              { label: 'Theories', value: String(nodes.length) },
-              { label: 'Connections', value: String(edges.length) },
-              { label: 'Ancient Sites', value: String(ancientSites.length) },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="text-2xl font-black text-purple-300">{stat.value}</div>
-                <div className="text-xs text-slate-500 tracking-wider">{stat.label}</div>
+      {/* ── How it works ── */}
+      <section className="border-t border-white/5 bg-white/[0.015] py-16 px-4">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl font-bold text-white text-center mb-12">How it works</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+            {HOW_IT_WORKS.map(({ icon: Icon, step, title, desc }) => (
+              <div key={step} className="flex flex-col items-start gap-4">
+                <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-purple-950/60 border border-purple-700/30">
+                  <Icon size={18} className="text-purple-400" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-mono text-slate-600 mb-1">{step}</div>
+                  <div className="font-bold text-white text-base mb-2">{title}</div>
+                  <div className="text-sm text-slate-400 leading-relaxed">{desc}</div>
+                </div>
               </div>
             ))}
-          </motion.div>
-        )}
-      </div>
+          </div>
+        </div>
+      </section>
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 3, duration: 1 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 text-slate-500"
-      >
-        <span className="text-xs tracking-widest uppercase">Scroll to explore</span>
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-        >
-          <ChevronDown size={16} />
-        </motion.div>
-      </motion.div>
+      {/* ── Interest picker (Phase 5 onboarding) ── */}
+      <section ref={interestRef as React.RefObject<HTMLElement>} className="max-w-4xl mx-auto px-4 py-16 sm:py-20">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl font-bold text-white mb-2">What interests you?</h2>
+          <p className="text-sm text-slate-500">Select a topic to start your research journey</p>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {GALAXY_CARDS.map((g) => {
+            const Icon = g.icon;
+            return (
+              <motion.button
+                key={g.slug}
+                onClick={() => handleCardClick(g.slug, g.name)}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+                className={`flex flex-col items-center gap-3 p-5 rounded-xl bg-gradient-to-br ${g.color} border ${g.border} hover:shadow-lg ${g.glow} transition-all duration-200 text-center`}
+              >
+                <Icon size={28} className="text-slate-300" />
+                <span className="text-xs font-semibold text-white leading-snug">{g.name}</span>
+              </motion.button>
+            );
+          })}
+        </div>
 
-      <div className="fixed top-20 left-4 z-10 text-purple-500/20 text-xs font-mono hidden lg:block">
-        {['SYS: ACTIVE', 'SEC: OMEGA', 'NET: ENCRYPTED'].map((line) => (
-          <div key={line}>{line}</div>
-        ))}
-      </div>
-      <div className="fixed top-20 right-4 z-10 text-cyan-500/20 text-xs font-mono text-right hidden lg:block">
-        {['AUTH: GRANTED', 'LEVEL: ∞', 'STATUS: ONLINE'].map((line) => (
-          <div key={line}>{line}</div>
-        ))}
-      </div>
+        <div className="flex items-center justify-center mt-10 gap-4">
+          <button
+            onClick={navigateToUniverse}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-700 hover:bg-purple-600 text-white font-bold text-sm transition-all"
+          >
+            <TrendingUp size={15} />
+            Browse All Galaxies
+          </button>
+          <button
+            onClick={() => setCurrentView('graph')}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white font-semibold text-sm transition-all"
+          >
+            <Network size={15} />
+            Open Research Graph
+          </button>
+        </div>
+      </section>
+
+      {/* ── Footer ── */}
+      <footer className="border-t border-white/5 py-8 px-4 text-center">
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <span className="text-purple-400">✦</span>
+          <span className="text-sm font-bold text-slate-400">Nexus Archive</span>
+        </div>
+        <p className="text-xs text-slate-600 max-w-lg mx-auto">
+          All content is presented as theories, claims, and open questions — not established facts.
+          Sources are cited where available. Critical thinking and independent research are encouraged.
+        </p>
+      </footer>
     </div>
   );
 }

@@ -24,12 +24,12 @@ import { usePerformanceStore, getEffectiveMode, type PerfMode } from '@/lib/stor
 
 const NAV_PRIMARY = [
   { id: 'universe',       label: 'Universe',        icon: Globe },
-  { id: 'graph',          label: 'Research Graph',  icon: Grid3X3 },
   { id: 'timeline',       label: 'Timeline',        icon: Clock },
   { id: 'globe',          label: 'Nexus Globe',     icon: MapPin },
   { id: 'evidence-board', label: 'Evidence Board',  icon: BarChart3 },
   { id: 'rabbit-hole',    label: 'Rabbit Hole',     icon: Rabbit },
   { id: 'dashboard',      label: 'Dashboard',       icon: User },
+  { id: 'graph',          label: 'Research Graph',  icon: Grid3X3 },
 ];
 // Always-visible tools (no auth required)
 const NAV_TOOLS_BASE = [
