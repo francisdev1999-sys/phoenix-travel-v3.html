@@ -305,7 +305,7 @@ export default function IntelFeed() {
             <Radio size={28} className="text-slate-700" />
             <p className="text-sm text-slate-600">No intel found</p>
             <p className="text-xs text-slate-700">
-              {query ? 'Try a different search term' : 'Run the cron job to populate the feed'}
+              {query ? 'Try a different search term' : 'New intel arrives hourly — check back soon'}
             </p>
           </div>
         )}
