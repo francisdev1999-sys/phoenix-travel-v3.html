@@ -1,7 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2, CheckCircle, AlertTriangle, X } from 'lucide-react';
-import { nodes } from '@/lib/graph';
+
+type NodeHit = { id: string; title: string };
 
 const RELATIONSHIP_TYPES = ['historical', 'geographical', 'textual', 'thematic', 'influence', 'contradictory'];
 const EVIDENCE_LEVELS    = ['verified', 'strong_evidence', 'debated', 'speculative', 'mythological'];
@@ -22,16 +23,36 @@ export default function ProposeEdgeForm({ onSuccess, onCancel }: Props) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [error, setError] = useState('');
   const [fromSearch, setFromSearch] = useState('');
-  const [toSearch, setToSearch] = useState('');
+  const [toSearch, setToSearch]   = useState('');
+  const [fromSuggestions, setFromSuggestions] = useState<NodeHit[]>([]);
+  const [toSuggestions, setToSuggestions]     = useState<NodeHit[]>([]);
+  const [fromSelectedName, setFromSelectedName] = useState('');
+  const [toSelectedName, setToSelectedName]     = useState('');
 
   const set = (k: string, v: unknown) => setForm(p => ({ ...p, [k]: v }));
 
-  const filteredFrom = fromSearch.length >= 2
-    ? nodes.filter(n => n.title.toLowerCase().includes(fromSearch.toLowerCase()) || n.id.includes(fromSearch.toLowerCase())).slice(0, 8)
-    : [];
-  const filteredTo = toSearch.length >= 2
-    ? nodes.filter(n => n.title.toLowerCase().includes(toSearch.toLowerCase()) || n.id.includes(toSearch.toLowerCase())).slice(0, 8)
-    : [];
+  // Live search — debounced fetch from DB
+  useEffect(() => {
+    if (fromSearch.length < 2) { setFromSuggestions([]); return; }
+    const t = setTimeout(async () => {
+      const r = await fetch(`/api/search/quick?q=${encodeURIComponent(fromSearch)}`).catch(() => null);
+      if (!r?.ok) return;
+      const d = await r.json() as { nodes: NodeHit[] };
+      setFromSuggestions(d.nodes?.slice(0, 8) ?? []);
+    }, 250);
+    return () => clearTimeout(t);
+  }, [fromSearch]);
+
+  useEffect(() => {
+    if (toSearch.length < 2) { setToSuggestions([]); return; }
+    const t = setTimeout(async () => {
+      const r = await fetch(`/api/search/quick?q=${encodeURIComponent(toSearch)}`).catch(() => null);
+      if (!r?.ok) return;
+      const d = await r.json() as { nodes: NodeHit[] };
+      setToSuggestions(d.nodes?.slice(0, 8) ?? []);
+    }, 250);
+    return () => clearTimeout(t);
+  }, [toSearch]);
 
   const submit = async () => {
     if (!form.fromNodeId || !form.toNodeId || !form.description.trim()) {
@@ -70,12 +91,14 @@ export default function ProposeEdgeForm({ onSuccess, onCancel }: Props) {
 
       {/* Node pickers */}
       <div className="grid grid-cols-2 gap-3">
-        <NodePicker label="From node *" value={form.fromNodeId} search={fromSearch}
-          setSearch={setFromSearch} suggestions={filteredFrom}
-          onSelect={id => { set('fromNodeId', id); setFromSearch(''); }} />
-        <NodePicker label="To node *" value={form.toNodeId} search={toSearch}
-          setSearch={setToSearch} suggestions={filteredTo}
-          onSelect={id => { set('toNodeId', id); setToSearch(''); }} />
+        <NodePicker label="From node *" value={form.fromNodeId} selectedName={fromSelectedName}
+          search={fromSearch} setSearch={setFromSearch} suggestions={fromSuggestions}
+          onSelect={(id, name) => { set('fromNodeId', id); setFromSelectedName(name); setFromSearch(''); setFromSuggestions([]); }}
+          onClear={() => { set('fromNodeId', ''); setFromSelectedName(''); }} />
+        <NodePicker label="To node *" value={form.toNodeId} selectedName={toSelectedName}
+          search={toSearch} setSearch={setToSearch} suggestions={toSuggestions}
+          onSelect={(id, name) => { set('toNodeId', id); setToSelectedName(name); setToSearch(''); setToSuggestions([]); }}
+          onClear={() => { set('toNodeId', ''); setToSelectedName(''); }} />
       </div>
 
       {/* Relationship type */}
@@ -161,19 +184,19 @@ function Slider({ label, value, onChange }: { label: string; value: number; onCh
   );
 }
 
-function NodePicker({ label, value, search, setSearch, suggestions, onSelect }: {
-  label: string; value: string; search: string;
-  setSearch: (s: string) => void; suggestions: typeof nodes;
-  onSelect: (id: string) => void;
+function NodePicker({ label, value, selectedName, search, setSearch, suggestions, onSelect, onClear }: {
+  label: string; value: string; selectedName: string; search: string;
+  setSearch: (s: string) => void; suggestions: NodeHit[];
+  onSelect: (id: string, name: string) => void;
+  onClear: () => void;
 }) {
-  const selectedNode = value ? nodes.find(n => n.id === value) : null;
   return (
     <div className="relative">
       <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">{label}</p>
-      {selectedNode ? (
+      {value ? (
         <div className="flex items-center gap-2 p-2 rounded-lg bg-purple-900/30 border border-purple-500/30">
-          <span className="text-xs text-white flex-1 truncate">{selectedNode.title}</span>
-          <button onClick={() => onSelect('')} className="text-slate-500 hover:text-white">
+          <span className="text-xs text-white flex-1 truncate">{selectedName || value}</span>
+          <button onClick={onClear} className="text-slate-500 hover:text-white">
             <X size={10} />
           </button>
         </div>
@@ -184,7 +207,7 @@ function NodePicker({ label, value, search, setSearch, suggestions, onSelect }: 
           {suggestions.length > 0 && (
             <div className="absolute top-full left-0 right-0 z-20 mt-1 rounded-xl bg-slate-900 border border-purple-900/40 overflow-hidden shadow-xl">
               {suggestions.map(n => (
-                <button key={n.id} onClick={() => onSelect(n.id)}
+                <button key={n.id} onClick={() => onSelect(n.id, n.title)}
                   className="w-full flex flex-col px-3 py-2 text-left hover:bg-white/10 transition-all border-b border-purple-900/20 last:border-0">
                   <span className="text-xs text-white">{n.title}</span>
                   <span className="text-[10px] text-slate-500 font-mono">{n.id}</span>
