@@ -237,3 +237,35 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   return NextResponse.json({ node: updated });
 }
+
+/**
+ * DELETE /api/nodes/:id
+ *
+ * Hard-deletes a node (owner only). Cascades to tags, claims, criticisms,
+ * openQuestions, edges, sourceLinks, and embeddings via Prisma relations.
+ */
+export async function DELETE(_req: NextRequest, { params }: Params) {
+  const { id } = await params;
+  const session = await auth();
+
+  const role = (session?.user as { role?: string } | undefined)?.role;
+  if (!session || role !== 'owner') {
+    return NextResponse.json({ error: 'Owner access required' }, { status: 403 });
+  }
+
+  const node = await prisma.node.findUnique({ where: { id }, select: { id: true, title: true } });
+  if (!node) return NextResponse.json({ error: 'Node not found' }, { status: 404 });
+
+  await prisma.node.delete({ where: { id } });
+
+  await writeAuditLog({
+    userId:     session.user!.id    ?? null,
+    userEmail:  session.user!.email ?? null,
+    action:     'delete',
+    entityType: 'node',
+    entityId:   id,
+    detail:     { title: node.title },
+  });
+
+  return NextResponse.json({ ok: true, deleted: id });
+}

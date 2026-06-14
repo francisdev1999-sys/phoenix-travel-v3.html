@@ -183,9 +183,9 @@ function GalaxyDetailView() {
   useEffect(() => {
     if (!galaxySlug) return;
     fetch(`/api/galaxies/${galaxySlug}`)
-      .then(r => r.json())
-      .then(d => { setGalaxy(d.galaxy); setClusters(d.clusters); })
-      .catch(console.error)
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(d => { setGalaxy(d.galaxy ?? null); setClusters(d.clusters ?? []); })
+      .catch(err => console.error('[galaxy]', err))
       .finally(() => setLoading(false));
   }, [galaxySlug]);
 
