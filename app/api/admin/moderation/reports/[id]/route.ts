@@ -16,7 +16,7 @@ export async function PATCH(
 ) {
   const { id } = await params;
   const session = await auth();
-  if (!isAdminSession(session) && !isModSession(session) || !session) {
+  if (!session || (!isAdminSession(session) && !isModSession(session))) {
     return NextResponse.json({ error: 'Moderator access required' }, { status: 403 });
   }
 

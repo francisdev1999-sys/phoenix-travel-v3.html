@@ -23,7 +23,7 @@ const VALID_ACTIONS = ['approved', 'rejected', 'revised'] as const;
 export async function POST(req: NextRequest, { params }: Params) {
   const { id } = await params;
   const session = await auth();
-  if (!isAdminSession(session) || !session) {
+  if (!session || !isAdminSession(session)) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   }
 
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   await writeAuditLog({
     userId:     reviewedBy,
     userEmail:  reviewerEmail,
-    action:     action === 'revised' ? 'approve' : 'approve',
+    action:     action === 'revised' ? 'revise' : 'approve',
     entityType: 'suggestion',
     entityId:   id,
     detail:     {

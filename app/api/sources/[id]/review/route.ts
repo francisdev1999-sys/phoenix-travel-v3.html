@@ -12,7 +12,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   const { id } = await params;
   const session = await auth();
 
-  if (!isAdminSession(session) || !session) {
+  if (!session || !isAdminSession(session)) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   }
 

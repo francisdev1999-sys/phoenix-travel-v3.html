@@ -3,18 +3,20 @@ import { requireSuperAdmin } from '@/lib/cleanup/admin-auth';
 import { prisma } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 
-type BulkAction = 'ignore' | 'resolve' | 'archive' | 'review' | 'blacklist';
+type BulkAction = 'ignore' | 'resolve' | 'archive' | 'review' | 'blacklist' | 'delete';
 
 export async function POST(req: NextRequest) {
   const { error, session } = await requireSuperAdmin();
   if (error) return error;
 
   const body = await req.json().catch(() => ({}));
-  const { ids, action, blacklistType, blacklistReason } = body as {
+  const { ids, action, blacklistType, blacklistReason, confirmation, reason } = body as {
     ids: string[];
     action: BulkAction;
     blacklistType?: string;
     blacklistReason?: string;
+    confirmation?: string;
+    reason?: string;
   };
 
   if (!Array.isArray(ids) || ids.length === 0 || !action) {
@@ -40,7 +42,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, affected: ids.length });
   }
 
-  // For archive / review / blacklist we need to read the findings first
+  // For archive / review / blacklist / delete we need to read the findings first
   const findings = await prisma.cleanupFinding.findMany({
     where: { id: { in: ids } },
     select: { id: true, itemType: true, itemId: true, title: true, blacklistSuggestion: true },
@@ -111,6 +113,32 @@ export async function POST(req: NextRequest) {
       }),
     ]);
     return NextResponse.json({ ok: true, affected: ids.length });
+  }
+
+  if (action === 'delete') {
+    if (confirmation !== 'DELETE') {
+      return NextResponse.json({ error: 'Confirmation text must be DELETE' }, { status: 400 });
+    }
+    if (!reason || reason.trim().length < 5) {
+      return NextResponse.json({ error: 'A reason is required for hard deletion' }, { status: 400 });
+    }
+
+    const nodeIds   = findings.filter(f => f.itemType === 'node').map(f => f.itemId);
+    const sourceIds = findings.filter(f => f.itemType === 'source').map(f => f.itemId);
+
+    await Promise.all([
+      nodeIds.length > 0
+        ? prisma.node.deleteMany({ where: { id: { in: nodeIds } } })
+        : Promise.resolve(),
+      sourceIds.length > 0
+        ? prisma.source.deleteMany({ where: { id: { in: sourceIds } } })
+        : Promise.resolve(),
+      prisma.cleanupFinding.updateMany({
+        where: { id: { in: ids } },
+        data:  { status: 'resolved', resolvedBy: adminEmail, resolvedAt: now },
+      }),
+    ]);
+    return NextResponse.json({ ok: true, affected: ids.length, nodeIds, sourceIds, reason });
   }
 
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
