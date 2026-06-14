@@ -156,6 +156,18 @@ export default function AppShell() {
 
   const isInitialMountRef = useRef(true);
 
+  // On first load: restore view from URL hash so deep-links and refreshes work
+  useEffect(() => {
+    const VALID = [
+      'graph', 'universe', 'galaxy', 'cluster', 'node', 'research-graph',
+      'timeline', 'evidence-board', 'globe', 'dashboard',
+      'diagnostics', 'sources', 'admin', 'rabbit-hole', 'intel-feed',
+    ] as const;
+    const urlHash = window.location.hash.slice(1) as typeof VALID[number];
+    if (urlHash && (VALID as readonly string[]).includes(urlHash)) setCurrentView(urlHash);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Sync currentView → browser history so back/forward navigate within the app
   useEffect(() => {
     const hash = currentView === 'landing' ? '' : `#${currentView}`;

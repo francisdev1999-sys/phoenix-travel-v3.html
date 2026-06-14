@@ -440,6 +440,7 @@ export default function NavBar() {
               )}
               <button
                 onClick={searchOpen ? closeSearch : openSearch}
+                aria-label={searchOpen ? 'Close search' : 'Search'}
                 className="p-2 rounded-lg text-slate-400 hover:text-purple-400 hover:bg-purple-900/30 transition-all"
               >
                 {searchOpen ? <X size={15} /> : <Search size={15} />}
@@ -610,6 +611,7 @@ export default function NavBar() {
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
               className="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-all"
             >
               {mobileOpen ? <X size={15} /> : <Menu size={15} />}

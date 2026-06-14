@@ -9,6 +9,18 @@ import {
 import { useUserStore } from '@/lib/store/userStore';
 import type { GalaxyWithCounts } from '@/app/api/galaxies/route';
 
+// Static placeholder galaxies shown when DB is unreachable
+const FALLBACK_GALAXIES: GalaxyWithCounts[] = [
+  { id: 'f1', order: 1, slug: 'ancient-civilizations', name: 'Ancient Civilizations', description: 'Lost cities, megalithic structures and forgotten empires.', color: '#b45309', icon: 'Landmark',   nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
+  { id: 'f2', order: 2, slug: 'ufo-uap',               name: 'UFO & UAP',             description: 'Documented sightings, government disclosures and aerial anomalies.', color: '#0e7490', icon: 'Satellite',  nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
+  { id: 'f3', order: 3, slug: 'government-programs',   name: 'Government Programs',   description: 'Classified operations, black sites and intelligence history.', color: '#475569', icon: 'Shield',     nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
+  { id: 'f4', order: 4, slug: 'mythology',             name: 'Mythology & Religion',  description: 'Gods, creation myths, religious texts and their real-world echoes.', color: '#7c3aed', icon: 'CircleDot', nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
+  { id: 'f5', order: 5, slug: 'historical-mysteries',  name: 'Historical Mysteries',  description: 'Unsolved events, vanished peoples and unexplained artifacts.', color: '#c2410c', icon: 'Flame',      nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
+  { id: 'f6', order: 6, slug: 'science-anomalies',     name: 'Science & Anomalies',   description: 'Physics anomalies, forbidden archaeology and fringe science.', color: '#15803d', icon: 'Dna',        nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
+  { id: 'f7', order: 7, slug: 'secret-societies',      name: 'Secret Societies',      description: 'Hidden orders, oaths of secrecy and their documented influence.', color: '#9f1239', icon: 'Network',    nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
+  { id: 'f8', order: 8, slug: 'human-psychology',      name: 'Human Psychology',      description: 'Mass delusion, perception manipulation and consciousness research.', color: '#6d28d9', icon: 'Users',      nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
+];
+
 const UniverseView = lazy(() => import('@/components/sections/UniverseView'));
 
 // Map galaxy icon names to lucide-react components
@@ -256,17 +268,11 @@ export default function GalaxyView() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full gap-2">
-        <p className="text-sm text-red-400">Failed to load galaxies.</p>
-        <button onClick={() => window.location.reload()} className="text-xs text-purple-400 hover:text-purple-300">Retry</button>
-      </div>
-    );
-  }
+  // Use live data or fall back to static placeholders when DB is unreachable
+  const displayGalaxies = error ? FALLBACK_GALAXIES : galaxies;
 
-  const totalNodes   = galaxies.reduce((s, g) => s + g.nodeCount, 0);
-  const totalSources = galaxies.reduce((s, g) => s + g.sourceCount, 0);
+  const totalNodes   = displayGalaxies.reduce((s, g) => s + g.nodeCount, 0);
+  const totalSources = displayGalaxies.reduce((s, g) => s + g.sourceCount, 0);
 
   return (
     <div className="h-full relative overflow-hidden">
@@ -278,7 +284,7 @@ export default function GalaxyView() {
               <Loader2 className="animate-spin text-purple-400" size={24} />
             </div>
           }>
-            <UniverseView galaxies={galaxies} onClose={() => setCosmosMode(false)} />
+            <UniverseView galaxies={displayGalaxies} onClose={() => setCosmosMode(false)} />
           </Suspense>
         </div>
       )}
@@ -313,14 +319,14 @@ export default function GalaxyView() {
             <div className="text-center">
               <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Universe</h1>
               <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
-                {totalNodes.toLocaleString()} nodes across {galaxies.length} galaxies · {totalSources.toLocaleString()} sources
+                {totalNodes > 0 ? `${totalNodes.toLocaleString()} nodes across ` : ''}{displayGalaxies.length} galaxies{totalSources > 0 ? ` · ${totalSources.toLocaleString()} sources` : ''}
               </p>
             </div>
           </motion.div>
 
           {/* Galaxy grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {galaxies.map((galaxy, i) => (
+            {displayGalaxies.map((galaxy, i) => (
               <GalaxyCard key={galaxy.id} galaxy={galaxy} index={i} />
             ))}
           </div>

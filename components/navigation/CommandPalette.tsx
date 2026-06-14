@@ -4,6 +4,31 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Loader2, Network, Folder, Telescope, X } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 
+type LightNode = { id: string; title: string; category: string; description?: string; tags?: string[] };
+let _cachedNodes: LightNode[] | null = null;
+async function loadStaticNodes(): Promise<LightNode[]> {
+  if (_cachedNodes) return _cachedNodes;
+  const mod = await import('@/lib/graph/nodes');
+  _cachedNodes = mod.nodes as unknown as LightNode[];
+  return _cachedNodes;
+}
+async function searchStaticNodes(q: string): Promise<QuickNode[]> {
+  const lq = q.toLowerCase();
+  const nodes = await loadStaticNodes();
+  return nodes
+    .filter(n => n.title.toLowerCase().includes(lq) || n.description?.toLowerCase().includes(lq))
+    .slice(0, 8)
+    .map(n => ({
+      id: n.id,
+      title: n.title,
+      evidenceLevel: 'speculative',
+      color: null,
+      icon: null,
+      categoryName: n.category,
+      categoryColor: null,
+    }));
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface QuickNode {
@@ -130,14 +155,19 @@ export default function CommandPalette({ open, onClose }: Props) {
     timerRef.current = setTimeout(async () => {
       try {
         const r = await fetch(`/api/search/quick?q=${encodeURIComponent(q)}`);
-        const d = await r.json();
-        setResults(d);
-        setActiveIdx(0);
-      } catch {
-        // silent
-      } finally {
-        setLoading(false);
-      }
+        if (r.ok) {
+          const d = await r.json();
+          setResults(d);
+          setActiveIdx(0);
+          setLoading(false);
+          return;
+        }
+      } catch { /* fall through to static */ }
+      // DB unavailable — search static node data
+      const staticNodes = await searchStaticNodes(q);
+      setResults({ nodes: staticNodes, clusters: [], galaxies: [] });
+      setActiveIdx(0);
+      setLoading(false);
     }, 280);
   }, []);
 
