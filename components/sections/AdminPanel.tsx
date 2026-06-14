@@ -430,9 +430,17 @@ export default function AdminPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ job: jobId }),
       });
-      const d = await r.json() as { ok: boolean; data?: Record<string, unknown>; error?: string };
-      if (!r.ok || !d.ok) {
+      const d = await r.json() as { ok: boolean; httpStatus?: number; data?: Record<string, unknown>; error?: string };
+      if (!r.ok) {
+        // Trigger endpoint itself failed (400/502)
         setCronResults(prev => ({ ...prev, [jobId]: d.error ?? `Error ${r.status}` }));
+      } else if (!d.ok) {
+        // Trigger endpoint succeeded but the cron job returned an error
+        const cronStatus = d.httpStatus ?? '?';
+        const detail = d.data && typeof d.data === 'object'
+          ? (d.data as { error?: string; message?: string }).error ?? (d.data as { error?: string; message?: string }).message
+          : undefined;
+        setCronResults(prev => ({ ...prev, [jobId]: detail ? `Error: ${detail}` : `Cron returned HTTP ${cronStatus}` }));
       } else {
         const data = d.data ?? {};
         const summary = Object.entries(data)
