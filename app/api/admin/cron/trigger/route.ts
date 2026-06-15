@@ -63,7 +63,18 @@ export async function POST(req: NextRequest) {
 
   try {
     const handler = HANDLERS[job];
-    const response = await handler();
+    // Pass a minimal NextRequest so handlers that read req.headers or req.json() don't crash
+    const cronSecret = process.env.CRON_SECRET ?? '';
+    const mockReq = new NextRequest(`http://localhost/api/cron/${job}`, {
+      method: 'POST',
+      headers: {
+        'Authorization':  `Bearer ${cronSecret}`,
+        'x-cron-secret':  cronSecret,
+        'content-type':   'application/json',
+      },
+      body: '{}',
+    });
+    const response = await handler(mockReq);
     const data = await response.json().catch(() => ({}));
     return NextResponse.json({ ok: response.ok, httpStatus: response.status, job, data });
   } catch (err) {
