@@ -1,0 +1,87 @@
+name: Autonomous Growth Cron
+
+# Drives the discovery -> promotion -> auto-approve pipeline on a schedule.
+# Railway has no native cron configured for this project, so this workflow
+# is the only thing that calls /api/cron/* in production. Requires a
+# repository secret CRON_SECRET matching the value set in Railway's env vars.
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'       # lift-bans            — every 15 min
+    - cron: '0 * * * *'          # news-feed             — hourly
+    - cron: '5 0,6,12,18 * * *'  # node-discovery         — every 6h
+    - cron: '20 0,6,12,18 * * *' # source-discovery       — every 6h
+    - cron: '35 0,6,12,18 * * *' # auto-similarity        — every 6h
+    - cron: '0 2 * * *'          # auto-relationships     — daily 02:00 UTC
+    - cron: '0 3 * * *'          # research-maturity      — daily 03:00 UTC
+    - cron: '0 4 * * *'          # auto-audit             — daily 04:00 UTC
+    - cron: '0 0 1 * *'          # trust-pass             — monthly
+  workflow_dispatch:
+    inputs:
+      job:
+        description: Cron job to trigger manually
+        required: true
+        type: choice
+        options:
+          - lift-bans
+          - news-feed
+          - node-discovery
+          - source-discovery
+          - auto-similarity
+          - auto-relationships
+          - research-maturity
+          - auto-audit
+          - trust-pass
+
+jobs:
+  trigger:
+    name: Trigger cron endpoint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve job name
+        id: resolve
+        env:
+          SCHEDULE:   ${{ github.event.schedule }}
+          MANUAL_JOB: ${{ github.event.inputs.job }}
+        run: |
+          if [ -n "$MANUAL_JOB" ]; then
+            job="$MANUAL_JOB"
+          else
+            case "$SCHEDULE" in
+              '*/15 * * * *')        job='lift-bans' ;;
+              '0 * * * *')           job='news-feed' ;;
+              '5 0,6,12,18 * * *')   job='node-discovery' ;;
+              '20 0,6,12,18 * * *')  job='source-discovery' ;;
+              '35 0,6,12,18 * * *')  job='auto-similarity' ;;
+              '0 2 * * *')           job='auto-relationships' ;;
+              '0 3 * * *')           job='research-maturity' ;;
+              '0 4 * * *')           job='auto-audit' ;;
+              '0 0 1 * *')           job='trust-pass' ;;
+              *) echo "Unrecognized schedule: $SCHEDULE" >&2; exit 1 ;;
+            esac
+          fi
+          echo "job=$job" >> "$GITHUB_OUTPUT"
+
+      - name: Call cron endpoint
+        env:
+          JOB:          ${{ steps.resolve.outputs.job }}
+          CRON_SECRET:  ${{ secrets.CRON_SECRET }}
+          SITE_URL:     ${{ vars.PRODUCTION_URL }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET repository secret is not set — cannot authenticate." >&2
+            exit 1
+          fi
+          url="${SITE_URL:-https://nexusarchive.up.railway.app}/api/cron/${JOB}"
+          status=$(curl -sS -o /tmp/response.json -w '%{http_code}' -X POST "$url" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -H "x-cron-secret: ${CRON_SECRET}" \
+            -H "Content-Type: application/json" \
+            -d '{}')
+          echo "HTTP status: $status"
+          cat /tmp/response.json
+          echo
+          if [ "$status" -ge 400 ]; then
+            echo "Cron job '$JOB' failed with status $status" >&2
+            exit 1
+          fi
