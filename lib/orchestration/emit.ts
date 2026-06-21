@@ -32,6 +32,10 @@ export interface EmitOptions {
   entityId:   string;
   actorEmail?: string;
   metadata?:   Record<string, unknown>;
+  // For edge events: the two endpoint node ids. Node-keyed jobs (rebuild-adjacency,
+  // similarity-node, etc.) target these instead of the edge's own id, which isn't
+  // a valid nodeId.
+  nodeIds?: [string, string];
 }
 
 // ── Event → job mapping ───────────────────────────────────────────────────────
@@ -92,7 +96,7 @@ export async function emit(
   eventType: ArchiveEventType,
   opts: EmitOptions,
 ): Promise<void> {
-  const { entityType, entityId, actorEmail, metadata = {} } = opts;
+  const { entityType, entityId, actorEmail, metadata = {}, nodeIds } = opts;
 
   // 1. Write immutable event log (best-effort — never throw to caller)
   try {
@@ -103,24 +107,36 @@ export async function emit(
     console.error(`[orchestration] Failed to write ArchiveEvent (${eventType}/${entityId}):`, err);
   }
 
+  // Node-keyed jobs need a real nodeId. For edge events that's the edge's two
+  // endpoints (caller must supply nodeIds); for node events it's entityId itself.
+  const targetNodeIds = entityType === 'edge' ? (nodeIds ?? []) : [entityId];
+
   // 2. Enqueue derived jobs (fire-and-forget, errors logged per job)
   const specs = EVENT_JOB_MAP[eventType] ?? [];
   await Promise.allSettled(
-    specs.map(async ({ type, priority = 50 }) => {
-      try {
-        // Build payload depending on job type
-        if (type === 'embed-node' || type === 'rebuild-adjacency' ||
-            type === 'similarity-node' || type === 'suggest-relationships' ||
-            type === 'propagate-archive') {
-          await enqueue(type, { nodeId: entityId }, priority);
-        } else if (type === 'embed-source' || type === 'enrich-source') {
-          await enqueue(type, { sourceId: entityId }, priority);
-        } else if (type === 'update-maturity') {
-          await enqueue(type, { entityType: entityType as 'node' | 'source', entityId }, priority);
+    specs.flatMap(({ type, priority = 50 }) => {
+      const enqueueOne = async (nodeId: string) => {
+        try {
+          await enqueue(type, { nodeId }, priority);
+        } catch (err) {
+          console.error(`[orchestration] Failed to enqueue ${type} for ${nodeId}:`, err);
         }
-      } catch (err) {
-        console.error(`[orchestration] Failed to enqueue ${type} for ${entityId}:`, err);
+      };
+
+      if (type === 'embed-node' || type === 'rebuild-adjacency' ||
+          type === 'similarity-node' || type === 'suggest-relationships' ||
+          type === 'propagate-archive') {
+        return targetNodeIds.map(enqueueOne);
       }
+      if (type === 'embed-source' || type === 'enrich-source') {
+        return [enqueue(type, { sourceId: entityId }, priority).catch(err =>
+          console.error(`[orchestration] Failed to enqueue ${type} for ${entityId}:`, err))];
+      }
+      if (type === 'update-maturity') {
+        return [enqueue(type, { entityType: entityType as 'node' | 'source', entityId }, priority).catch(err =>
+          console.error(`[orchestration] Failed to enqueue ${type} for ${entityId}:`, err))];
+      }
+      return [];
     }),
   );
 }

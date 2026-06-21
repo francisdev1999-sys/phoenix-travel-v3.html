@@ -11,8 +11,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { enqueue } from '@/lib/jobs/queue';
 import { writeAuditLog } from '@/lib/audit';
+import { emit } from '@/lib/orchestration/emit';
 import { generateSuggestionsForNode } from '@/lib/suggestion-engine';
 import { computeNodeSourceQuality } from '@/lib/source-quality';
 import { generateAiSemanticSuggestions } from '@/lib/ai/semantic-suggestions';
@@ -109,18 +109,24 @@ export async function POST(_req: NextRequest, { params }: Params) {
   const sourceQuality = await computeNodeSourceQuality(id).catch(() => null);
 
   // Non-blocking background work — failures don't roll back the publish.
+  // emit() logs the ArchiveEvent (powers the live activity feed) and enqueues
+  // embed-node/rebuild-adjacency/similarity-node/suggest-relationships/update-maturity.
   // generateAiSemanticSuggestions reads the rule-based candidates that
   // generateSuggestionsForNode writes, so it must run after, not concurrently.
   await Promise.allSettled([
-    enqueue('embed-node',        { nodeId: id }, 60),
-    enqueue('rebuild-adjacency', { nodeId: id }, 60),
+    emit('node.published', {
+      entityType: 'node',
+      entityId:   id,
+      actorEmail: session!.user!.email ?? undefined,
+      metadata:   { title: node.title, category: node.category.name, origin: 'manual' },
+    }),
     generateSuggestionsForNode(id).then(() => generateAiSemanticSuggestions(id)),
   ]);
 
   return NextResponse.json({
     message:     `Node '${id}' published successfully.`,
     node:        { id, status: 'published', publishedAt: now },
-    jobsEnqueued: ['embed-node', 'rebuild-adjacency'],
+    jobsEnqueued: ['embed-node', 'rebuild-adjacency', 'similarity-node', 'suggest-relationships', 'update-maturity'],
     sourceQuality: sourceQuality
       ? {
           recommendation: sourceQuality.publicationRecommendation,

@@ -10,9 +10,9 @@ on:
     - cron: '*/5 * * * *'        # process-jobs          — every 5 min
     - cron: '*/15 * * * *'       # lift-bans            — every 15 min
     - cron: '0 * * * *'          # news-feed             — hourly
-    - cron: '5 0,6,12,18 * * *'  # node-discovery         — every 6h
-    - cron: '20 0,6,12,18 * * *' # source-discovery       — every 6h
-    - cron: '35 0,6,12,18 * * *' # auto-similarity        — every 6h
+    - cron: '5 */3 * * *'        # node-discovery         — every 3h
+    - cron: '20 */3 * * *'       # source-discovery       — every 3h
+    - cron: '35 */3 * * *'       # auto-similarity        — every 3h
     - cron: '0 2 * * *'          # auto-relationships     — daily 02:00 UTC
     - cron: '0 3 * * *'          # research-maturity      — daily 03:00 UTC
     - cron: '0 4 * * *'          # auto-audit             — daily 04:00 UTC
@@ -55,9 +55,9 @@ jobs:
               '*/5 * * * *')         job='process-jobs' ;;
               '*/15 * * * *')        job='lift-bans' ;;
               '0 * * * *')           job='news-feed' ;;
-              '5 0,6,12,18 * * *')   job='node-discovery' ;;
-              '20 0,6,12,18 * * *')  job='source-discovery' ;;
-              '35 0,6,12,18 * * *')  job='auto-similarity' ;;
+              '5 */3 * * *')         job='node-discovery' ;;
+              '20 */3 * * *')        job='source-discovery' ;;
+              '35 */3 * * *')        job='auto-similarity' ;;
               '0 2 * * *')           job='auto-relationships' ;;
               '0 3 * * *')           job='research-maturity' ;;
               '0 4 * * *')           job='auto-audit' ;;

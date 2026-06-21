@@ -9,6 +9,7 @@
 
 import { prisma } from '@/lib/db';
 import { writeAuditLog } from '@/lib/audit';
+import { emit } from '@/lib/orchestration/emit';
 import { SUGGESTION_TO_EDGE_TYPE } from '@/lib/suggestion-engine';
 
 const AUTO_APPROVE_REL_MIN_CONFIDENCE = 0.85;
@@ -92,6 +93,23 @@ export async function promoteRelationshipSuggestion(suggestion: PromotableSugges
       confidence:       suggestion.confidenceScore,
     },
   });
+
+  const [fromNode, toNode] = await Promise.all([
+    prisma.node.findUnique({ where: { id: suggestion.fromNodeId }, select: { title: true } }),
+    prisma.node.findUnique({ where: { id: suggestion.toNodeId },   select: { title: true } }),
+  ]);
+  await emit('edge.published', {
+    entityType: 'edge',
+    entityId:   edge.id,
+    nodeIds:    [suggestion.fromNodeId, suggestion.toNodeId],
+    metadata:   {
+      relationshipType: edgeType,
+      confidence:       suggestion.confidenceScore,
+      origin:           'ai_semantic',
+      fromTitle:        fromNode?.title,
+      toTitle:          toNode?.title,
+    },
+  }).catch(() => {});
 
   return edge.id;
 }

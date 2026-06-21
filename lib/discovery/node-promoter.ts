@@ -4,7 +4,7 @@
  */
 
 import { prisma } from '@/lib/db';
-import { enqueue } from '@/lib/jobs/queue';
+import { emit } from '@/lib/orchestration/emit';
 import { generateSuggestionsForNode } from '@/lib/suggestion-engine';
 import { generateAiSemanticSuggestions } from '@/lib/ai/semantic-suggestions';
 
@@ -190,7 +190,7 @@ export async function promoteDiscoveredNode(
       where: { id: relId, status: 'published' },
     }).catch(() => null);
     if (!relNode) continue;
-    await prisma.edge.create({
+    const thematicEdge = await prisma.edge.create({
       data: {
         fromId:           node.id,
         toId:             relNode.id,
@@ -202,15 +202,28 @@ export async function promoteDiscoveredNode(
         sourceType:       'academic',
         status:           'published',
       },
-    }).catch(() => {});
+    }).catch(() => null);
+    if (thematicEdge) {
+      await emit('edge.published', {
+        entityType: 'edge',
+        entityId:   thematicEdge.id,
+        nodeIds:    [node.id, relNode.id],
+        metadata:   { fromTitle: node.title, toTitle: relNode.title, relationshipType: 'thematic', origin: 'discovery' },
+      }).catch(() => {});
+    }
   }
 
   // Same background pipeline as a manual publish — keeps autonomously
   // discovered nodes eligible for the AI-semantic auto-approve gate instead
-  // of only ever getting the three fixed thematic edges above.
+  // of only ever getting the three fixed thematic edges above. emit() logs
+  // the ArchiveEvent (powers the live activity feed) and enqueues
+  // embed-node/rebuild-adjacency/similarity-node/suggest-relationships/update-maturity.
   await Promise.allSettled([
-    enqueue('embed-node',        { nodeId: node.id }, 60),
-    enqueue('rebuild-adjacency', { nodeId: node.id }, 60),
+    emit('node.published', {
+      entityType: 'node',
+      entityId:   node.id,
+      metadata:   { title: node.title, category: discovered.category, origin: 'discovery' },
+    }),
     generateSuggestionsForNode(node.id).then(() => generateAiSemanticSuggestions(node.id)),
   ]);
 

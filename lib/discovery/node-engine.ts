@@ -84,6 +84,27 @@ const DISCOVERY_SEEDS = [
   'interstellar object anomalous space',
   'dark matter dark energy unexplained physics',
   'exoplanet biosignature life detection',
+  // Lost civilisations & cataclysm theories
+  'lost continent legend Atlantis Lemuria',
+  'ancient flood myth global cataclysm',
+  'forbidden archaeology anomalous artefact',
+  // Cryptids & unexplained creatures
+  'cryptid sighting eyewitness investigation',
+  // Cover-ups & suppressed knowledge
+  'suppressed invention scientist controversy',
+  'document declassification cover-up revealed',
+  'whistleblower leaked classified evidence',
+  // Mind control & psyops
+  'mind control experiment government program',
+  'psychological operation propaganda campaign',
+  'remote viewing psychic intelligence program',
+  // Anomalous places & events
+  'unexplained disappearance vanished mystery',
+  'anomalous zone unexplained phenomena region',
+  'ancient prophecy text rediscovered',
+  // Deep history power structures
+  'shadow government hidden influence elite',
+  'banking dynasty financial power history',
 ];
 
 // ── Wikipedia search + fetch helpers ─────────────────────────────────────────
@@ -342,9 +363,12 @@ export async function runNodeDiscovery(opts: {
     skipped: 0, totalCostUsd: 0,
   };
 
-  // Sample seeds randomly so we don't always hit the same ones
+  // Sample seeds randomly so we don't always hit the same ones. Cap scales
+  // with maxNodes (instead of a flat 8) so a larger per-run budget actually
+  // reaches more of the DISCOVERY_SEEDS list rather than always re-hitting
+  // the same handful.
   const shuffled = [...DISCOVERY_SEEDS].sort(() => Math.random() - 0.5);
-  const seedBatch = shuffled.slice(0, Math.min(8, Math.ceil(maxNodes * 1.5)));
+  const seedBatch = shuffled.slice(0, Math.min(DISCOVERY_SEEDS.length, Math.ceil(maxNodes * 1.5)));
 
   for (const seed of seedBatch) {
     if (result.nodesProposed >= maxNodes) break;

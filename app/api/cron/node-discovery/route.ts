@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const result = await runNodeDiscovery({ maxNodes: 8 });
+    const result = await runNodeDiscovery({ maxNodes: 14 });
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

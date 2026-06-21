@@ -146,6 +146,78 @@ function Starfield() {
   );
 }
 
+// ── Live activity feed ────────────────────────────────────────────────────────
+// Polls the public ArchiveEvent-backed feed (populated in near-real-time by
+// lib/orchestration/emit() at the moment a node/edge/source actually goes
+// live — not on a batch-cron delay) so visitors can see the archive growing.
+
+interface ActivityItem {
+  id:        string;
+  type:      string;
+  label:     string;
+  createdAt: string;
+}
+
+function relativeTime(iso: string): string {
+  const seconds = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  if (seconds < 60)   return 'just now';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  return `${Math.floor(seconds / 86400)}d ago`;
+}
+
+const ACTIVITY_ICON: Record<string, string> = {
+  'node.published': '🔵',
+  'edge.published': '🔗',
+  'source.approved': '📄',
+};
+
+function LiveActivityFeed() {
+  const [items, setItems] = useState<ActivityItem[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchFeed = () => {
+      fetch('/api/activity-feed')
+        .then(r => r.ok ? r.json() : null)
+        .then((data: { items: ActivityItem[] } | null) => {
+          if (!cancelled && data?.items) setItems(data.items.slice(0, 6));
+        })
+        .catch(() => {});
+    };
+    fetchFeed();
+    const interval = setInterval(fetchFeed, 30_000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
+
+  if (items.length === 0) return null;
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.2 }}
+      className="border-b border-white/5 bg-white/[0.02] py-5"
+    >
+      <div className="max-w-3xl mx-auto px-4">
+        <div className="flex items-center gap-2 mb-3 justify-center">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-xs font-bold text-emerald-400 uppercase tracking-wide">Growing right now</span>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+          {items.map(item => (
+            <div key={item.id} className="flex items-center gap-1.5 text-xs text-slate-400">
+              <span>{ACTIVITY_ICON[item.type] ?? '✦'}</span>
+              <span className="text-slate-300">{item.label}</span>
+              <span className="text-slate-600">· {relativeTime(item.createdAt)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
@@ -326,6 +398,8 @@ export default function LandingPage() {
           ))}
         </div>
       </motion.section>
+
+      <LiveActivityFeed />
 
       {/* ── Galaxy grid ── */}
       <section className="max-w-5xl mx-auto px-4 py-16 sm:py-20">

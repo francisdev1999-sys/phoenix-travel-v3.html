@@ -229,7 +229,12 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   let eventType: 'node.updated' | 'node.published' | 'node.archived' = 'node.updated';
   if (newStatus === 'published' && node.status !== 'published') eventType = 'node.published';
   else if (newStatus === 'archived' && node.status !== 'archived') eventType = 'node.archived';
-  emit(eventType, { entityType: 'node', entityId: id, actorEmail: userEmail ?? undefined }).catch(() => {});
+  emit(eventType, {
+    entityType: 'node',
+    entityId:   id,
+    actorEmail: userEmail ?? undefined,
+    metadata:   { title: String(b.title ?? node.title) },
+  }).catch(() => {});
 
   const updated = await prisma.node.findUnique({
     where: { id },

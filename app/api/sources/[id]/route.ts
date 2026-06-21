@@ -106,6 +106,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         entityType: 'source',
         entityId:   id,
         actorEmail: session.user?.email ?? undefined,
+        metadata:   { title: updated.title },
       }).catch(() => {});
     }
   } else {
@@ -114,6 +115,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       entityType: 'source',
       entityId:   id,
       actorEmail: session.user?.email ?? undefined,
+      metadata:   { title: updated.title },
     }).catch(() => {});
   }
 
