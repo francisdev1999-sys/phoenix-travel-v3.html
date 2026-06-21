@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { promoteDiscoveredSource } from '@/lib/discovery/source-promoter';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -19,71 +20,12 @@ export async function POST(req: NextRequest, { params }: Params) {
   if (!discovered) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   if (action === 'approve') {
-    // Promote to proper Source record — deduplicate by DOI if available, else create new
-    let source;
-    if (discovered.doi) {
-      source = await prisma.source.upsert({
-        where:  { doi: discovered.doi },
-        update: {},
-        create: {
-          title:           discovered.title,
-          sourceType:      discovered.sourceType,
-          author:          discovered.author,
-          publicationYear: discovered.publicationYear,
-          journal:         discovered.journal,
-          doi:             discovered.doi,
-          abstract:        discovered.abstract,
-          url:             discovered.url,
-          language:        'en',
-          credibilityScore: discovered.credibilityScore,
-          status:          'approved',
-          reviewedBy:      session!.user!.id,
-          reviewedAt:      new Date(),
-          submittedBy:     null,
-        },
-      });
-    } else {
-      source = await prisma.source.create({
-        data: {
-          title:           discovered.title,
-          sourceType:      discovered.sourceType,
-          author:          discovered.author,
-          publicationYear: discovered.publicationYear,
-          journal:         discovered.journal,
-          doi:             null,
-          abstract:        discovered.abstract,
-          url:             discovered.url,
-          language:        'en',
-          credibilityScore: discovered.credibilityScore,
-          status:          'approved',
-          reviewedBy:      session!.user!.id,
-          reviewedAt:      new Date(),
-          submittedBy:     null,
-        },
-      });
-    }
-
-    // Link to node
-    // Link to node (create only if not already linked)
-    const existingLink = await prisma.sourceLink.findFirst({
-      where: { sourceId: source.id, targetType: 'node', targetId: discovered.nodeId },
-    });
-    if (!existingLink) {
-      await prisma.sourceLink.create({
-        data: { sourceId: source.id, targetType: 'node', targetId: discovered.nodeId, linkType: 'supports' },
-      }).catch(() => {});
-    }
-
-    // Update domain reputation
-    await prisma.sourceDomainReputation.upsert({
-      where:  { domain: discovered.domain },
-      update: { approvalCount: { increment: 1 }, reputationScore: { increment: 0.001 } },
-      create: { domain: discovered.domain, approvalCount: 1, reputationScore: 0.65 },
-    }).catch(() => {});
+    const sourceId = discovered.promotedSourceId
+      ?? await promoteDiscoveredSource(discovered, session!.user!.id);
 
     await prisma.discoveredSource.update({
       where:  { id },
-      data:   { status: 'approved', promotedSourceId: source.id, reviewedBy: session!.user!.id, reviewedAt: new Date() },
+      data:   { status: 'approved', promotedSourceId: sourceId, reviewedBy: session!.user!.id, reviewedAt: new Date() },
     });
 
     // Log audit
@@ -95,7 +37,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       },
     }).catch(() => {});
 
-    return NextResponse.json({ ok: true, sourceId: source.id });
+    return NextResponse.json({ ok: true, sourceId });
   } else {
     await prisma.sourceDomainReputation.upsert({
       where:  { domain: discovered.domain },

@@ -17,6 +17,7 @@ import {
   searchOpenAlex, searchWikipedia, searchPubMed,
   type DiscoveredRaw,
 } from './apis';
+import { promoteDiscoveredSource } from './source-promoter';
 
 export interface DiscoveryResult {
   nodesChecked:  number;
@@ -111,8 +112,9 @@ async function discoverForNode(node: {
 
     const status = scoring.autoApprove ? 'auto_approved' : 'pending_review';
 
+    let discoveredSource;
     try {
-      await prisma.discoveredSource.upsert({
+      discoveredSource = await prisma.discoveredSource.upsert({
         where:  { nodeId_url: { nodeId: node.id, url: raw.url } },
         update: {}, // Don't overwrite existing entries — preserve reviewer decisions
         create: {
@@ -138,6 +140,21 @@ async function discoverForNode(node: {
       });
     } catch {
       continue; // Unique constraint violation means it already exists — skip
+    }
+
+    // Green-lane sources don't just sit at "auto_approved" waiting for an
+    // admin click — they're already deemed credible, so promote them to a
+    // live, citable Source immediately, same as a human approval would.
+    if (status === 'auto_approved' && !discoveredSource.promotedSourceId) {
+      try {
+        const sourceId = await promoteDiscoveredSource(discoveredSource);
+        await prisma.discoveredSource.update({
+          where: { id: discoveredSource.id },
+          data:  { promotedSourceId: sourceId, reviewedAt: new Date() },
+        });
+      } catch (err) {
+        console.warn(`[discovery] auto-promote failed for ${raw.url}:`, err);
+      }
     }
 
     if (status === 'auto_approved') autoApproved++;
