@@ -25,17 +25,37 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Find nodes that have zero pending relationship suggestions
-  const nodes = await prisma.node.findMany({
+  // Orphans (zero edges either direction) get first claim on the batch —
+  // this is what the archive-health audit actually measures, and without
+  // this a node with even one old unresolved suggestion was permanently
+  // skipped below even though it never got connected.
+  const orphans = await prisma.node.findMany({
     where: {
       status: 'published',
-      outgoingRelSuggestions: { none: { status: 'pending' } },
-      incomingRelSuggestions: { none: { status: 'pending' } },
+      edgesFrom: { none: {} },
+      edgesTo:   { none: {} },
     },
     select:  { id: true },
     take:    BATCH_SIZE,
     orderBy: { publishedAt: 'desc' },
   });
+
+  // Fill remaining quota with nodes that have zero pending relationship suggestions
+  let nodes = orphans;
+  if (nodes.length < BATCH_SIZE) {
+    const fresh = await prisma.node.findMany({
+      where: {
+        status: 'published',
+        id:     { notIn: nodes.map(n => n.id) },
+        outgoingRelSuggestions: { none: { status: 'pending' } },
+        incomingRelSuggestions: { none: { status: 'pending' } },
+      },
+      select:  { id: true },
+      take:    BATCH_SIZE - nodes.length,
+      orderBy: { publishedAt: 'desc' },
+    });
+    nodes = [...nodes, ...fresh];
+  }
 
   if (nodes.length === 0) {
     return NextResponse.json({ enqueued: 0, reason: 'all nodes have pending suggestions' });
