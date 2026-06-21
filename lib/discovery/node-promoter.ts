@@ -48,11 +48,11 @@ export async function getOrCreateCategory(categoryName: string): Promise<string>
 
 // ── Auto-approve quality thresholds ─────────────────────────────────────────
 
-const AUTO_APPROVE_MIN_RELEVANCE  = 0.65;
-const AUTO_APPROVE_MIN_QUALITY    = 0.65;
-const AUTO_APPROVE_MIN_NOVELTY    = 0.70;
-const AUTO_APPROVE_MIN_CLAIMS     = 3;
-const AUTO_APPROVE_MIN_CRITICISMS = 2;
+const AUTO_APPROVE_MIN_RELEVANCE  = 0.60;
+const AUTO_APPROVE_MIN_QUALITY    = 0.60;
+const AUTO_APPROVE_MIN_NOVELTY    = 0.65;
+const AUTO_APPROVE_MIN_CLAIMS     = 2;
+const AUTO_APPROVE_MIN_CRITICISMS = 1;
 // Only auto-approve verifiable topics (not pure speculation)
 const AUTO_APPROVE_EVIDENCE_LEVELS = new Set(['verified', 'strong_evidence', 'debated']);
 
