@@ -107,3 +107,15 @@ export function clampScore(v: unknown, fallback: number): number {
   if (!Number.isFinite(n)) return fallback;
   return Math.max(0, Math.min(1, n));
 }
+
+/**
+ * Rejects dateEnd < dateStart without guessing which value is wrong —
+ * silently swapping or nulling would be a form of fabricating a date.
+ * Returns null when the range is valid (or incomplete).
+ */
+export function dateRangeError(dateStart: number | null | undefined, dateEnd: number | null | undefined): string | null {
+  if (dateStart == null || dateEnd == null) return null;
+  if (!Number.isFinite(dateStart) || !Number.isFinite(dateEnd)) return null;
+  if (dateEnd < dateStart) return `dateEnd (${dateEnd}) cannot be before dateStart (${dateStart})`;
+  return null;
+}

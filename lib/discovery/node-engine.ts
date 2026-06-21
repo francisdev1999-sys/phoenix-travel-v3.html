@@ -316,10 +316,18 @@ export async function runNodeDiscovery(opts: {
     staticNodes.map(n => n.id)
   );
 
+  // Candidate pool for related-node linking — keeps id↔title pairs so
+  // promoted nodes can be connected by real DB id, not just by title text.
+  const candidatePool: { id: string; title: string }[] = staticNodes.map(n => ({ id: n.id, title: n.title }));
+
   // Also pull from DB
   try {
     const dbNodes = await prisma.node.findMany({ select: { id: true, title: true }, where: { status: 'published' } });
-    dbNodes.forEach(n => { existingTitlesSet.add(n.title.toLowerCase()); existingSlugsSet.add(n.id); });
+    dbNodes.forEach(n => {
+      existingTitlesSet.add(n.title.toLowerCase());
+      existingSlugsSet.add(n.id);
+      candidatePool.push({ id: n.id, title: n.title });
+    });
   } catch { /* DB may not have nodes yet */ }
 
   // Already-discovered slugs (don't re-propose)
@@ -352,11 +360,13 @@ export async function runNodeDiscovery(opts: {
     const searchResults = await searchWikipedia(seed, 6);
     result.articlesFound += searchResults.length;
 
-    // Find existing nodes related to this seed for context
-    const relatedNodeTitles = staticNodes
+    // Find existing nodes related to this seed for context — searches the
+    // full static+DB candidate pool so AI-to-AI connections are possible too.
+    const relatedNodes = candidatePool
       .filter(n => seed.split(' ').some(w => w.length > 4 && n.title.toLowerCase().includes(w.toLowerCase())))
-      .map(n => n.title)
       .slice(0, 4);
+    const relatedNodeTitles = relatedNodes.map(n => n.title); // AI prompt context only
+    const relatedNodeIds    = relatedNodes.map(n => n.id);    // real DB ids for edge-linking
 
     for (const article of searchResults) {
       if (result.nodesProposed >= maxNodes) break;
@@ -421,7 +431,7 @@ export async function runNodeDiscovery(opts: {
           criticisms:     proposal.criticisms,
           openQuestions:  proposal.open_questions,
           discoveryQuery: seed,
-          relatedNodeIds: relatedNodeTitles,
+          relatedNodeIds: relatedNodeIds,
           sourceUrl:      `https://en.wikipedia.org/wiki/${encodeURIComponent(article.title)}`,
           relevanceScore: scores.relevanceScore,
           qualityScore:   scores.qualityScore,

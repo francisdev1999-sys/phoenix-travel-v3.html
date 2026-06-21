@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getNodeFromDB, getNeighboursFromDB, computeResearchScoreFromDB } from '@/lib/retrieval/graph';
 import { prisma } from '@/lib/db';
 import { auth, isAdminSession } from '@/lib/auth';
-import { EVIDENCE_LEVELS, isValidScore } from '@/lib/validation/enums';
+import { EVIDENCE_LEVELS, isValidScore, dateRangeError } from '@/lib/validation/enums';
 import { writeAuditLog } from '@/lib/audit';
 import { emit } from '@/lib/orchestration/emit';
 
@@ -135,6 +135,13 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (b.title !== undefined && (typeof b.title !== 'string' || !b.title.trim())) {
     return NextResponse.json({ error: 'title must be a non-empty string' }, { status: 400 });
   }
+
+  // Validate against the post-patch effective range, not just the patched fields,
+  // so editing only one of the two dates can't produce an invalid pair.
+  const effectiveDateStart = 'dateStart' in b ? (b.dateStart as number | null) : node.dateStart;
+  const effectiveDateEnd   = 'dateEnd'   in b ? (b.dateEnd   as number | null) : node.dateEnd;
+  const dateErr = dateRangeError(effectiveDateStart, effectiveDateEnd);
+  if (dateErr) return NextResponse.json({ error: dateErr }, { status: 400 });
 
   // Build scalar update payload — only include fields present in body
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

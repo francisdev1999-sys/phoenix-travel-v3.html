@@ -174,21 +174,37 @@ export async function runDiscovery(opts: {
 
   await seedDomainReputations();
 
-  const where = {
+  const baseWhere = {
     status: 'published',
     ...(opts.nodeId ? { id: opts.nodeId } : {}),
   };
+  const nodeSelect = {
+    id: true, title: true, description: true,
+    tags:   { select: { tag: true } },
+    claims: { select: { text: true }, take: 3 },
+  } as const;
+  const take = opts.maxNodes ?? 50;
 
-  const nodes = await prisma.node.findMany({
-    where,
-    take:    opts.maxNodes ?? 50,
+  // Prioritize nodes with zero sources — without this, discovery always
+  // re-checks the newest `take` published nodes by publishedAt, so once the
+  // archive grows past `take` nodes, anything older never gets a pass again.
+  const unsourced = await prisma.node.findMany({
+    where:   { ...baseWhere, sourceLinks: { none: {} } },
+    take,
     orderBy: { publishedAt: 'desc' },
-    select:  {
-      id: true, title: true, description: true,
-      tags:   { select: { tag: true } },
-      claims: { select: { text: true }, take: 3 },
-    },
+    select:  nodeSelect,
   });
+
+  let nodes = unsourced;
+  if (nodes.length < take) {
+    const extra = await prisma.node.findMany({
+      where:   { ...baseWhere, id: { notIn: nodes.map(n => n.id) } },
+      take:    take - nodes.length,
+      orderBy: { publishedAt: 'desc' },
+      select:  nodeSelect,
+    });
+    nodes = [...nodes, ...extra];
+  }
 
   const result: DiscoveryResult = {
     nodesChecked:  0,

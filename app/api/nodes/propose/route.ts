@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { EVIDENCE_LEVELS, NODE_CATEGORIES, isValidScore } from '@/lib/validation/enums';
+import { EVIDENCE_LEVELS, NODE_CATEGORIES, isValidScore, dateRangeError } from '@/lib/validation/enums';
 import { checkTrustGate, checkSubmissionRate, validateNodeSubmission, checkDuplicate } from '@/lib/quality-gates';
 import { logActivity } from '@/lib/rank-system';
 import { rateLimit } from '@/lib/rate-limiter';
@@ -115,6 +115,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const resolvedDateStart = dateStart ? Number(dateStart) : null;
+  const resolvedDateEnd   = dateEnd   ? Number(dateEnd)   : null;
+  const dateErr = dateRangeError(resolvedDateStart, resolvedDateEnd);
+  if (dateErr) return NextResponse.json({ error: dateErr }, { status: 400 });
+
   const node = await prisma.proposedNode.create({
     data: {
       nodeId: nodeId?.trim() || null,
@@ -129,8 +134,8 @@ export async function POST(req: NextRequest) {
       mainstreamView: mainstreamView?.trim() || null,
       region: region?.trim() || null,
       country: country?.trim() || null,
-      dateStart: dateStart ? Number(dateStart) : null,
-      dateEnd: dateEnd ? Number(dateEnd) : null,
+      dateStart: resolvedDateStart,
+      dateEnd: resolvedDateEnd,
       tags: tags ?? [],
       status: 'pending',
       submittedBy: session.user.id,

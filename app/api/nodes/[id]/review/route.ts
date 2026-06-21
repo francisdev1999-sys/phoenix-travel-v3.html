@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { writeAuditLog } from '@/lib/audit';
 import { applyTrustEvent } from '@/lib/trust-score';
 import { evaluateBadges, refreshUserRank } from '@/lib/rank-system';
+import { dateRangeError } from '@/lib/validation/enums';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -62,6 +63,9 @@ export async function POST(req: NextRequest, { params }: Params) {
   }
 
   // ── Approval: migrate ProposedNode → live Node ───────────────────────────
+
+  const dateErr = dateRangeError(proposal.dateStart, proposal.dateEnd);
+  if (dateErr) return NextResponse.json({ error: dateErr }, { status: 400 });
 
   // Derive the node ID (slug) from the proposal's nodeId field or generate from label
   const nodeId = (proposal.nodeId?.trim() || null)
