@@ -108,12 +108,13 @@ export async function POST(_req: NextRequest, { params }: Params) {
   // Source quality check — informational, never blocks the publish
   const sourceQuality = await computeNodeSourceQuality(id).catch(() => null);
 
-  // Non-blocking background work — failures don't roll back the publish
+  // Non-blocking background work — failures don't roll back the publish.
+  // generateAiSemanticSuggestions reads the rule-based candidates that
+  // generateSuggestionsForNode writes, so it must run after, not concurrently.
   await Promise.allSettled([
     enqueue('embed-node',        { nodeId: id }, 60),
     enqueue('rebuild-adjacency', { nodeId: id }, 60),
-    generateSuggestionsForNode(id),
-    generateAiSemanticSuggestions(id),
+    generateSuggestionsForNode(id).then(() => generateAiSemanticSuggestions(id)),
   ]);
 
   return NextResponse.json({

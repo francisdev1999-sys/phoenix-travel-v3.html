@@ -4,6 +4,9 @@
  */
 
 import { prisma } from '@/lib/db';
+import { enqueue } from '@/lib/jobs/queue';
+import { generateSuggestionsForNode } from '@/lib/suggestion-engine';
+import { generateAiSemanticSuggestions } from '@/lib/ai/semantic-suggestions';
 
 const CATEGORY_META: Record<string, { slug: string; name: string; color: string }> = {
   'Ancient Civilizations': { slug: 'ancient-civilizations', name: 'Ancient Civilizations', color: '#d97706' },
@@ -151,6 +154,15 @@ export async function promoteDiscoveredNode(
       },
     }).catch(() => {});
   }
+
+  // Same background pipeline as a manual publish — keeps autonomously
+  // discovered nodes eligible for the AI-semantic auto-approve gate instead
+  // of only ever getting the three fixed thematic edges above.
+  await Promise.allSettled([
+    enqueue('embed-node',        { nodeId: node.id }, 60),
+    enqueue('rebuild-adjacency', { nodeId: node.id }, 60),
+    generateSuggestionsForNode(node.id).then(() => generateAiSemanticSuggestions(node.id)),
+  ]);
 
   return node.id;
 }
