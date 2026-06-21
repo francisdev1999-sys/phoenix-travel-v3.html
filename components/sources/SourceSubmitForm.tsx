@@ -60,31 +60,6 @@ export default function SourceSubmitForm({ onSuccess, onCancel }: Props) {
   const credColor = preview.score >= 0.75 ? '#22c55e' : preview.score >= 0.5 ? '#eab308' : '#ef4444';
   const typeColor = (SOURCE_TYPE_COLORS as Record<string, string>)[form.sourceType] ?? '#94a3b8';
 
-  const checkDuplicates = useCallback(async () => {
-    if (!form.title.trim()) { setError('Title is required'); return; }
-    if (!form.sourceTrustExplanation.trim()) { setError('Please explain why this source should be trusted'); return; }
-    setError('');
-    setStep('submitting');
-    try {
-      const res = await fetch('/api/sources/duplicate-check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: form.title, doi: form.doi, isbn: form.isbn }),
-      });
-      const data: DuplicateCheckResult = await res.json();
-      setDupResult(data);
-      if (data.isDuplicate) {
-        setStep('duplicate');
-      } else {
-        await doSubmit();
-      }
-    } catch {
-      setError('Failed to check for duplicates');
-      setStep('form');
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form]);
-
   const doSubmit = async () => {
     setStep('submitting');
     try {
@@ -110,6 +85,31 @@ export default function SourceSubmitForm({ onSuccess, onCancel }: Props) {
       setStep('form');
     }
   };
+
+  const checkDuplicates = useCallback(async () => {
+    if (!form.title.trim()) { setError('Title is required'); return; }
+    if (!form.sourceTrustExplanation.trim()) { setError('Please explain why this source should be trusted'); return; }
+    setError('');
+    setStep('submitting');
+    try {
+      const res = await fetch('/api/sources/duplicate-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: form.title, doi: form.doi, isbn: form.isbn }),
+      });
+      const data: DuplicateCheckResult = await res.json();
+      setDupResult(data);
+      if (data.isDuplicate) {
+        setStep('duplicate');
+      } else {
+        await doSubmit();
+      }
+    } catch {
+      setError('Failed to check for duplicates');
+      setStep('form');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form]);
 
   if (step === 'done') {
     return (
