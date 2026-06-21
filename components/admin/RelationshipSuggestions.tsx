@@ -58,13 +58,13 @@ const EDGE_TYPES = [
   'historical', 'thematic', 'textual', 'speculative',
 ];
 
-const STATUS_TABS = ['pending', 'approved', 'rejected'] as const;
+const STATUS_TABS = ['pending', 'auto_approved', 'approved', 'rejected'] as const;
 
 export default function RelationshipSuggestions() {
   const [suggestions, setSuggestions]   = useState<Suggestion[]>([]);
   const [total,       setTotal]         = useState(0);
   const [loading,     setLoading]       = useState(false);
-  const [statusFilter, setStatusFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [statusFilter, setStatusFilter] = useState<'pending' | 'auto_approved' | 'approved' | 'rejected'>('pending');
   const [expanded,    setExpanded]      = useState<string | null>(null);
   const [revising,    setRevising]      = useState<string | null>(null);
   const [revisedType, setRevisedType]   = useState('');
@@ -112,7 +112,7 @@ export default function RelationshipSuggestions() {
             <span className="text-sm font-bold text-white">Relationship Suggestions</span>
           </div>
           <p className="text-[10px] text-slate-500">
-            Auto-generated from tag overlap, dates, geography, and shared sources. Every suggestion requires human approval before becoming an edge.
+            Auto-generated from tag overlap, dates, geography, and shared sources. High-confidence AI-semantic matches between non-speculative nodes publish automatically — everything else waits for review.
           </p>
         </div>
         <button onClick={load} className="text-slate-500 hover:text-slate-300 transition-colors">
@@ -132,7 +132,7 @@ export default function RelationshipSuggestions() {
                 : 'border-transparent text-slate-500 hover:text-slate-300'
             }`}
           >
-            {s}
+            {s.replace(/_/g, ' ')}
           </button>
         ))}
         <span className="ml-auto text-[10px] text-slate-600 self-center pr-1">{total} total</span>
@@ -190,11 +190,12 @@ function SuggestionCard({
   acting: boolean;
   onAct: (action: 'approved' | 'rejected' | 'revised') => void;
 }) {
-  const isPending = s.status === 'pending';
+  const isPending      = s.status === 'pending';
+  const isAutoApproved = s.status === 'auto_approved';
 
   return (
     <div className={`rounded-xl border transition-all ${
-      isPending ? 'border-slate-800/50 bg-slate-900/40' : 'border-slate-800/30 bg-slate-900/20 opacity-70'
+      isPending || isAutoApproved ? 'border-slate-800/50 bg-slate-900/40' : 'border-slate-800/30 bg-slate-900/20 opacity-70'
     }`}>
       {/* Main row */}
       <div className="p-3 flex flex-col gap-2">
@@ -220,8 +221,8 @@ function SuggestionCard({
           </span>
           {s.status !== 'pending' && (
             <span className={`text-[10px] font-medium capitalize ${
-              s.status === 'approved' || s.status === 'revised' ? 'text-emerald-400' : 'text-red-400'
-            }`}>{s.status}</span>
+              ['approved', 'revised', 'auto_approved'].includes(s.status) ? 'text-emerald-400' : 'text-red-400'
+            }`}>{s.status.replace(/_/g, ' ')}</span>
           )}
           <button
             onClick={onToggle}
@@ -305,6 +306,21 @@ function SuggestionCard({
               </button>
             </div>
           )
+        )}
+
+        {/* Auto-approved: edge is already live — only an undo (reject/archive) is available */}
+        {isAutoApproved && (
+          <div className="flex items-center gap-1.5 pt-1 border-t border-slate-800/50">
+            <span className="text-[10px] text-slate-500">Published automatically — no review was required.</span>
+            <button
+              onClick={() => onAct('rejected')}
+              disabled={acting}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-400 hover:bg-red-900/20 transition-colors disabled:opacity-40 ml-auto"
+            >
+              {acting ? <Loader2 size={10} className="animate-spin" /> : <X size={10} />}
+              Reject &amp; archive edge
+            </button>
+          </div>
         )}
       </div>
     </div>

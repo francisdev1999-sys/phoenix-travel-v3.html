@@ -226,6 +226,7 @@ export const SUGGESTION_TO_EDGE_TYPE: Record<string, string> = {
   textual:             'textual',
   speculative:         'speculative',   // preserved — distinct from thematic
   contradiction:       'contradictory',
+  contradictory:       'contradictory',
 };
 
 // ── Text builders ─────────────────────────────────────────────────────────────

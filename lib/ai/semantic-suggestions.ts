@@ -23,6 +23,7 @@
  */
 
 import { prisma } from '@/lib/db';
+import { qualifiesForRelationshipAutoApprove, promoteRelationshipSuggestion } from '@/lib/discovery/relationship-promoter';
 
 const MODEL      = 'claude-opus-4-8';
 const MAX_TOKENS = 1200;
@@ -128,7 +129,7 @@ export async function generateAiSemanticSuggestions(nodeId: string): Promise<voi
       orderBy: { confidenceScore: 'desc' },
       take:   MAX_PAIRS,
       include: {
-        toNode: { select: { id: true, title: true, description: true } },
+        toNode: { select: { id: true, title: true, description: true, evidenceLevel: true } },
       },
     });
 
@@ -141,6 +142,7 @@ export async function generateAiSemanticSuggestions(nodeId: string): Promise<voi
       ruleScore:      s.confidenceScore,
       ruleType:       s.relationshipType,
     }));
+    const toEvidenceLevelById = new Map(existing.map(s => [s.toNodeId, s.toNode.evidenceLevel]));
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method:  'POST',
@@ -180,7 +182,7 @@ export async function generateAiSemanticSuggestions(nodeId: string): Promise<voi
       });
       if (alreadyDecided) continue;
 
-      await prisma.relationshipSuggestion.upsert({
+      const suggestion = await prisma.relationshipSuggestion.upsert({
         where: {
           fromNodeId_toNodeId: { fromNodeId: nodeId, toNodeId: r.candidateId },
         },
@@ -189,7 +191,7 @@ export async function generateAiSemanticSuggestions(nodeId: string): Promise<voi
           toNodeId:          r.candidateId,
           relationshipType:  r.relationshipType,
           reason:            r.reason,
-          evidenceBasis:     'AI semantic analysis of node descriptions. Requires human review.',
+          evidenceBasis:     'AI semantic analysis of node descriptions.',
           confidenceScore:   r.confidence,
           riskLevel:         r.confidence >= 0.65 ? 'low' : r.confidence >= 0.40 ? 'medium' : 'high',
           signalBreakdown:   { ai_semantic: r.confidence },
@@ -203,6 +205,23 @@ export async function generateAiSemanticSuggestions(nodeId: string): Promise<voi
           generationMethod: 'ai_semantic',
         },
       });
+
+      const toEvidenceLevel = toEvidenceLevelById.get(r.candidateId);
+      if (
+        suggestion.status === 'pending' &&
+        toEvidenceLevel &&
+        qualifiesForRelationshipAutoApprove({
+          confidence:        r.confidence,
+          relationshipType:  r.relationshipType,
+          generationMethod:  'ai_semantic',
+          fromEvidenceLevel: node.evidenceLevel,
+          toEvidenceLevel,
+        })
+      ) {
+        await promoteRelationshipSuggestion(suggestion).catch(err =>
+          console.error('[semantic-suggestions] auto-approve failed:', err),
+        );
+      }
     }
   } catch (err) {
     console.error('[semantic-suggestions] error:', err);

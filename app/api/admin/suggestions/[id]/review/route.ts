@@ -42,13 +42,41 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const suggestion = await prisma.relationshipSuggestion.findUnique({ where: { id } });
   if (!suggestion) return NextResponse.json({ error: 'Suggestion not found' }, { status: 404 });
-  if (suggestion.status !== 'pending') {
-    return NextResponse.json({ error: `Suggestion already ${suggestion.status}` }, { status: 409 });
-  }
 
   const now          = new Date();
   const reviewedBy   = session.user.id;
   const reviewerEmail = session.user.email ?? null;
+
+  // Auto-approved suggestions already have a live edge — rejection archives it
+  // instead of going through the draft-edge approval flow below.
+  if (suggestion.status === 'auto_approved') {
+    if (action !== 'rejected') {
+      return NextResponse.json({ error: 'Auto-approved suggestions can only be rejected (archives the live edge)' }, { status: 409 });
+    }
+    if (suggestion.promotedEdgeId) {
+      await prisma.edge.update({
+        where: { id: suggestion.promotedEdgeId },
+        data:  { status: 'archived' },
+      }).catch(() => {});
+    }
+    await prisma.relationshipSuggestion.update({
+      where: { id },
+      data:  { status: 'rejected', reviewedBy, reviewerEmail, reviewedAt: now, reviewNote: reviewNote ?? null },
+    });
+    await writeAuditLog({
+      userId:     reviewedBy,
+      userEmail:  reviewerEmail,
+      action:     'reject',
+      entityType: 'suggestion',
+      entityId:   id,
+      detail:     { fromNodeId: suggestion.fromNodeId, toNodeId: suggestion.toNodeId, edgeId: suggestion.promotedEdgeId, reason: reviewNote, wasAutoApproved: true },
+    });
+    return NextResponse.json({ ok: true, action: 'rejected' });
+  }
+
+  if (suggestion.status !== 'pending') {
+    return NextResponse.json({ error: `Suggestion already ${suggestion.status}` }, { status: 409 });
+  }
 
   if (action === 'rejected') {
     await prisma.relationshipSuggestion.update({
