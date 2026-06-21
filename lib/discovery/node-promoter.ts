@@ -93,6 +93,23 @@ export interface DiscoveredNodeRecord {
   criticisms:      unknown;
   openQuestions:   unknown;
   relatedNodeIds:  unknown;
+  sourceUrl?:      string | null;
+}
+
+// Wikipedia is the only origin source node-discovery ever cites. Its
+// credibility score mirrors the same domain-reputation seed source-discovery
+// uses (lib/discovery/credibility.ts) so the two pipelines never disagree on
+// how much weight a Wikipedia citation carries.
+const WIKIPEDIA_CREDIBILITY_SCORE = 0.65;
+
+function wikipediaTitleFromUrl(url: string): string | null {
+  const match = url.match(/\/wiki\/([^/?#]+)/);
+  if (!match) return null;
+  try {
+    return decodeURIComponent(match[1]).replace(/_/g, ' ');
+  } catch {
+    return null;
+  }
 }
 
 export async function promoteDiscoveredNode(
@@ -132,7 +149,40 @@ export async function promoteDiscoveredNode(
       criticisms:    { create: criticisms.map((text, i) => ({ text, orderIndex: i })) },
       openQuestions: { create: openQuestions.map((text, i) => ({ text, orderIndex: i })) },
     },
+    include: { claims: true, criticisms: true },
   });
+
+  // Cite the real Wikipedia article node-discovery actually extracted from —
+  // never a fabricated source. Without this, promoted claims/criticisms had
+  // zero citation trail even though the AI extraction was already grounded
+  // in a real article (lib/discovery/node-engine.ts anti-hallucination design).
+  if (discovered.sourceUrl) {
+    const wikiTitle = wikipediaTitleFromUrl(discovered.sourceUrl);
+    if (wikiTitle) {
+      await (async () => {
+        const source = await prisma.source.findFirst({ where: { url: discovered.sourceUrl! } })
+          ?? await prisma.source.create({
+            data: {
+              title:            wikiTitle,
+              sourceType:       'wikipedia',
+              journal:          'Wikipedia — The Free Encyclopedia',
+              url:              discovered.sourceUrl,
+              language:         'en',
+              credibilityScore: WIKIPEDIA_CREDIBILITY_SCORE,
+              status:           'approved',
+              reviewedAt:       new Date(),
+            },
+          });
+
+        const links = [
+          { sourceId: source.id, nodeId: node.id, linkType: 'supports' },
+          ...node.claims.map(c => ({ sourceId: source.id, claimId: c.id, linkType: 'supports' })),
+          ...node.criticisms.map(c => ({ sourceId: source.id, criticismId: c.id, linkType: 'supports' })),
+        ];
+        await prisma.sourceLink.createMany({ data: links });
+      })().catch(() => {});
+    }
+  }
 
   // Connect to related nodes that exist in DB
   for (const relId of relatedIds.slice(0, 3)) {
