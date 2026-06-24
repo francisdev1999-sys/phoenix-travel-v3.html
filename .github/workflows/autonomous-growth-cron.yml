@@ -12,7 +12,7 @@ on:
     - cron: '0 * * * *'          # news-feed             — hourly
     - cron: '5 5 */5 * *'        # node-discovery         — every 5 days
     - cron: '20 5 */5 * *'       # source-discovery       — every 5 days
-    - cron: '35 5 */5 * *'       # auto-similarity        — every 5 days
+    - cron: '35 0,6,12,18 * * *' # auto-similarity        — every 6h
     - cron: '0 2 * * *'          # auto-relationships     — daily 02:00 UTC
     - cron: '0 3 * * *'          # research-maturity      — daily 03:00 UTC
     - cron: '0 4 * * *'          # auto-audit             — daily 04:00 UTC
@@ -57,7 +57,7 @@ jobs:
               '0 * * * *')           job='news-feed' ;;
               '5 5 */5 * *')         job='node-discovery' ;;
               '20 5 */5 * *')        job='source-discovery' ;;
-              '35 5 */5 * *')        job='auto-similarity' ;;
+              '35 0,6,12,18 * * *')  job='auto-similarity' ;;
               '0 2 * * *')           job='auto-relationships' ;;
               '0 3 * * *')           job='research-maturity' ;;
               '0 4 * * *')           job='auto-audit' ;;
