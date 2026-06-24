@@ -38,7 +38,7 @@ function useIsMobile() {
 }
 
 function MobileGraphFallback() {
-  const { navigateToUniverse, navigateToGalaxy } = useUserStore();
+  const { navigateToUniverse } = useUserStore();
   return (
     <div className="flex flex-col items-center justify-center h-full px-6 text-center gap-6">
       <div className="w-16 h-16 rounded-full border border-purple-500/40 bg-purple-950/30 flex items-center justify-center">
@@ -59,7 +59,7 @@ function MobileGraphFallback() {
           Browse Galaxies
         </button>
         <button
-          onClick={() => navigateToGalaxy('ancient-civilizations', 'Ancient Civilizations')}
+          onClick={navigateToUniverse}
           className="flex items-center justify-center gap-2 w-full px-5 py-3.5 rounded-xl border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white font-semibold text-sm transition-all"
         >
           Start Exploring

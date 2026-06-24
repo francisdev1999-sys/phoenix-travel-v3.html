@@ -9,16 +9,18 @@ import {
 import { useUserStore } from '@/lib/store/userStore';
 import type { GalaxyWithCounts } from '@/app/api/galaxies/route';
 
-// Static placeholder galaxies shown when DB is unreachable
+// Static placeholder galaxies shown when DB is unreachable.
+// Slugs/names/icons mirror lib/taxonomy/galaxies.ts (the live taxonomy) so a
+// failed fetch never produces a card that 404s when clicked.
 const FALLBACK_GALAXIES: GalaxyWithCounts[] = [
-  { id: 'f1', order: 1, slug: 'ancient-civilizations', name: 'Ancient Civilizations', description: 'Lost cities, megalithic structures and forgotten empires.', color: '#b45309', icon: 'Landmark',   nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
-  { id: 'f2', order: 2, slug: 'ufo-uap',               name: 'UFO & UAP',             description: 'Documented sightings, government disclosures and aerial anomalies.', color: '#0e7490', icon: 'Satellite',  nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
-  { id: 'f3', order: 3, slug: 'government-programs',   name: 'Government Programs',   description: 'Classified operations, black sites and intelligence history.', color: '#475569', icon: 'Shield',     nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
-  { id: 'f4', order: 4, slug: 'mythology',             name: 'Mythology & Religion',  description: 'Gods, creation myths, religious texts and their real-world echoes.', color: '#7c3aed', icon: 'CircleDot', nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
-  { id: 'f5', order: 5, slug: 'historical-mysteries',  name: 'Historical Mysteries',  description: 'Unsolved events, vanished peoples and unexplained artifacts.', color: '#c2410c', icon: 'Flame',      nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
-  { id: 'f6', order: 6, slug: 'science-anomalies',     name: 'Science & Anomalies',   description: 'Physics anomalies, forbidden archaeology and fringe science.', color: '#15803d', icon: 'Dna',        nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
-  { id: 'f7', order: 7, slug: 'secret-societies',      name: 'Secret Societies',      description: 'Hidden orders, oaths of secrecy and their documented influence.', color: '#9f1239', icon: 'Network',    nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
-  { id: 'f8', order: 8, slug: 'human-psychology',      name: 'Human Psychology',      description: 'Mass delusion, perception manipulation and consciousness research.', color: '#6d28d9', icon: 'Users',      nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
+  { id: 'f1', order: 1, slug: 'ancient-knowledge',  name: 'Ancient Knowledge',       description: 'Lost civilizations, archaeological mysteries and forbidden archaeology.', color: '#ca8a04', icon: 'Landmark',   nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
+  { id: 'f2', order: 2, slug: 'anomalies',          name: 'Anomalies & Unexplained', description: 'UFO encounters, unexplained phenomena and modern mysteries.', color: '#16a34a', icon: 'CircleDot', nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
+  { id: 'f3', order: 3, slug: 'government-power',   name: 'Government & Power',      description: 'Classified programs, intelligence operations and state secrecy.', color: '#0369a1', icon: 'Shield',    nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
+  { id: 'f4', order: 4, slug: 'religion-mythology', name: 'Religion & Mythology',    description: 'Religious traditions, mythological narratives and sacred symbolism.', color: '#b91c1c', icon: 'Flame',     nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
+  { id: 'f5', order: 5, slug: 'conspiracy-society', name: 'Conspiracy & Society',    description: 'Contested theories, historical controversies and whistleblowers.', color: '#7c3aed', icon: 'Network',  nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
+  { id: 'f6', order: 6, slug: 'life-biology',       name: 'Life & Biology',          description: 'Disease outbreaks, pandemics and biological threats.', color: '#e11d48', icon: 'Dna',       nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
+  { id: 'f7', order: 7, slug: 'entities',           name: 'People & Organizations',  description: 'Key individuals, groups, agencies and institutions.', color: '#475569', icon: 'Users',     nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
+  { id: 'f8', order: 8, slug: 'technology-cosmos',  name: 'Technology & Cosmos',     description: 'Emerging technology, space exploration and the cosmos.', color: '#0891b2', icon: 'Satellite', nodeCount: 0, clusterCount: 0, sourceCount: 0, edgeCount: 0 },
 ];
 
 const UniverseView = lazy(() => import('@/components/sections/UniverseView'));
@@ -185,18 +187,25 @@ function ClusterCard({ cluster, galaxySlug, galaxyName, index }: {
 // ── Galaxy detail (cluster list for a specific galaxy) ──────────────────────
 
 function GalaxyDetailView() {
-  const { navContext } = useUserStore();
+  const { navContext, navigateToUniverse } = useUserStore();
   const { galaxySlug, galaxyName } = navContext;
 
   const [clusters, setClusters] = useState<ClusterItem[]>([]);
   const [galaxy, setGalaxy]     = useState<{ name: string; description: string | null; color: string | null; icon: string | null } | null>(null);
   const [loading, setLoading]   = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     if (!galaxySlug) return;
+    setLoading(true);
+    setNotFound(false);
     fetch(`/api/galaxies/${galaxySlug}`)
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(d => { setGalaxy(d.galaxy ?? null); setClusters(d.clusters ?? []); })
+      .then(r => {
+        if (r.status === 404) { setNotFound(true); return null; }
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then(d => { if (d) { setGalaxy(d.galaxy ?? null); setClusters(d.clusters ?? []); } })
       .catch(err => console.error('[galaxy]', err))
       .finally(() => setLoading(false));
   }, [galaxySlug]);
@@ -204,6 +213,20 @@ function GalaxyDetailView() {
   if (loading) return (
     <div className="flex justify-center items-center h-full">
       <Loader2 className="animate-spin text-purple-400" size={20} />
+    </div>
+  );
+
+  if (notFound) return (
+    <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-4">
+      <p className="text-sm text-slate-400">
+        Galaxy &ldquo;{galaxyName}&rdquo; couldn&rsquo;t be found — the archive&rsquo;s topic structure may have changed.
+      </p>
+      <button
+        onClick={navigateToUniverse}
+        className="px-4 py-2 rounded-lg bg-purple-700 hover:bg-purple-600 text-white text-xs font-semibold transition-all"
+      >
+        Browse all galaxies
+      </button>
     </div>
   );
 

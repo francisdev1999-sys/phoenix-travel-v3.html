@@ -3,91 +3,59 @@ import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   Search, ArrowRight, BookOpen, Network, Globe2,
-  Landmark, Rocket, ShieldAlert, Atom, Brain, Scroll, Compass,
+  Landmark, Rocket, ShieldAlert, Scroll, Dna, Users, Atom,
   Star, Clock, TrendingUp, ChevronRight, LogIn,
 } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import { useNodes, useEdges } from '@/lib/graph/useNodes';
 import { useSession, signIn } from 'next-auth/react';
 
-// ── Static galaxy catalogue ───────────────────────────────────────────────────
-// Shown as cards even before the API responds; slugs are corrected by the
-// API fetch below if they differ.
+// ── Galaxy card styling, keyed by live galaxy slug ────────────────────────────
+// Cards are built from the live /api/galaxies response (see `galaxies` state
+// below) so navigation always targets a real galaxy — this map only supplies
+// icon/color decoration. A galaxy slug missing here falls back to DEFAULT_STYLE.
 
-const GALAXY_CARDS = [
-  {
-    slug:  'ancient-civilizations',
-    name:  'Ancient Civilizations',
-    icon:  Landmark,
-    color: 'from-amber-900/50 to-amber-950/30',
-    border:'border-amber-700/30',
-    glow:  'hover:shadow-amber-900/30',
-    desc:  'Lost cities, megalithic structures, forgotten empires and their secrets.',
+const GALAXY_STYLE: Record<string, {
+  icon: typeof Landmark; color: string; border: string; glow: string; desc: string;
+}> = {
+  'ancient-knowledge': {
+    icon: Landmark, color: 'from-amber-900/50 to-amber-950/30', border: 'border-amber-700/30', glow: 'hover:shadow-amber-900/30',
+    desc: 'Lost cities, megalithic structures, forgotten empires and forbidden archaeology.',
   },
-  {
-    slug:  'ufo-uap',
-    name:  'UFO & UAP',
-    icon:  Rocket,
-    color: 'from-cyan-900/50 to-cyan-950/30',
-    border:'border-cyan-700/30',
-    glow:  'hover:shadow-cyan-900/30',
-    desc:  'Documented sightings, government disclosures and aerial anomalies.',
+  anomalies: {
+    icon: Rocket, color: 'from-cyan-900/50 to-cyan-950/30', border: 'border-cyan-700/30', glow: 'hover:shadow-cyan-900/30',
+    desc: 'UFO encounters, unexplained phenomena and modern mysteries that defy explanation.',
   },
-  {
-    slug:  'government-programs',
-    name:  'Government Programs',
-    icon:  ShieldAlert,
-    color: 'from-slate-800/60 to-slate-900/40',
-    border:'border-slate-600/30',
-    glow:  'hover:shadow-slate-700/30',
-    desc:  'Classified operations, black sites and intelligence history.',
+  'government-power': {
+    icon: ShieldAlert, color: 'from-slate-800/60 to-slate-900/40', border: 'border-slate-600/30', glow: 'hover:shadow-slate-700/30',
+    desc: 'Classified programs, intelligence operations and the hidden machinery of power.',
   },
-  {
-    slug:  'mythology',
-    name:  'Mythology & Religion',
-    icon:  Scroll,
-    color: 'from-purple-900/50 to-purple-950/30',
-    border:'border-purple-700/30',
-    glow:  'hover:shadow-purple-900/30',
-    desc:  'Gods, creation myths, religious texts and their real-world echoes.',
+  'religion-mythology': {
+    icon: Scroll, color: 'from-purple-900/50 to-purple-950/30', border: 'border-purple-700/30', glow: 'hover:shadow-purple-900/30',
+    desc: 'Religious traditions, mythological narratives and sacred symbolism.',
   },
-  {
-    slug:  'historical-mysteries',
-    name:  'Historical Mysteries',
-    icon:  Compass,
-    color: 'from-orange-900/50 to-orange-950/30',
-    border:'border-orange-700/30',
-    glow:  'hover:shadow-orange-900/30',
-    desc:  'Unsolved events, vanished peoples and unexplained artifacts.',
+  'conspiracy-society': {
+    icon: Network, color: 'from-rose-900/50 to-rose-950/30', border: 'border-rose-700/30', glow: 'hover:shadow-rose-900/30',
+    desc: 'Contested theories, whistleblowers and hidden agendas in public life.',
   },
-  {
-    slug:  'science-anomalies',
-    name:  'Science & Anomalies',
-    icon:  Atom,
-    color: 'from-green-900/50 to-green-950/30',
-    border:'border-green-700/30',
-    glow:  'hover:shadow-green-900/30',
-    desc:  'Physics anomalies, forbidden archaeology and fringe science.',
+  'life-biology': {
+    icon: Dna, color: 'from-red-900/50 to-red-950/30', border: 'border-red-700/30', glow: 'hover:shadow-red-900/30',
+    desc: 'Disease outbreaks, pandemics and events at the frontier of human health.',
   },
-  {
-    slug:  'secret-societies',
-    name:  'Secret Societies',
-    icon:  Network,
-    color: 'from-rose-900/50 to-rose-950/30',
-    border:'border-rose-700/30',
-    glow:  'hover:shadow-rose-900/30',
-    desc:  'Hidden orders, oaths of secrecy and their documented influence.',
+  entities: {
+    icon: Users, color: 'from-violet-900/50 to-violet-950/30', border: 'border-violet-700/30', glow: 'hover:shadow-violet-900/30',
+    desc: 'Key individuals, agencies and institutions that shaped pivotal events.',
   },
-  {
-    slug:  'human-psychology',
-    name:  'Human Psychology',
-    icon:  Brain,
-    color: 'from-violet-900/50 to-violet-950/30',
-    border:'border-violet-700/30',
-    glow:  'hover:shadow-violet-900/30',
-    desc:  'Mass delusion, perception manipulation and consciousness research.',
+  'technology-cosmos': {
+    icon: Atom, color: 'from-green-900/50 to-green-950/30', border: 'border-green-700/30', glow: 'hover:shadow-green-900/30',
+    desc: 'Emerging technology, space exploration and humanity’s place in the cosmos.',
   },
-];
+};
+
+const DEFAULT_STYLE = {
+  icon: Network, color: 'from-slate-800/60 to-slate-900/40', border: 'border-slate-600/30', glow: 'hover:shadow-slate-700/30',
+  desc: '',
+};
 
 const HOW_IT_WORKS = [
   {
@@ -229,7 +197,8 @@ export default function LandingPage() {
   const [galaxies, setGalaxies]       = useState<{ id: string; slug: string; name: string }[]>([]);
   const interestRef = useRef<HTMLElement>(null);
 
-  // Fetch live galaxy list to get correct slugs
+  // Fetch the live galaxy list — cards below are built from this, never from
+  // a hardcoded slug, so a clicked card can never 404 into an empty galaxy page.
   useEffect(() => {
     fetch('/api/galaxies')
       .then(r => r.ok ? r.json() : [])
@@ -239,19 +208,9 @@ export default function LandingPage() {
       .catch(() => {});
   }, []);
 
-  // Resolve a static card slug to a real slug from the API (best-effort)
-  const resolveSlug = (staticSlug: string, name: string) => {
-    const match = galaxies.find(g =>
-      g.slug === staticSlug ||
-      g.name.toLowerCase().includes(name.split(' ')[0].toLowerCase())
-    );
-    return match ? { slug: match.slug, name: match.name } : { slug: staticSlug, name };
-  };
+  const cards = galaxies.map(g => ({ ...(GALAXY_STYLE[g.slug] ?? DEFAULT_STYLE), slug: g.slug, name: g.name }));
 
-  const handleCardClick = (staticSlug: string, staticName: string) => {
-    const { slug, name } = resolveSlug(staticSlug, staticName);
-    navigateToGalaxy(slug, name);
-  };
+  const handleCardClick = (slug: string, name: string) => navigateToGalaxy(slug, name);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -337,7 +296,7 @@ export default function LandingPage() {
 
           {/* Topic pills */}
           <div className="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
-            {GALAXY_CARDS.map(g => (
+            {cards.map(g => (
               <button
                 key={g.slug}
                 onClick={() => handleCardClick(g.slug, g.name)}
@@ -418,7 +377,7 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {GALAXY_CARDS.map((g, i) => {
+            {cards.map((g, i) => {
               const Icon = g.icon;
               return (
                 <motion.button
@@ -469,7 +428,7 @@ export default function LandingPage() {
           <p className="text-sm text-slate-500">Select a topic to start your research journey</p>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {GALAXY_CARDS.map((g) => {
+          {cards.map((g) => {
             const Icon = g.icon;
             return (
               <motion.button
