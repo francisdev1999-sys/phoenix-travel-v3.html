@@ -81,25 +81,33 @@ export async function getNeighboursFromDB(nodeId: string) {
 
 // ── Viewport: top N nodes by degree for initial graph render ──────────────────
 
-export async function getViewportNodes(limit = 150) {
+type ViewportNodeRow = {
+  id: string; title: string; categoryName: string; color: string | null;
+  confidenceScore: number; evidenceLevel: string; icon: string | null; degree: number;
+};
+
+export async function getViewportNodes(rawLimit = 150) {
+  // Clamp + coerce to a safe integer before it gets interpolated into raw SQL below.
+  const limit = Math.max(1, Math.min(1000, Math.trunc(Number(rawLimit)) || 150));
   const cacheKey = `viewport:top:${limit}`;
   const cached = viewportCache.get(cacheKey);
   if (cached) return cached as { nodes: object[]; edges: object[] };
 
-  // Top nodes by edge count (degree).
-  // INNER JOIN on the degree subquery acts as a maxDegree >= 1 pre-filter:
-  // nodes with zero published edges (isolated draft-leftovers) are excluded.
-  const topNodes = await prisma.$queryRaw<
-    { id: string; title: string; categoryName: string; color: string | null;
-      confidenceScore: number; evidenceLevel: string; icon: string | null; degree: number }[]
-  >`
-    SELECT
+  // Reserve a slice of slots for the most recently published nodes so newly
+  // discovered/promoted nodes are visible right away, instead of waiting
+  // until they accumulate enough edges to crack the top-degree ranking.
+  const RECENT_RESERVE = Math.min(20, Math.floor(limit * 0.15));
+  const topLimit = limit - RECENT_RESERVE;
+
+  // Top nodes by edge count (degree). LEFT JOIN so isolated nodes (degree 0)
+  // are scoreable too — they just sort to the bottom of this ranked slice.
+  const degreeSelect = `
       n."id", n."title", c."name" AS "categoryName", c."color",
       n."confidenceScore", n."evidenceLevel", n."icon",
-      ec."degree"::int AS "degree"
+      COALESCE(ec."degree", 0)::int AS "degree"
     FROM "Node" n
     JOIN "Category" c ON c."id" = n."categoryId"
-    JOIN (
+    LEFT JOIN (
       SELECT unnested."nodeId", COUNT(*)::int AS "degree"
       FROM (
         SELECT "fromId" AS "nodeId" FROM "Edge" WHERE "status" = 'published'
@@ -108,12 +116,28 @@ export async function getViewportNodes(limit = 150) {
       ) unnested
       GROUP BY unnested."nodeId"
     ) ec ON ec."nodeId" = n."id"
-    WHERE n."status" = 'published'
-    ORDER BY "degree" DESC
-    LIMIT ${limit}
-  `;
+    WHERE n."status" = 'published'`;
 
-  const nodeIds = topNodes.map(n => n.id);
+  const [topNodes, recentNodes] = await Promise.all([
+    prisma.$queryRawUnsafe<ViewportNodeRow[]>(
+      `SELECT ${degreeSelect} ORDER BY "degree" DESC LIMIT ${topLimit}`,
+    ),
+    RECENT_RESERVE > 0
+      ? prisma.$queryRawUnsafe<ViewportNodeRow[]>(
+          `SELECT ${degreeSelect} ORDER BY n."publishedAt" DESC NULLS LAST LIMIT ${RECENT_RESERVE}`,
+        )
+      : Promise.resolve([] as ViewportNodeRow[]),
+  ]);
+
+  const seen = new Set<string>();
+  const mergedNodes: ViewportNodeRow[] = [];
+  for (const node of [...topNodes, ...recentNodes]) {
+    if (seen.has(node.id)) continue;
+    seen.add(node.id);
+    mergedNodes.push(node);
+  }
+
+  const nodeIds = mergedNodes.map(n => n.id);
 
   const edges = await prisma.edge.findMany({
     where: {
@@ -127,7 +151,7 @@ export async function getViewportNodes(limit = 150) {
     },
   });
 
-  const result = { nodes: topNodes, edges };
+  const result = { nodes: mergedNodes, edges };
   viewportCache.set(cacheKey, result as object);
   return result;
 }
