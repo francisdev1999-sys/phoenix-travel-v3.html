@@ -23,13 +23,15 @@ export default auth(function middleware(req: NextRequest & { auth: unknown }) {
   const { nextUrl } = req;
   const session = (req as unknown as { auth: { user?: { role?: string; email?: string | null } } | null }).auth;
 
-  // ── Super-admin routes — owner only ────────────────────────────────────────
+  // ── Privileged panel routes — admin or owner ───────────────────────────────
+  // The `admin` role has full control-panel access; owner-only protections
+  // (e.g. cannot demote/ban an owner) are enforced inside the individual routes.
   if (nextUrl.pathname.startsWith('/api/super-admin')) {
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { role, email } = session.user;
-    if (role !== 'owner' && email !== process.env.ADMIN_EMAIL) {
+    if (!['owner', 'admin'].includes(role ?? '') && email !== process.env.ADMIN_EMAIL) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
   }

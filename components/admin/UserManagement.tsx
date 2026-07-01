@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
 import { Loader2, Search, Shield, ShieldOff, ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { trustColor } from '@/lib/trust-utils';
 
@@ -17,6 +18,10 @@ const ROLE_OPTIONS = [
   'verified_contributor', 'contributor', 'user', 'banned',
 ];
 
+// `owner` is co-equal/full-power, so it is only offered to an existing owner
+// (the API enforces this too). This is how a second owner is minted.
+const ROLE_OPTIONS_OWNER = ['owner', ...ROLE_OPTIONS];
+
 const ROLE_COLOR: Record<string, string> = {
   owner:                'text-yellow-400',
   admin:                'text-purple-400',
@@ -30,6 +35,8 @@ const ROLE_COLOR: Record<string, string> = {
 };
 
 export default function UserManagement() {
+  const { data: session } = useSession();
+  const isOwner = ((session?.user as { role?: string })?.role ?? '') === 'owner';
   const [users, setUsers]         = useState<UserRow[]>([]);
   const [total, setTotal]         = useState(0);
   const [page, setPage]           = useState(1);
@@ -170,7 +177,7 @@ export default function UserManagement() {
                       disabled={!!actionLoading}
                       className="px-2 py-1 text-xs rounded-lg bg-black/40 border border-purple-900/30 text-slate-300"
                     >
-                      {ROLE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                      {(isOwner ? ROLE_OPTIONS_OWNER : ROLE_OPTIONS).map(r => <option key={r} value={r}>{r}</option>)}
                     </select>
                     {/* Ban toggle */}
                     <button

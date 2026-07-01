@@ -247,7 +247,6 @@ export default function AdminPanel() {
   const { data: session, status } = useSession();
   const role    = (session?.user as { role?: string })?.role ?? 'user';
   const isAdmin = role === 'owner' || role === 'admin';
-  const isOwner = role === 'owner';
   const [tab, setTab] = useState<Tab>('overview');
   const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
   const [proposingNode, setProposingNode] = useState(false);
@@ -509,7 +508,8 @@ export default function AdminPanel() {
     { id: 'intelligence',      label: 'User Intel',      icon: <Brain size={13} />,       ownerOnly: true },
     { id: 'ai-activity',       label: 'AI Activity',     icon: <Sparkles size={13} />,    ownerOnly: true },
   ];
-  const tabs = allTabs.filter(t => !t.ownerOnly || isOwner);
+  // The full control panel (all tabs) is open to the owner and admin roles alike.
+  const tabs = allTabs.filter(t => !t.ownerOnly || isAdmin);
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -669,7 +669,7 @@ export default function AdminPanel() {
             </div>
           )}
 
-          {tab === 'node-manager' && isOwner && <NodeManager />}
+          {tab === 'node-manager' && isAdmin && <NodeManager />}
 
           {tab === 'nodes' && (
             <div className="flex flex-col gap-4">
@@ -785,9 +785,9 @@ export default function AdminPanel() {
           {tab === 'beta-feedback'     && <BetaFeedbackAdmin />}
           {tab === 'beta-invites'      && <BetaInviteManager />}
           {tab === 'beta-analytics'    && <BetaAnalytics />}
-          {tab === 'cleanup'           && isOwner && <CleanupDashboard adminEmail={session.user?.email ?? ''} />}
-          {tab === 'intelligence'      && isOwner && <UserIntelligenceDashboard />}
-          {tab === 'ai-activity'       && isOwner && <AiActivityDashboard />}
+          {tab === 'cleanup'           && isAdmin && <CleanupDashboard adminEmail={session.user?.email ?? ''} />}
+          {tab === 'intelligence'      && isAdmin && <UserIntelligenceDashboard />}
+          {tab === 'ai-activity'       && isAdmin && <AiActivityDashboard />}
         </motion.div>
       </AnimatePresence>
     </div>

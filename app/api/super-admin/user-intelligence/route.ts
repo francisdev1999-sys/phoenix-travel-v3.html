@@ -1,11 +1,11 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
-import { auth, isOwnerSession } from '@/lib/auth';
+import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 
 export async function GET() {
   const session = await auth();
-  if (!isOwnerSession(session)) {
+  if (!isAdminSession(session)) {
     return NextResponse.json({ error: 'Super-admin only' }, { status: 403 });
   }
 

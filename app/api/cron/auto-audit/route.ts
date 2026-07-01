@@ -2,9 +2,11 @@ export const dynamic = 'force-dynamic';
 /**
  * POST /api/cron/auto-audit
  *
- * Automatically triggers a quick AI cleanup audit (nodes + sources) when
- * no audit has run in the past 24 hours. Uses the super-admin analyze
- * endpoints internally.
+ * Automatically runs a quick AI cleanup audit of nodes when no audit has run
+ * in the past 24 hours. Calls the shared runNodeCleanupAudit() directly — the
+ * old version fetched the /api/super-admin analyze route over HTTP with a cron
+ * token, but that route is session-based, so the internal (cookieless) call
+ * always 401/403'd and the audit never actually ran. Direct call closes the loop.
  *
  * Protected by CRON_SECRET. Suggested schedule: daily at 04:00 UTC.
  */
@@ -12,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { runNodeRules } from '@/lib/cleanup/rules';
 import { checkApiKey, checkGeminiKey } from '@/lib/cleanup/analyzer';
+import { runNodeCleanupAudit } from '@/lib/cleanup/run-audit';
 
 const CRON_SECRET    = process.env.CRON_SECRET;
 const AUDIT_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
@@ -51,24 +54,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ skipped: true, reason: 'no flagged candidates' });
   }
 
-  // Trigger the analyze-nodes endpoint internally
-  const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000';
-  const res = await fetch(`${baseUrl}/api/super-admin/cleanup-ai/analyze-nodes`, {
-    method:  'POST',
-    headers: {
-      'Content-Type':  'application/json',
-      'Authorization': `Bearer ${CRON_SECRET ?? ''}`,
-      // Pass a special header so the admin-auth check recognises cron context
-      'X-Cron-Token':  CRON_SECRET ?? '',
-    },
-    body: JSON.stringify({ mode: 'quick', dryRun: false }),
+  // Run the audit directly (no HTTP hop, no session required).
+  const result = await runNodeCleanupAudit({
+    mode:        'quick',
+    dryRun:      false,
+    triggeredBy: 'auto-audit-cron',
   });
 
-  if (!res.ok) {
-    const body = await res.text();
-    return NextResponse.json({ error: `Analyze-nodes failed: ${res.status} ${body}` }, { status: 502 });
+  if (result.kind === 'no_ai_key') {
+    return NextResponse.json({ skipped: true, reason: 'no AI key configured' });
+  }
+  if (result.kind === 'completed' && result.allFailed) {
+    return NextResponse.json(
+      { error: `All ${result.candidateCount} analyses failed: ${result.errors[0]}`, run: result.run },
+      { status: 502 },
+    );
   }
 
-  const result = await res.json();
-  return NextResponse.json({ triggered: true, candidates: candidates.length, run: result });
+  return NextResponse.json({
+    triggered:  true,
+    candidates: candidates.length,
+    run:        result.kind === 'completed' ? result.run : result,
+  });
 }

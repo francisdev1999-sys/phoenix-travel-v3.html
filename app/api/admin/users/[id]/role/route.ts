@@ -1,6 +1,8 @@
 /**
  * POST /api/admin/users/[id]/role
- * Sets a user's role. Only owner can create admins.
+ * Sets a user's role. Only an existing owner can grant the owner or admin role
+ * (or change the role of an existing owner/admin) — this is how a second,
+ * co-equal owner is minted. All other roles can be assigned by any admin.
  */
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
@@ -11,7 +13,7 @@ import { logAudit } from '@/lib/audit';
 import { evaluateBadges, refreshUserRank } from '@/lib/rank-system';
 
 const VALID_ROLES = [
-  'admin', 'moderation_admin', 'reviewer', 'source_verifier',
+  'owner', 'admin', 'moderation_admin', 'reviewer', 'source_verifier',
   'verified_contributor', 'contributor', 'user', 'banned',
 ];
 
@@ -35,10 +37,10 @@ export async function POST(
     );
   }
 
-  // Only super_admin (owner) can promote to admin
+  // Only an existing owner can promote to owner or admin.
   if ((ADMIN_ROLES as string[]).includes(role) && !isSuperAdminSession(session)) {
     return NextResponse.json(
-      { error: 'Only the owner can assign the admin role.' },
+      { error: 'Only the owner can assign the owner or admin role.' },
       { status: 403 },
     );
   }

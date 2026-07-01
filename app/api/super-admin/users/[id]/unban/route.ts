@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth, isOwnerSession } from '@/lib/auth';
+import { auth, isAdminSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { writeAuditLog } from '@/lib/audit';
 import { sendUnbanNotification } from '@/lib/email';
@@ -10,7 +10,7 @@ type Params = { params: Promise<{ id: string }> };
 export async function POST(req: NextRequest, { params }: Params) {
   const { id } = await params;
   const session = await auth();
-  if (!isOwnerSession(session)) {
+  if (!isAdminSession(session)) {
     return NextResponse.json({ error: 'Super-admin only' }, { status: 403 });
   }
 
