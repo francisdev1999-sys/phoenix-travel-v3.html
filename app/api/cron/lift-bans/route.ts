@@ -1,3 +1,4 @@
+import { withCronTracking } from '@/lib/cron/tracker';
 export const dynamic = 'force-dynamic';
 /**
  * POST /api/cron/lift-bans
@@ -10,7 +11,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { writeAuditLog } from '@/lib/audit';
 
-export async function POST() {
+async function handler() {
   const now = new Date();
 
   // Find all users with an expired ban/suspension
@@ -50,3 +51,5 @@ export async function POST() {
 
   return NextResponse.json({ lifted: ids.length, userIds: ids });
 }
+
+export const POST = withCronTracking('lift-bans', handler);

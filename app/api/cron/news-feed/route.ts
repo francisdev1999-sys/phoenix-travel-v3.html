@@ -1,3 +1,4 @@
+import { withCronTracking } from '@/lib/cron/tracker';
 export const dynamic = 'force-dynamic';
 /**
  * POST /api/cron/news-feed
@@ -13,7 +14,7 @@ import { fetchAllFeeds } from '@/lib/news/rss-fetcher';
 
 const MAX_AGE_DAYS = 30;
 
-export async function POST() {
+async function handler() {
   const started = Date.now();
 
   // ── 1. Fetch all feeds in parallel ───────────────────────────────────────
@@ -59,3 +60,5 @@ export async function POST() {
     ms: Date.now() - started,
   });
 }
+
+export const POST = withCronTracking('news-feed', handler);

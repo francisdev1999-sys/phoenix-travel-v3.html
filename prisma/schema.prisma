@@ -1183,3 +1183,22 @@ model ArchiveEvent {
   @@index([entityType, entityId])
   @@index([eventType, createdAt])
 }
+
+// One row per cron-job execution (scheduled or manually triggered). Powers the
+// autonomous-health board in the admin panel and consecutive-failure alerting.
+// Written by lib/cron/tracker.ts — tracking failures never break the job itself.
+model CronRun {
+  id          String    @id @default(cuid())
+  job         String
+  status      String    @default("running") // running | success | skipped | failed
+  ok          Boolean   @default(false)
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  durationMs  Int?
+  result      Json?
+  error       String?
+  createdAt   DateTime  @default(now())
+
+  @@index([job, startedAt])
+  @@index([status, startedAt])
+}

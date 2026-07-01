@@ -1,21 +1,75 @@
 # THE NEXUS ARCHIVE
 
-Next.js 15+ app with TypeScript, Tailwind CSS, Framer Motion, Three.js/React Three Fiber, Zustand.
+A full-stack, community-driven **knowledge-graph platform** for sourced
+alternative-history / ancient-mystery research. Nodes (topics) and Edges
+(relationships) form a navigable graph; every claim must carry sources,
+criticisms, and a mainstream view. An AI layer (Claude) reviews submissions,
+generates rabbit-hole narratives, and drives an **autonomous growth pipeline**
+that discovers, promotes, and connects new content on a schedule.
+
+> The repo directory is named `phoenix-travel-v3.html` for historical reasons —
+> the actual project is `nexus-archive` (see `package.json`).
+
+## Stack
+
+Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind v4 ·
+Framer Motion · Three.js / React Three Fiber · Zustand · NextAuth v5 ·
+Prisma 7 + PostgreSQL (pgvector + pg_trgm) · Anthropic Claude · Voyage
+embeddings · Upstash Redis (rate limit) · Resend (email). Deployed on Railway.
 
 ## Structure
 
-- `app/` — Next.js App Router pages
-- `components/effects/` — Canvas particle/tunnel animations
-- `components/layout/` — NavBar, AppShell
-- `components/sections/` — All main view components
-- `lib/data/` — Theory, timeline, and sites data
-- `lib/store/` — Zustand user progress store
-- `lib/types.ts` — TypeScript interfaces
+- `app/` — App Router pages + **~130 API routes** under `app/api/`
+  - `app/api/cron/` — 11 scheduled jobs (discovery, promotion, audit, trust…)
+  - `app/api/admin/` — admin panel APIs (role: `owner` | `admin`)
+  - `app/api/super-admin/` — privileged APIs (also `owner` | `admin`; owner-only
+    protections are enforced per-route)
+- `components/sections/AdminPanel.tsx` — the full admin control panel (all tabs)
+- `components/admin/` — admin dashboards (cleanup, user-intel, moderation…)
+- `lib/` — business logic
+  - `lib/discovery/` — autonomous node/source/relationship discovery + promoters
+  - `lib/jobs/` — IngestionJob queue + processor
+  - `lib/cron/tracker.ts` — wraps every cron handler to record a `CronRun`
+  - `lib/cleanup/`, `lib/similarity/`, `lib/maturity/`, `lib/trust-score.ts`,
+    `lib/rank-system.ts`, `lib/permissions.ts`, `lib/quality-gates.ts`
+- `prisma/schema.prisma` — 68 models; migrations in `prisma/migrations/`
+- `middleware.ts` — security headers + route auth (`/api/admin`, `/api/super-admin`,
+  `/api/cron` via `CRON_SECRET`)
+
+## Roles
+
+`owner > admin > moderation_admin > reviewer > source_verifier >
+verified_contributor > contributor > user | banned`
+
+- `admin` has **full control-panel access** (all tabs + `/api/super-admin/*`).
+- Only an existing **owner** can grant/revoke `owner`/`admin` (that's how a
+  second owner is minted, from the Users tab). Owner targets are protected from
+  ban/suspend/demote.
+
+## Autonomous pipeline
+
+GitHub Actions (`.github/workflows/autonomous-growth-cron.yml`) is the only
+scheduler in production — it POSTs `/api/cron/<job>` with `CRON_SECRET`.
+Loop: discover → auto-promote (strict quality gates) → suggest/auto-approve
+relationships → discover/auto-approve sources → similarity → audit/cleanup →
+trust/rank. Every run is recorded in `CronRun`; the admin panel surfaces
+per-job health and flags consecutive failures (`/api/admin/cron-health`).
 
 ## Commands
 
 ```bash
-npm run dev    # development server
-npm run build  # production build
-npm run lint   # ESLint
+npm run dev    # dev server
+npm run build  # prisma generate && next build
+npm run start  # prisma migrate deploy && next start
+npm run lint   # eslint
+npx tsc --noEmit   # typecheck
+npx vitest run     # unit tests (__tests__/)
 ```
+
+## Conventions
+
+- No auto-publishing of user content — everything goes through review + trust
+  gates. Autonomous auto-approve lanes are deliberately strict; don't loosen
+  quality thresholds without being asked.
+- Cron handlers are called **directly** (no internal HTTP hop) when composed —
+  the `/api/super-admin/*` routes are session-gated and reject cookieless calls.

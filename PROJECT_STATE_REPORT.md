@@ -1,5 +1,11 @@
 # PROJECT STATE REPORT — NEXUS ARCHIVE
-*Generated: 2026-06-13 | Full audit of current main state*
+*Generated: 2026-07-01 | Full audit of current main state*
+
+> **Since the 2026-06-13 snapshot:** admin role now has full control-panel
+> access; owners can mint a second owner; the autonomous loop gained per-job
+> `CronRun` health tracking + consecutive-failure alerting; and the daily
+> `auto-audit` cron (which silently 401'd via an internal HTTP hop) was fixed
+> to call the audit directly.
 
 ---
 
@@ -7,13 +13,14 @@
 
 | Metric | Value |
 |--------|-------|
-| Total source files | 294 |
-| Total lines of code | ~52,160 |
-| API routes | 108 |
-| Database tables | 43+ |
-| React components | 84 |
+| Total source files | 306 |
+| Total lines of code | ~57,000 |
+| API routes | 130 |
+| Database tables (Prisma models) | 68 |
+| React components | 85 |
 | Lib modules | 85 |
-| Prisma migrations | 25 |
+| Prisma migrations | 33 |
+| Cron jobs (scheduled) | 11 |
 | Unit tests | 3 |
 
 ---
@@ -448,13 +455,25 @@ Base score by type (Academic Paper: 0.8+, Government: 0.7+, etc.) adjusted by: D
 - `GET/POST /api/super-admin/discovery-whitelist` | `/[id]` DELETE
 - `GET/POST /api/super-admin/discovery-blacklist` | `/[id]` DELETE
 
-### Cron Jobs (CRON_SECRET required)
-- `GET /api/cron/trust-pass` — monthly trust recalculation
-- `GET /api/cron/node-discovery` — AI node discovery
-- `GET /api/cron/source-discovery` — source discovery
-- `GET /api/cron/research-maturity` — maturity scoring
-- `GET /api/cron/news-feed` — RSS ingestion
-- `GET /api/cron/lift-bans` — auto-lift expired bans
+### Cron Jobs (CRON_SECRET required — 11 total, POST)
+Driven by `.github/workflows/autonomous-growth-cron.yml`. Every run is wrapped
+by `lib/cron/tracker.ts` and recorded in `CronRun`.
+- `process-jobs` — drain the IngestionJob queue (every 5 min)
+- `lift-bans` — auto-lift expired bans (every 15 min)
+- `news-feed` — RSS ingestion (hourly)
+- `node-discovery` — AI node discovery (every 5 days)
+- `source-discovery` — academic source discovery + auto-approve (every 5 days)
+- `auto-similarity` — enqueue similarity computation (every 6h)
+- `auto-relationships` — enqueue relationship suggestions (daily)
+- `research-maturity` — maturity scoring (daily)
+- `auto-audit` — AI cleanup audit (daily; runs directly, no HTTP hop)
+- `fix-invalid-dates` — clear invalid node dates (daily)
+- `trust-pass` — monthly trust/rank recalculation
+
+### Cron Health / Observability
+- `GET /api/admin/cron-health` — per-job last status, duration, consecutive
+  failures, `alerting` (≥3 consecutive fails) and `presumedStuck` flags.
+  Surfaced in the Admin panel's Scheduled Jobs board.
 
 ### Public
 - `GET /api/user/profile`
@@ -523,7 +542,10 @@ Cron or manual → scans nodes/edges/sources for orphans, broken links, credibil
 | User intelligence dashboard | ✅ Complete |
 | Moderation (warn/suspend/ban) | ✅ Complete |
 | Beta program (invites + feedback) | ✅ Complete |
-| Cron jobs (6 scheduled) | ✅ Complete |
+| Cron jobs (11 scheduled) | ✅ Complete |
+| Cron health tracking + failure alerting | ✅ Complete |
+| Admin role: full control-panel access | ✅ Complete |
+| Second-owner provisioning (owner-gated) | ✅ Complete |
 | Knowledge graph visualization | ✅ Complete |
 | Rabbit hole exploration UI | ✅ Complete |
 | Globe, timeline, galaxy views | ✅ Complete |
@@ -559,9 +581,16 @@ Cron or manual → scans nodes/edges/sources for orphans, broken links, credibil
 
 ---
 
-## OVERALL COMPLETION: ~82%
+## OVERALL COMPLETION: ~85%
 
-The platform is production-ready at its core. Content pipeline, trust/rank system, AI systems, admin dashboards, discovery, moderation, and source intelligence are all implemented. Remaining work is primarily test coverage, notification integrations, and pgvector hardening.
+The platform is production-ready at its core. Content pipeline, trust/rank
+system, AI systems, admin dashboards, discovery, moderation, source
+intelligence, and the autonomous growth loop (now with per-job health
+tracking) are all implemented. The single largest remaining risk is **test
+coverage** — still only 3 unit tests against a self-modifying pipeline, no E2E.
+Other remaining work: notification integrations (Discord/Slack), pgvector
+semantic-search hardening, and automated retry (vs. current detect+alert) for
+repeatedly-failing cron jobs.
 
 ---
 

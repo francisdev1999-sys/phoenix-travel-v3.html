@@ -1,8 +1,9 @@
+import { withCronTracking } from '@/lib/cron/tracker';
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { runNodeDiscovery } from '@/lib/discovery/node-engine';
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   const secret = req.headers.get('x-cron-secret');
   if (secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -16,3 +17,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
+
+export const POST = withCronTracking('node-discovery', handler);

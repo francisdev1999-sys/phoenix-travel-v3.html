@@ -58,7 +58,33 @@ const CRON_JOBS = [
   { id: 'research-maturity',  label: 'Research Maturity',   desc: 'Recalculate research maturity scores for all galaxies & clusters' },
   { id: 'lift-bans',          label: 'Lift Bans',           desc: 'Automatically lift temporary user bans that have expired' },
   { id: 'trust-pass',         label: 'Trust Pass',          desc: 'Recalculate trust scores and update user ranks' },
+  { id: 'process-jobs',       label: 'Process Jobs',        desc: 'Drain the ingestion queue: embeddings, similarity, relationship suggestions' },
+  { id: 'fix-invalid-dates',  label: 'Fix Invalid Dates',   desc: 'Clear out-of-range / reversed node dates (writes a version snapshot first)' },
 ] as const;
+
+interface CronJobHealth {
+  job:                 string;
+  lastStatus:          string | null;
+  lastStartedAt:       string | null;
+  lastDurationMs:      number | null;
+  lastError:           string | null;
+  consecutiveFailures: number;
+  alerting:            boolean;
+  successRate:         number | null;
+  presumedStuck:       boolean;
+}
+
+function relativeTime(iso: string | null): string {
+  if (!iso) return 'never run';
+  const diff = Date.now() - new Date(iso).getTime();
+  if (diff < 0) return 'just now';
+  const m = Math.floor(diff / 60000);
+  if (m < 1)   return 'just now';
+  if (m < 60)  return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24)  return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
 
 type CronId = typeof CRON_JOBS[number]['id'];
 
@@ -272,6 +298,16 @@ export default function AdminPanel() {
   const [nodeScanMsg,   setNodeScanMsg]   = useState<string | null>(null);
   const [cronRunning,   setCronRunning]   = useState<Partial<Record<CronId, boolean>>>({});
   const [cronResults,   setCronResults]   = useState<Partial<Record<CronId, string>>>({});
+  const [cronHealth,    setCronHealth]    = useState<Record<string, CronJobHealth>>({});
+
+  const loadCronHealth = useCallback(async () => {
+    try {
+      const r = await fetch('/api/admin/cron-health');
+      if (!r.ok) return;
+      const d = await r.json() as { jobs: CronJobHealth[] };
+      setCronHealth(Object.fromEntries(d.jobs.map(j => [j.job, j])));
+    } catch { /* non-fatal */ }
+  }, []);
 
   useEffect(() => {
     if (tab === 'nodes') {
@@ -311,6 +347,7 @@ export default function AdminPanel() {
   }, []);
 
   useEffect(() => { fetchEmbStats(); }, [fetchEmbStats]);
+  useEffect(() => { loadCronHealth(); }, [loadCronHealth]);
 
   // Clean up polling on unmount
   useEffect(() => () => { if (embPollRef.current) clearInterval(embPollRef.current); }, []);
@@ -452,6 +489,7 @@ export default function AdminPanel() {
       setCronResults(prev => ({ ...prev, [jobId]: `Failed: ${String(e)}` }));
     } finally {
       setCronRunning(prev => ({ ...prev, [jobId]: false }));
+      loadCronHealth();
     }
   };
 
@@ -631,22 +669,59 @@ export default function AdminPanel() {
               </ControlCard>
 
               {/* ── Scheduled Jobs ── */}
-              <SectionHeading icon={<Clock size={14} />} label="Scheduled Jobs" />
+              {(() => {
+                const alerting = Object.values(cronHealth).filter(h => h.alerting || h.presumedStuck);
+                return (
+                  <>
+                    <SectionHeading icon={<Clock size={14} />} label="Scheduled Jobs — Autonomous Health" />
+                    {alerting.length > 0 && (
+                      <div className="flex items-start gap-2 p-3 rounded-xl bg-red-950/40 border border-red-800/40 text-[11px] text-red-300">
+                        <AlertOctagon size={14} className="flex-shrink-0 mt-0.5" />
+                        <span>
+                          <strong>{alerting.length}</strong> job{alerting.length > 1 ? 's are' : ' is'} unhealthy:{' '}
+                          {alerting.map(h => h.job).join(', ')}. Run manually to inspect the error.
+                        </span>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {CRON_JOBS.map(job => {
                   const running = cronRunning[job.id as CronId];
                   const result  = cronResults[job.id as CronId];
                   const isError = result && !['Done', 'done'].some(s => result.startsWith(s)) && result.includes('Error') || result?.includes('fail') || result?.includes('Failed');
+                  const health  = cronHealth[job.id];
+                  const badge =
+                    !health || health.lastStatus === null
+                      ? { text: 'never run',                          cls: 'text-slate-500' }
+                    : health.alerting
+                      ? { text: `failing ×${health.consecutiveFailures}`, cls: 'text-red-400' }
+                    : health.presumedStuck
+                      ? { text: 'stuck',                              cls: 'text-amber-400' }
+                    : health.lastStatus === 'failed'
+                      ? { text: `failed · ${relativeTime(health.lastStartedAt)}`,  cls: 'text-red-400' }
+                    : health.lastStatus === 'skipped'
+                      ? { text: `skipped · ${relativeTime(health.lastStartedAt)}`, cls: 'text-slate-400' }
+                    : health.lastStatus === 'running'
+                      ? { text: 'running…',                           cls: 'text-purple-400' }
+                      : { text: `ok · ${relativeTime(health.lastStartedAt)}`,      cls: 'text-green-400' };
                   return (
                     <div key={job.id}
-                      className="flex items-start gap-3 p-3.5 rounded-xl bg-white/3 border border-white/6 hover:border-purple-900/40 transition-all">
+                      className={`flex items-start gap-3 p-3.5 rounded-xl bg-white/3 border transition-all hover:border-purple-900/40 ${health?.alerting ? 'border-red-800/50' : health?.presumedStuck ? 'border-amber-800/40' : 'border-white/6'}`}>
                       <div className="w-7 h-7 rounded-lg bg-purple-900/30 border border-purple-700/30 flex items-center justify-center flex-shrink-0 mt-0.5">
                         {running ? <Loader2 size={13} className="text-purple-400 animate-spin" /> : <Clock size={13} className="text-purple-400" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-white">{job.label}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-bold text-white">{job.label}</p>
+                          <span className={`text-[9px] font-bold uppercase tracking-wide ${badge.cls}`}>● {badge.text}</span>
+                        </div>
                         <p className="text-[10px] text-slate-500 leading-snug mt-0.5">{job.desc}</p>
+                        {health?.lastError && (health.alerting || health.lastStatus === 'failed') && (
+                          <p className="text-[10px] mt-1 text-red-400/80 truncate" title={health.lastError}>↳ {health.lastError}</p>
+                        )}
                         {result && (
                           <p className={`text-[10px] mt-1 ${isError ? 'text-red-400' : 'text-green-400'}`}>
                             {isError ? '✗ ' : '✓ '}{result}

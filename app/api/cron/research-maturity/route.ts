@@ -1,3 +1,4 @@
+import { withCronTracking } from '@/lib/cron/tracker';
 export const dynamic = 'force-dynamic';
 /**
  * POST /api/cron/research-maturity
@@ -8,8 +9,10 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { recalculateAllMaturity } from '@/lib/maturity/scorer';
 
-export async function POST() {
+async function handler() {
   const started = Date.now();
   const updated = await recalculateAllMaturity(200);
   return NextResponse.json({ updated, ms: Date.now() - started });
 }
+
+export const POST = withCronTracking('research-maturity', handler);

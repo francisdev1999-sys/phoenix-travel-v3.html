@@ -1,3 +1,4 @@
+import { withCronTracking } from '@/lib/cron/tracker';
 export const dynamic = 'force-dynamic';
 /**
  * POST /api/cron/auto-audit
@@ -25,7 +26,7 @@ function isAuthorized(req: NextRequest): boolean {
   return !!CRON_SECRET && auth === `Bearer ${CRON_SECRET}`;
 }
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   if (!isAuthorized(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -77,3 +78,5 @@ export async function POST(req: NextRequest) {
     run:        result.kind === 'completed' ? result.run : result,
   });
 }
+
+export const POST = withCronTracking('auto-audit', handler);

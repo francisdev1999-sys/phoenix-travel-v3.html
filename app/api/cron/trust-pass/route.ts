@@ -1,3 +1,4 @@
+import { withCronTracking } from '@/lib/cron/tracker';
 export const dynamic = 'force-dynamic';
 /**
  * POST /api/cron/trust-pass
@@ -11,7 +12,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { applyTrustEvent, recomputeTrustScore } from '@/lib/trust-score';
 
-export async function POST() {
+async function handler() {
   const now = new Date();
 
   // Fetch all eligible users in one query
@@ -68,3 +69,5 @@ export async function POST() {
 
   return NextResponse.json({ processed, recomputed, total: users.length, ranAt: now });
 }
+
+export const POST = withCronTracking('trust-pass', handler);

@@ -1,3 +1,4 @@
+import { withCronTracking } from '@/lib/cron/tracker';
 export const dynamic = 'force-dynamic';
 /**
  * POST /api/cron/source-discovery
@@ -13,7 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { runDiscovery } from '@/lib/discovery/engine';
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   const body = await req.json().catch(() => ({})) as { nodeId?: string; maxNodes?: number };
   const started = new Date();
 
@@ -56,3 +57,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
+
+export const POST = withCronTracking('source-discovery', handler);

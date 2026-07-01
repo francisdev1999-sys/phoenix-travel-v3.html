@@ -20,6 +20,8 @@ import { POST as autoAudit }         from '@/app/api/cron/auto-audit/route';
 import { POST as researchMaturity }  from '@/app/api/cron/research-maturity/route';
 import { POST as liftBans }          from '@/app/api/cron/lift-bans/route';
 import { POST as trustPass }         from '@/app/api/cron/trust-pass/route';
+import { POST as processJobs }       from '@/app/api/cron/process-jobs/route';
+import { POST as fixInvalidDates }   from '@/app/api/cron/fix-invalid-dates/route';
 
 const VALID_JOBS = [
   'news-feed',
@@ -31,6 +33,8 @@ const VALID_JOBS = [
   'research-maturity',
   'lift-bans',
   'trust-pass',
+  'process-jobs',
+  'fix-invalid-dates',
 ] as const;
 
 type Job = typeof VALID_JOBS[number];
@@ -48,6 +52,8 @@ const HANDLERS: Record<Job, CronHandler> = {
   'research-maturity':  researchMaturity,
   'lift-bans':          liftBans,
   'trust-pass':         trustPass,
+  'process-jobs':       processJobs,
+  'fix-invalid-dates':  fixInvalidDates,
 };
 
 export async function POST(req: NextRequest) {
