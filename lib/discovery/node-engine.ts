@@ -320,6 +320,8 @@ export interface NodeDiscoveryResult {
 export async function runNodeDiscovery(opts: {
   maxNodes?:   number;
   runId?:      string;
+  /** Override the static DISCOVERY_SEEDS — used by the news→discovery bridge. */
+  seeds?:      string[];
 }): Promise<NodeDiscoveryResult> {
   const maxNodes = opts.maxNodes ?? 10;
 
@@ -364,12 +366,14 @@ export async function runNodeDiscovery(opts: {
     skipped: 0, totalCostUsd: 0,
   };
 
-  // Sample seeds randomly so we don't always hit the same ones. Cap scales
-  // with maxNodes (instead of a flat 8) so a larger per-run budget actually
-  // reaches more of the DISCOVERY_SEEDS list rather than always re-hitting
-  // the same handful.
-  const shuffled = [...DISCOVERY_SEEDS].sort(() => Math.random() - 0.5);
-  const seedBatch = shuffled.slice(0, Math.min(DISCOVERY_SEEDS.length, Math.ceil(maxNodes * 1.5)));
+  // Caller-supplied seeds (e.g. fresh news headlines) take priority and keep
+  // their order (newest first); the static list is sampled randomly so we
+  // don't always hit the same ones. Cap scales with maxNodes so a larger
+  // per-run budget actually reaches more seeds.
+  const seedSource = opts.seeds?.length
+    ? [...opts.seeds]
+    : [...DISCOVERY_SEEDS].sort(() => Math.random() - 0.5);
+  const seedBatch = seedSource.slice(0, Math.min(seedSource.length, Math.ceil(maxNodes * 1.5)));
 
   for (const seed of seedBatch) {
     if (result.nodesProposed >= maxNodes) break;

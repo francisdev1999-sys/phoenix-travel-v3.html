@@ -14,7 +14,7 @@ import { ALERT_THRESHOLD } from '@/lib/cron/tracker';
 const KNOWN_JOBS = [
   'process-jobs', 'lift-bans', 'news-feed', 'node-discovery', 'source-discovery',
   'auto-similarity', 'auto-relationships', 'research-maturity', 'auto-audit',
-  'fix-invalid-dates', 'learning-pass', 'trust-pass',
+  'fix-invalid-dates', 'learning-pass', 'news-discovery', 'trust-pass',
 ];
 
 const HISTORY_PER_JOB = 20;

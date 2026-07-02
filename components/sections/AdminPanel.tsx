@@ -63,6 +63,7 @@ const CRON_JOBS = [
   { id: 'process-jobs',       label: 'Process Jobs',        desc: 'Drain the ingestion queue: embeddings, similarity, relationship suggestions' },
   { id: 'fix-invalid-dates',  label: 'Fix Invalid Dates',   desc: 'Clear out-of-range / reversed node dates (writes a version snapshot first)' },
   { id: 'learning-pass',      label: 'Learning Pass',       desc: 'Retrain the adaptive promotion model on approval/survival outcomes' },
+  { id: 'news-discovery',     label: 'News Discovery',      desc: 'Turn fresh intel-feed headlines into discovery seeds — the archive reacts to world events' },
 ] as const;
 
 interface CronJobHealth {

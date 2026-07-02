@@ -20,8 +20,8 @@ embeddings · Upstash Redis (rate limit) · Resend (email). Deployed on Railway.
 ## Structure
 
 - `app/` — App Router pages + **~130 API routes** under `app/api/`
-  - `app/api/cron/` — 12 scheduled jobs (discovery, promotion, audit, trust,
-    nightly `learning-pass`…)
+  - `app/api/cron/` — 13 scheduled jobs (discovery, promotion, audit, trust,
+    nightly `learning-pass`, daily `news-discovery`…)
   - `app/api/admin/` — admin panel APIs (role: `owner` | `admin`)
   - `app/api/super-admin/` — privileged APIs (also `owner` | `admin`; owner-only
     protections are enforced per-route)
@@ -55,10 +55,12 @@ verified_contributor > contributor > user | banned`
 
 GitHub Actions (`.github/workflows/autonomous-growth-cron.yml`) is the only
 scheduler in production — it POSTs `/api/cron/<job>` with `CRON_SECRET`.
-Loop: discover → auto-promote (strict quality gates **+ a learned lane**) →
-suggest/auto-approve relationships → discover/auto-approve sources → similarity
-→ audit/cleanup → trust/rank → nightly `learning-pass`. Every run is recorded in
-`CronRun`; the admin panel surfaces per-job health (`/api/admin/cron-health`).
+Loop: discover (static seeds every 5 days **+ daily `news-discovery`, which turns
+fresh intel-feed headlines into targeted seeds**) → auto-promote (strict quality
+gates **+ a learned lane**) → suggest/auto-approve relationships → discover/
+auto-approve sources → similarity → audit/cleanup → trust/rank → nightly
+`learning-pass`. Every run is recorded in `CronRun`; the admin panel surfaces
+per-job health (`/api/admin/cron-health`).
 
 The **learned lane**: an online-learning model (`lib/learning/`) trained nightly
 on the whole archive (published nodes + their sources/connections as positives,
