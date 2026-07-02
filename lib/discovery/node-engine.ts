@@ -15,6 +15,7 @@ import { prisma } from '@/lib/db';
 import { checkBudget, recordUsage } from '@/lib/budget/tracker';
 import { nodes as staticNodes } from '@/lib/graph';
 import { qualifiesForAutoApprove, promoteDiscoveredNode } from './node-promoter';
+import { scoreCandidate, passesLearnedSafetyGuards, LEARNED_AUTO_APPROVE_THRESHOLD } from '@/lib/learning/scorer';
 
 const DISCOVERY_MODEL    = 'claude-haiku-4-5';
 const MAX_OUTPUT_TOKENS  = 1200;
@@ -428,7 +429,7 @@ export async function runNodeDiscovery(opts: {
       }
 
       const meta      = CATEGORY_META[proposal.category] ?? { color: '#6b7280', icon: '📌' };
-      const autoApprove = qualifiesForAutoApprove({
+      let autoApprove = qualifiesForAutoApprove({
         relevanceScore:  scores.relevanceScore,
         qualityScore:    scores.qualityScore,
         noveltyScore:    scores.noveltyScore,
@@ -436,6 +437,36 @@ export async function runNodeDiscovery(opts: {
         claimCount:      proposal.claims.length,
         criticismCount:  proposal.criticisms.length,
       });
+
+      // Learned auto-approve lane: when the strict static gate says no, consult
+      // the self-learning model. It may approve a borderline candidate only if
+      // (a) it's trained enough to have authority, (b) it's highly confident,
+      // and (c) the candidate clears the hard safety guards. Every learned
+      // evaluation is recorded so the nightly pass can grade itself.
+      let learnedDecision: { score: number; modelId: string } | null = null;
+      if (!autoApprove) {
+        const candidateInput = {
+          relevanceScore:  scores.relevanceScore,
+          qualityScore:    scores.qualityScore,
+          noveltyScore:    scores.noveltyScore,
+          confidenceScore: proposal.confidence_score,
+          evidenceLevel:   proposal.evidence_level,
+          claimCount:      proposal.claims.length,
+          criticismCount:  proposal.criticisms.length,
+          tagCount:        proposal.tags.length,
+          descriptionLen:  proposal.description.length,
+          hasSource:       true, // node-discovery always cites a Wikipedia source
+        };
+        const scored = await scoreCandidate(candidateInput).catch(() => null);
+        if (scored) {
+          learnedDecision = { score: scored.score, modelId: scored.modelId };
+          if (scored.mature &&
+              scored.score >= LEARNED_AUTO_APPROVE_THRESHOLD &&
+              passesLearnedSafetyGuards(candidateInput)) {
+            autoApprove = true;
+          }
+        }
+      }
       const status = autoApprove ? 'auto_approved' : 'pending_review';
 
       try {
@@ -469,6 +500,21 @@ export async function runNodeDiscovery(opts: {
           update: { ...discoveredNodeData },
           create: { ...discoveredNodeData },
         });
+
+        // Record the learned decision (only when the learned lane was consulted,
+        // i.e. the strict gate declined) so the nightly pass can grade itself.
+        if (learnedDecision) {
+          await prisma.learningPrediction.create({
+            data: {
+              kind:       'node_promotion',
+              modelId:    learnedDecision.modelId,
+              entityType: 'discovered_node',
+              entityId:   dn.id,
+              score:      learnedDecision.score,
+              decision:   autoApprove ? 'learned_auto_approved' : 'queued',
+            },
+          }).catch(() => {});
+        }
 
         // Auto-approve: immediately promote to live graph node
         if (autoApprove && !dn.promotedNodeId) {

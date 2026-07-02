@@ -1202,3 +1202,49 @@ model CronRun {
   @@index([job, startedAt])
   @@index([status, startedAt])
 }
+
+// ── Adaptive learning ─────────────────────────────────────────────────────────
+// A versioned online-learning scorer (single-layer logistic "neuron" trained by
+// gradient descent). The learning-pass cron warm-starts from the active model
+// and retrains nightly on approval/survival outcomes, so it evolves over time.
+model LearningModel {
+  id            String   @id @default(cuid())
+  kind          String   @default("node_promotion")
+  version       Int      @default(1)
+  active        Boolean  @default(true)
+  features      String[]
+  weights       Float[]
+  bias          Float    @default(0)
+  learningRate  Float    @default(0.05)
+  exampleCount  Int      @default(0)
+  positiveCount Int      @default(0)
+  negativeCount Int      @default(0)
+  accuracy      Float?
+  precision     Float?
+  recall        Float?
+  auc           Float?
+  trainedAt     DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  @@index([kind, active])
+  @@index([kind, version])
+}
+
+// One row per learned decision made during discovery — the audit trail for the
+// learned auto-approve lane, and the ground truth the nightly pass scores itself
+// against (resolved to approved_survived / rejected_removed).
+model LearningPrediction {
+  id         String    @id @default(cuid())
+  kind       String    @default("node_promotion")
+  modelId    String?
+  entityType String    @default("discovered_node")
+  entityId   String
+  score      Float
+  decision   String    // learned_auto_approved | queued
+  outcome    String    @default("pending") // approved_survived | rejected_removed | pending
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([kind, outcome])
+  @@index([entityType, entityId])
+}

@@ -22,6 +22,7 @@ import { POST as liftBans }          from '@/app/api/cron/lift-bans/route';
 import { POST as trustPass }         from '@/app/api/cron/trust-pass/route';
 import { POST as processJobs }       from '@/app/api/cron/process-jobs/route';
 import { POST as fixInvalidDates }   from '@/app/api/cron/fix-invalid-dates/route';
+import { POST as learningPass }      from '@/app/api/cron/learning-pass/route';
 
 const VALID_JOBS = [
   'news-feed',
@@ -35,6 +36,7 @@ const VALID_JOBS = [
   'trust-pass',
   'process-jobs',
   'fix-invalid-dates',
+  'learning-pass',
 ] as const;
 
 type Job = typeof VALID_JOBS[number];
@@ -54,6 +56,7 @@ const HANDLERS: Record<Job, CronHandler> = {
   'trust-pass':         trustPass,
   'process-jobs':       processJobs,
   'fix-invalid-dates':  fixInvalidDates,
+  'learning-pass':      learningPass,
 };
 
 export async function POST(req: NextRequest) {

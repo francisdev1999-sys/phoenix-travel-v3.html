@@ -36,13 +36,14 @@ import BetaAnalytics from '@/components/admin/BetaAnalytics';
 import CROAuditDashboard from '@/components/admin/CROAuditDashboard';
 import SourceIntelligenceDashboard from '@/components/admin/SourceIntelligenceDashboard';
 import CleanupDashboard from '@/components/admin/CleanupDashboard';
+import LearningDashboard from '@/components/admin/LearningDashboard';
 
 type Tab =
   | 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports'
   | 'imports' | 'drafts' | 'suggestions' | 'users' | 'moderation' | 'platform'
   | 'intelligence' | 'integrity' | 'similarity' | 'ai-activity' | 'ai-audit'
   | 'source-enrichment' | 'beta-feedback' | 'beta-invites' | 'beta-analytics'
-  | 'cro-audit' | 'source-intel' | 'cleanup' | 'node-manager';
+  | 'cro-audit' | 'source-intel' | 'cleanup' | 'node-manager' | 'learning';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Cron job metadata
@@ -60,6 +61,7 @@ const CRON_JOBS = [
   { id: 'trust-pass',         label: 'Trust Pass',          desc: 'Recalculate trust scores and update user ranks' },
   { id: 'process-jobs',       label: 'Process Jobs',        desc: 'Drain the ingestion queue: embeddings, similarity, relationship suggestions' },
   { id: 'fix-invalid-dates',  label: 'Fix Invalid Dates',   desc: 'Clear out-of-range / reversed node dates (writes a version snapshot first)' },
+  { id: 'learning-pass',      label: 'Learning Pass',       desc: 'Retrain the adaptive promotion model on approval/survival outcomes' },
 ] as const;
 
 interface CronJobHealth {
@@ -541,6 +543,7 @@ export default function AdminPanel() {
     { id: 'beta-feedback',     label: 'Beta Feedback',   icon: <MessageSquarePlus size={13} /> },
     { id: 'beta-invites',      label: 'Beta Invites',    icon: <Ticket size={13} /> },
     { id: 'beta-analytics',    label: 'Beta Analytics',  icon: <TrendingUp size={13} /> },
+    { id: 'learning',          label: 'Learning',        icon: <Brain size={13} />,       ownerOnly: true },
     { id: 'cleanup',           label: 'AI Cleanup',      icon: <AlertCircle size={13} />, ownerOnly: true },
     { id: 'platform',          label: 'Platform',        icon: <BarChart3 size={13} />,   ownerOnly: true },
     { id: 'intelligence',      label: 'User Intel',      icon: <Brain size={13} />,       ownerOnly: true },
@@ -860,6 +863,7 @@ export default function AdminPanel() {
           {tab === 'beta-feedback'     && <BetaFeedbackAdmin />}
           {tab === 'beta-invites'      && <BetaInviteManager />}
           {tab === 'beta-analytics'    && <BetaAnalytics />}
+          {tab === 'learning'          && isAdmin && <LearningDashboard />}
           {tab === 'cleanup'           && isAdmin && <CleanupDashboard adminEmail={session.user?.email ?? ''} />}
           {tab === 'intelligence'      && isAdmin && <UserIntelligenceDashboard />}
           {tab === 'ai-activity'       && isAdmin && <AiActivityDashboard />}

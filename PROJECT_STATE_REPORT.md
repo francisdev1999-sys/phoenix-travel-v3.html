@@ -20,8 +20,8 @@
 | React components | 85 |
 | Lib modules | 85 |
 | Prisma migrations | 33 |
-| Cron jobs (scheduled) | 11 |
-| Unit tests | 3 |
+| Cron jobs (scheduled) | 12 |
+| Unit tests | 4 |
 
 ---
 
@@ -542,8 +542,10 @@ Cron or manual → scans nodes/edges/sources for orphans, broken links, credibil
 | User intelligence dashboard | ✅ Complete |
 | Moderation (warn/suspend/ban) | ✅ Complete |
 | Beta program (invites + feedback) | ✅ Complete |
-| Cron jobs (11 scheduled) | ✅ Complete |
+| Cron jobs (12 scheduled) | ✅ Complete |
 | Cron health tracking + failure alerting | ✅ Complete |
+| Self-learning promotion model (online logistic NN) | ✅ Complete |
+| Learned auto-approve lane (guardrailed, maturity-gated) | ✅ Complete |
 | Admin role: full control-panel access | ✅ Complete |
 | Second-owner provisioning (owner-gated) | ✅ Complete |
 | Knowledge graph visualization | ✅ Complete |

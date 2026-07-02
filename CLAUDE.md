@@ -20,7 +20,8 @@ embeddings · Upstash Redis (rate limit) · Resend (email). Deployed on Railway.
 ## Structure
 
 - `app/` — App Router pages + **~130 API routes** under `app/api/`
-  - `app/api/cron/` — 11 scheduled jobs (discovery, promotion, audit, trust…)
+  - `app/api/cron/` — 12 scheduled jobs (discovery, promotion, audit, trust,
+    nightly `learning-pass`…)
   - `app/api/admin/` — admin panel APIs (role: `owner` | `admin`)
   - `app/api/super-admin/` — privileged APIs (also `owner` | `admin`; owner-only
     protections are enforced per-route)
@@ -28,6 +29,8 @@ embeddings · Upstash Redis (rate limit) · Resend (email). Deployed on Railway.
 - `components/admin/` — admin dashboards (cleanup, user-intel, moderation…)
 - `lib/` — business logic
   - `lib/discovery/` — autonomous node/source/relationship discovery + promoters
+  - `lib/learning/` — self-learning promotion model (logistic "neuron": features,
+    model math, dataset from approve/survival outcomes, scorer, nightly trainer)
   - `lib/jobs/` — IngestionJob queue + processor
   - `lib/cron/tracker.ts` — wraps every cron handler to record a `CronRun`
   - `lib/cleanup/`, `lib/similarity/`, `lib/maturity/`, `lib/trust-score.ts`,
@@ -50,10 +53,17 @@ verified_contributor > contributor > user | banned`
 
 GitHub Actions (`.github/workflows/autonomous-growth-cron.yml`) is the only
 scheduler in production — it POSTs `/api/cron/<job>` with `CRON_SECRET`.
-Loop: discover → auto-promote (strict quality gates) → suggest/auto-approve
-relationships → discover/auto-approve sources → similarity → audit/cleanup →
-trust/rank. Every run is recorded in `CronRun`; the admin panel surfaces
-per-job health and flags consecutive failures (`/api/admin/cron-health`).
+Loop: discover → auto-promote (strict quality gates **+ a learned lane**) →
+suggest/auto-approve relationships → discover/auto-approve sources → similarity
+→ audit/cleanup → trust/rank → nightly `learning-pass`. Every run is recorded in
+`CronRun`; the admin panel surfaces per-job health (`/api/admin/cron-health`).
+
+The **learned lane**: an online-learning model (`lib/learning/`) trained nightly
+on approval/survival outcomes scores each discovered candidate. When the strict
+static gate declines, a *mature* model (enough labeled data + accuracy bar) may
+auto-approve a high-confidence candidate that also clears hard safety guards.
+A cold/immature model has no authority, so it never publishes junk on day one.
+The admin **Learning** tab shows weights, accuracy history, and live precision.
 
 ## Commands
 

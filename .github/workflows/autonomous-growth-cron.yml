@@ -17,6 +17,7 @@ on:
     - cron: '0 3 * * *'          # research-maturity      — daily 03:00 UTC
     - cron: '0 4 * * *'          # auto-audit             — daily 04:00 UTC
     - cron: '30 4 * * *'         # fix-invalid-dates      — daily 04:30 UTC
+    - cron: '0 5 * * *'          # learning-pass          — daily 05:00 UTC
     - cron: '0 0 1 * *'          # trust-pass             — monthly
   workflow_dispatch:
     inputs:
@@ -35,6 +36,7 @@ on:
           - research-maturity
           - auto-audit
           - fix-invalid-dates
+          - learning-pass
           - trust-pass
 
 jobs:
@@ -62,6 +64,7 @@ jobs:
               '0 3 * * *')           job='research-maturity' ;;
               '0 4 * * *')           job='auto-audit' ;;
               '30 4 * * *')          job='fix-invalid-dates' ;;
+              '0 5 * * *')           job='learning-pass' ;;
               '0 0 1 * *')           job='trust-pass' ;;
               *) echo "Unrecognized schedule: $SCHEDULE" >&2; exit 1 ;;
             esac
