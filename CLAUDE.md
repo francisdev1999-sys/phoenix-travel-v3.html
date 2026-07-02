@@ -70,7 +70,9 @@ may auto-approve a high-confidence candidate that also clears hard safety guards
 A cold/immature model has no authority, so it never publishes junk on day one.
 Besides the nightly pass, `emit()` fires a gated background retrain as the archive
 grows (`maybeAutoTrain`), so the model keeps learning from new data automatically.
-The admin **Learning** tab shows weights, accuracy history, and live precision.
+The admin **Neural Core** tab is the archive's brain — the command-center view
+plus the embedded Neuron Lab (weights, accuracy history, live precision,
+inference playground).
 
 ## Commands
 

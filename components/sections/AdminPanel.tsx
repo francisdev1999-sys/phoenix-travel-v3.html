@@ -36,7 +36,6 @@ import BetaAnalytics from '@/components/admin/BetaAnalytics';
 import CROAuditDashboard from '@/components/admin/CROAuditDashboard';
 import SourceIntelligenceDashboard from '@/components/admin/SourceIntelligenceDashboard';
 import CleanupDashboard from '@/components/admin/CleanupDashboard';
-import LearningDashboard from '@/components/admin/LearningDashboard';
 import NeuralCore from '@/components/admin/NeuralCore';
 
 type Tab =
@@ -44,7 +43,7 @@ type Tab =
   | 'imports' | 'drafts' | 'suggestions' | 'users' | 'moderation' | 'platform'
   | 'intelligence' | 'integrity' | 'similarity' | 'ai-activity' | 'ai-audit'
   | 'source-enrichment' | 'beta-feedback' | 'beta-invites' | 'beta-analytics'
-  | 'cro-audit' | 'source-intel' | 'cleanup' | 'node-manager' | 'learning' | 'neural-core';
+  | 'cro-audit' | 'source-intel' | 'cleanup' | 'node-manager' | 'neural-core';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Cron job metadata
@@ -546,7 +545,6 @@ export default function AdminPanel() {
     { id: 'beta-feedback',     label: 'Beta Feedback',   icon: <MessageSquarePlus size={13} /> },
     { id: 'beta-invites',      label: 'Beta Invites',    icon: <Ticket size={13} /> },
     { id: 'beta-analytics',    label: 'Beta Analytics',  icon: <TrendingUp size={13} /> },
-    { id: 'learning',          label: 'Learning',        icon: <Brain size={13} />,       ownerOnly: true },
     { id: 'cleanup',           label: 'AI Cleanup',      icon: <AlertCircle size={13} />, ownerOnly: true },
     { id: 'platform',          label: 'Platform',        icon: <BarChart3 size={13} />,   ownerOnly: true },
     { id: 'intelligence',      label: 'User Intel',      icon: <Brain size={13} />,       ownerOnly: true },
@@ -867,7 +865,6 @@ export default function AdminPanel() {
           {tab === 'beta-invites'      && <BetaInviteManager />}
           {tab === 'beta-analytics'    && <BetaAnalytics />}
           {tab === 'neural-core'       && isAdmin && <NeuralCore />}
-          {tab === 'learning'          && isAdmin && <LearningDashboard />}
           {tab === 'cleanup'           && isAdmin && <CleanupDashboard adminEmail={session.user?.email ?? ''} />}
           {tab === 'intelligence'      && isAdmin && <UserIntelligenceDashboard />}
           {tab === 'ai-activity'       && isAdmin && <AiActivityDashboard />}

@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Cpu, Activity, Database, Radio, Gauge, ShieldCheck, Maximize2, Minimize2, MousePointerClick } from 'lucide-react';
+import { Cpu, Activity, Database, Radio, Gauge, ShieldCheck, Maximize2, Minimize2, MousePointerClick, Brain, ChevronDown, ChevronUp } from 'lucide-react';
+import LearningDashboard from '@/components/admin/LearningDashboard';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Neural Core — a futuristic command-center view of the adaptive engine.
@@ -59,6 +60,7 @@ export default function NeuralCore() {
   const [isFull, setIsFull]     = useState(false);
   const [bootStep, setBootStep] = useState(0);
   const [booting, setBooting]   = useState(true);
+  const [showLab, setShowLab]   = useState(true);
 
   const loadAll = useCallback(async () => {
     const safe = <T,>(p: Promise<Response>): Promise<T | null> =>
@@ -418,6 +420,25 @@ export default function NeuralCore() {
             ))}
           </div>
         </VitalPanel>
+
+        {/* Neuron Lab — the archive's brain: adaptive models, playground, decisions */}
+        <div className="border border-violet-500/20 rounded-xl bg-black/40 hud-corners">
+          <button
+            onClick={() => setShowLab(v => !v)}
+            className="w-full flex items-center justify-between px-4 py-3 text-violet-300/90 hover:text-violet-200 transition-colors"
+          >
+            <span className="flex items-center gap-2">
+              <Brain size={14} className="text-violet-400" />
+              <span className="text-[10px] font-bold tracking-widest">NEURON LAB · ADAPTIVE MODELS · LIVE INFERENCE PLAYGROUND</span>
+            </span>
+            {showLab ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+          {showLab && (
+            <div className="px-3 pb-3">
+              <LearningDashboard />
+            </div>
+          )}
+        </div>
       </div>
 
       <style jsx>{`
