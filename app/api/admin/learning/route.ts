@@ -60,6 +60,7 @@ export async function GET() {
     active: active && {
       version:       active.version,
       trainedAt:     active.trainedAt,
+      bias:          active.bias,
       exampleCount:  active.exampleCount,
       positiveCount: active.positiveCount,
       negativeCount: active.negativeCount,
