@@ -14,6 +14,7 @@ import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Link2, ArrowRight, HelpCircle, Quote, Compass } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
+import { trackEngagement, type EngagementKind } from '@/lib/engagement';
 import { useNodes, useEdges } from '@/lib/graph/useNodes';
 import type { GraphNode, GraphEdge } from '@/lib/graph/types';
 
@@ -53,13 +54,33 @@ export default function ExploreFeed() {
   const nodes = useNodes();
   const edges = useEdges();
   const [count, setCount] = useState(BATCH);
+  const [hot, setHot] = useState<Map<string, 'trending' | 'predicted'>>(new Map());
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // What are people engaging with — and what does the interest neuron predict
+  // they'll love? Those topics lead the feed.
+  useEffect(() => {
+    fetch('/api/explore/trending')
+      .then(r => (r.ok ? r.json() : null))
+      .then((d: { trending: { nodeId: string }[]; predicted: { nodeId: string }[] } | null) => {
+        if (!d) return;
+        const m = new Map<string, 'trending' | 'predicted'>();
+        d.predicted?.forEach(p => m.set(p.nodeId, 'predicted'));
+        d.trending?.forEach(t => m.set(t.nodeId, 'trending')); // real engagement outranks prediction
+        if (m.size) setHot(m);
+      })
+      .catch(() => {});
+  }, []);
 
   // Build the shuffled feed once per visit: topic cards with a "hidden link"
   // spotlight woven in every few cards.
   const feed = useMemo<FeedItem[]>(() => {
     const byId = new Map(nodes.map(n => [n.id, n]));
-    const topicCards: FeedItem[] = shuffle(nodes).map(node => ({ kind: 'topic', node }));
+    const shuffled = shuffle(nodes);
+    // Hot topics (live engagement + neuron predictions) lead the feed.
+    const hotNodes  = shuffled.filter(n => hot.has(n.id));
+    const restNodes = shuffled.filter(n => !hot.has(n.id));
+    const topicCards: FeedItem[] = [...hotNodes, ...restNodes].map(node => ({ kind: 'topic', node }));
     const strongEdges = shuffle(
       edges.filter(e => e.strength_score >= 0.6 && byId.has(e.from) && byId.has(e.to)),
     ).map<FeedItem>(e => ({ kind: 'link', edge: e, a: byId.get(e.from)!, b: byId.get(e.to)! }));
@@ -72,7 +93,7 @@ export default function ExploreFeed() {
     });
     return mixed;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodes.length, edges.length]);
+  }, [nodes.length, edges.length, hot]);
 
   const loadMore = useCallback(() => setCount(c => Math.min(c + BATCH, feed.length)), [feed.length]);
 
@@ -104,7 +125,10 @@ export default function ExploreFeed() {
     return out;
   }, [nodes, edges]);
 
-  const open = (n: GraphNode) => navigateToNode(n.id, n.title);
+  const open = (n: GraphNode, kind: EngagementKind = 'node_dive') => {
+    trackEngagement(kind, n.id);
+    navigateToNode(n.id, n.title);
+  };
 
   return (
     <div className="min-h-full text-slate-200 pb-28">
@@ -166,6 +190,12 @@ export default function ExploreFeed() {
                       {node.icon ? `${node.icon} ` : ''}{node.title}
                     </span>
                     <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded border ${ev.cls}`}>{ev.label}</span>
+                    {hot.get(node.id) === 'trending' && (
+                      <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded border bg-orange-900/50 text-orange-300 border-orange-700/40">🔥 Trending</span>
+                    )}
+                    {hot.get(node.id) === 'predicted' && (
+                      <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded border bg-fuchsia-900/50 text-fuchsia-300 border-fuchsia-700/40">✦ Picked for you</span>
+                    )}
                   </div>
                   <p className="text-[13px] text-slate-400 mt-1.5 line-clamp-3 leading-relaxed">{node.description}</p>
                   <span className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-purple-300">
@@ -176,7 +206,7 @@ export default function ExploreFeed() {
                   <div className="border-t border-white/5 bg-black/20 px-5 py-2.5 flex items-center gap-2 flex-wrap">
                     <span className="text-[10px] text-slate-500 uppercase tracking-wide font-bold shrink-0">Leads to</span>
                     {conns.map(c => (
-                      <button key={c.id} onClick={() => open(c)}
+                      <button key={c.id} onClick={() => open(c, 'connection_hop')}
                         className="text-[11px] px-2 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300 hover:text-cyan-300 hover:border-cyan-700/50 transition-colors">
                         {c.title}
                       </button>

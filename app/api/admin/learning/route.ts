@@ -12,18 +12,23 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import {
-  LEARNING_KIND, EDGE_LEARNING_KIND, isModelMature,
+  LEARNING_KIND, EDGE_LEARNING_KIND, INTEREST_LEARNING_KIND, isModelMature,
   MIN_EXAMPLES_FOR_AUTHORITY, MIN_ACCURACY_FOR_AUTHORITY, LEARNED_AUTO_APPROVE_THRESHOLD,
 } from '@/lib/learning/scorer';
+import { getEngagementScores } from '@/lib/learning/interest';
 
 export async function GET() {
-  const [active, edgeActive, history, recentPredictions, resolved, edgeResolved] = await Promise.all([
+  const [active, edgeActive, interestActive, history, recentPredictions, resolved, edgeResolved] = await Promise.all([
     prisma.learningModel.findFirst({
       where: { kind: LEARNING_KIND, active: true },
       orderBy: { version: 'desc' },
     }),
     prisma.learningModel.findFirst({
       where: { kind: EDGE_LEARNING_KIND, active: true },
+      orderBy: { version: 'desc' },
+    }),
+    prisma.learningModel.findFirst({
+      where: { kind: INTEREST_LEARNING_KIND, active: true },
       orderBy: { version: 'desc' },
     }),
     prisma.learningModel.findMany({
@@ -67,6 +72,35 @@ export async function GET() {
 
   const edgeWeights = edgeActive
     ? edgeActive.features.map((name, i) => ({ name, weight: edgeActive.weights[i] ?? 0 }))
+        .sort((a, b) => Math.abs(b.weight) - Math.abs(a.weight))
+    : [];
+
+  // ── Audience intelligence: live engagement + interest-neuron summary ────────
+  const h24 = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const [counts24h, weekScores] = await Promise.all([
+    prisma.usageEvent.groupBy({
+      by:     ['eventType'],
+      where:  { eventType: { in: ['node_view', 'node_dive', 'connection_hop'] }, createdAt: { gte: h24 } },
+      _count: { _all: true },
+    }).catch(() => [] as { eventType: string; _count: { _all: number } }[]),
+    getEngagementScores(7).catch(() => new Map<string, number>()),
+  ]);
+  const topIds = [...weekScores.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const topNodes = topIds.length
+    ? await prisma.node.findMany({
+        where:  { id: { in: topIds.map(([id]) => id) } },
+        select: { id: true, title: true },
+      }).catch(() => [])
+    : [];
+  const titleById = new Map(topNodes.map(n => [n.id, n.title]));
+  const engagement = {
+    last24h: Object.fromEntries(counts24h.map(c => [c.eventType, c._count._all])),
+    topTopics: topIds.map(([id, score]) => ({ id, title: titleById.get(id) ?? id, score })),
+    engagedNodes7d: weekScores.size,
+  };
+
+  const interestWeights = interestActive
+    ? interestActive.features.map((name, i) => ({ name, weight: interestActive.weights[i] ?? 0 }))
         .sort((a, b) => Math.abs(b.weight) - Math.abs(a.weight))
     : [];
 
@@ -129,6 +163,20 @@ export async function GET() {
         livePrecision: edgeResolved.length ? edgeSurvived / edgeResolved.length : null,
       },
     },
+    interest: interestActive && {
+      version:       interestActive.version,
+      trainedAt:     interestActive.trainedAt,
+      bias:          interestActive.bias,
+      exampleCount:  interestActive.exampleCount,
+      positiveCount: interestActive.positiveCount,
+      negativeCount: interestActive.negativeCount,
+      accuracy:      interestActive.accuracy,
+      precision:     interestActive.precision,
+      recall:        interestActive.recall,
+      auc:           interestActive.auc,
+      weights:       interestWeights,
+    },
+    engagement,
     recentPredictions,
   });
 }

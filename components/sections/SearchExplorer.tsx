@@ -14,6 +14,7 @@ import { useMemo, useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Search, ArrowRight, Link2, Sparkles, BookOpen } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
+import { trackEngagement, type EngagementKind } from '@/lib/engagement';
 import { useNodes, useEdges } from '@/lib/graph/useNodes';
 import type { GraphNode, GraphEdge } from '@/lib/graph/types';
 
@@ -91,7 +92,10 @@ export default function SearchExplorer() {
       .slice(0, 8);
   }, [nodes, edges]);
 
-  const openNode = (n: GraphNode) => navigateToNode(n.id, n.title);
+  const openNode = (n: GraphNode, kind: EngagementKind = 'node_dive') => {
+    trackEngagement(kind, n.id);
+    navigateToNode(n.id, n.title);
+  };
 
   return (
     <div className="min-h-full text-slate-200 pb-24">
@@ -179,7 +183,7 @@ export default function SearchExplorer() {
                       </div>
                       <div className="space-y-1.5">
                         {shown.map(c => (
-                          <button key={c.node.id} onClick={() => openNode(c.node)}
+                          <button key={c.node.id} onClick={() => openNode(c.node, 'connection_hop')}
                             className="w-full flex items-start gap-2 text-left group/conn">
                             <span className="mt-1 w-1.5 h-1.5 rounded-full bg-cyan-500/70 shrink-0" />
                             <span className="text-[13px] leading-snug">

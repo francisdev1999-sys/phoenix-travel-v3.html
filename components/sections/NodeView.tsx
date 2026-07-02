@@ -7,6 +7,7 @@ import {
   Shuffle, ExternalLink, Network, ChevronRight,
 } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
+import { trackEngagement } from '@/lib/engagement';
 import ConfidenceMeter from '@/components/research/ConfidenceMeter';
 import ResearchScore from '@/components/research/ResearchScore';
 import ClaimBlock from '@/components/research/ClaimBlock';
@@ -304,6 +305,7 @@ export default function NodeView() {
     setActiveTab('overview');
     setShowAllSources(false);
     setShowAllNeighbours(false);
+    trackEngagement('node_view', nodeId);
     fetch(`/api/nodes/${nodeId}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(setData)
@@ -715,7 +717,7 @@ function ContinueCard({ item }: { item: DBNeighbour }) {
   const { edge, neighbour } = item;
   return (
     <button
-      onClick={() => navigateToNode(neighbour.id, neighbour.title)}
+      onClick={() => { trackEngagement('connection_hop', neighbour.id); navigateToNode(neighbour.id, neighbour.title); }}
       className="text-left p-4 rounded-xl bg-white/[0.03] border border-white/8 hover:border-cyan-700/50 hover:bg-white/[0.05] transition-all group"
     >
       <div className="flex items-center gap-2">

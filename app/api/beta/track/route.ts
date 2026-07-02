@@ -12,6 +12,8 @@ const VALID_TYPES = new Set([
   'search', 'search_click', 'graph_view', 'timeline_view', 'globe_view',
   'source_view', 'node_submit', 'rabbit_hole', 'node_view',
   'evidence_view', 'universe_view',
+  // Engagement-intelligence signals (anonymous; meta.nodeId identifies the topic)
+  'node_dive', 'connection_hop', 'explore_view',
 ]);
 
 export async function POST(req: NextRequest) {

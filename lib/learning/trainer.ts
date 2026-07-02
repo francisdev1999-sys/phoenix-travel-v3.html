@@ -131,7 +131,7 @@ export interface LearningPassResult {
 }
 
 // Below this we don't have enough signal to train a meaningful model yet.
-const MIN_EXAMPLES_TO_TRAIN = 12;
+export const MIN_EXAMPLES_TO_TRAIN = 12;
 
 function splitDataset(examples: TrainExample[]): { train: TrainExample[]; test: TrainExample[] } {
   if (examples.length < 20) return { train: examples, test: examples }; // too small to hold out
@@ -185,7 +185,7 @@ export async function runEdgeLearningPass(): Promise<LearningPassResult> {
 }
 
 /** Shared: warm-start fit, held-out eval, save as the new active version. */
-async function fitAndSave(
+export async function fitAndSave(
   kind: string,
   featureNames: string[],
   featureCount: number,

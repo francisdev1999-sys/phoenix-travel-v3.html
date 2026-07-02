@@ -19,7 +19,28 @@ interface Learning {
     mature: boolean; weights: Weight[]; bias: number;
   } | null;
   autoApprove: { total: number; livePrecision: number | null };
+  interest: {
+    version: number; accuracy: number | null; auc: number | null;
+    exampleCount: number; positiveCount: number; negativeCount: number;
+    weights: Weight[];
+  } | null;
+  engagement: {
+    last24h: Record<string, number>;
+    topTopics: { id: string; title: string; score: number }[];
+    engagedNodes7d: number;
+  } | null;
 }
+
+// Plain-language names for what the interest neuron learned drives engagement.
+const DRIVER_LABELS: Record<string, string> = {
+  confidence: 'high confidence', claims: 'bold claims', criticisms: 'counter-arguments',
+  tags: 'rich tagging', descLength: 'deep writeups', sources: 'heavy sourcing',
+  sourceCred: 'credible sources', connections: 'well-connected topics',
+  hasMainstream: 'mainstream context', openQuestions: 'open questions',
+  ev_verified: 'verified topics', ev_strong: 'strong-evidence topics',
+  ev_debated: 'debated topics', ev_speculative: 'speculative theories',
+  ev_mythological: 'myth & legend',
+};
 interface JobHealth { job: string; lastStatus: string | null; alerting: boolean; presumedStuck: boolean }
 interface FeedItem { id: string; label: string; type: string; createdAt: string }
 interface Stats { nodeCount: number; edgeCount: number; galaxyCount: number; yearsCovered: number }
@@ -396,6 +417,68 @@ export default function NeuralCore() {
             </VitalPanel>
           </div>
         </div>
+
+        {/* Audience intelligence — the archive learning its users */}
+        <VitalPanel icon={<Brain size={13} />} title="AUDIENCE INTELLIGENCE · LEARNING THE USERS">
+          <div className="grid md:grid-cols-3 gap-4 pt-1">
+            {/* Live pulse */}
+            <div>
+              <div className="text-[9px] text-slate-600 tracking-widest mb-2">SIGNALS · LAST 24H</div>
+              <div className="grid grid-cols-3 gap-2">
+                <Stat label="VIEWS" value={`${learning?.engagement?.last24h?.node_view ?? 0}`} color={NEON.cyan} />
+                <Stat label="DIVES" value={`${learning?.engagement?.last24h?.node_dive ?? 0}`} color={NEON.violet} />
+                <Stat label="HOPS"  value={`${learning?.engagement?.last24h?.connection_hop ?? 0}`} color={NEON.emerald} />
+              </div>
+              <div className="text-[10px] text-slate-500 mt-2">
+                {learning?.engagement?.engagedNodes7d ?? 0} topics drew engagement this week
+              </div>
+            </div>
+            {/* What it learned pulls users in */}
+            <div>
+              <div className="text-[9px] text-slate-600 tracking-widest mb-2">
+                WHAT PULLS USERS IN {learning?.interest ? `· MODEL v${learning.interest.version}` : '· AWAITING TRAINING'}
+              </div>
+              {!learning?.interest ? (
+                <div className="text-[11px] text-slate-600">
+                  {'// interest neuron untrained — needs visitor engagement data'}
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {learning.interest.weights.slice(0, 5).map(w => (
+                    <div key={w.name} className="flex items-center gap-2 text-[11px]">
+                      <span className={w.weight >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                        {w.weight >= 0 ? '▲' : '▼'}
+                      </span>
+                      <span className="text-slate-300">{DRIVER_LABELS[w.name] ?? w.name}</span>
+                      <span className="ml-auto font-mono text-slate-500">{w.weight >= 0 ? '+' : ''}{w.weight.toFixed(2)}</span>
+                    </div>
+                  ))}
+                  <div className="text-[9px] text-slate-600 pt-1">
+                    acc {learning.interest.accuracy == null ? '—' : `${Math.round(learning.interest.accuracy * 100)}%`} ·
+                    {' '}{learning.interest.exampleCount} examples
+                  </div>
+                </div>
+              )}
+            </div>
+            {/* Hottest topics */}
+            <div>
+              <div className="text-[9px] text-slate-600 tracking-widest mb-2">HOTTEST TOPICS · 7D</div>
+              {(!learning?.engagement || learning.engagement.topTopics.length === 0) ? (
+                <div className="text-[11px] text-slate-600">{'// no engagement signal yet'}</div>
+              ) : (
+                <div className="space-y-1">
+                  {learning.engagement.topTopics.map((t, i) => (
+                    <div key={t.id} className="flex items-center gap-2 text-[11px]">
+                      <span className="text-orange-400 font-mono">{i + 1}</span>
+                      <span className="text-slate-300 truncate flex-1">{t.title}</span>
+                      <span className="font-mono text-slate-500">{t.score}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </VitalPanel>
 
         {/* Reactor row — cron subsystems */}
         <VitalPanel icon={<ShieldCheck size={13} />} title={`SUBSYSTEM REACTORS · ${online}/${health.length || 0} ONLINE`}>

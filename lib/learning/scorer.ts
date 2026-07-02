@@ -11,8 +11,9 @@ import { predict } from '@/lib/learning/model';
 import { extractFeatures, type CandidateInput } from '@/lib/learning/features';
 import { extractEdgeFeatures, type EdgeCandidateInput } from '@/lib/learning/edge-features';
 
-export const LEARNING_KIND      = 'node_promotion';
-export const EDGE_LEARNING_KIND = 'edge_promotion';
+export const LEARNING_KIND          = 'node_promotion';
+export const EDGE_LEARNING_KIND     = 'edge_promotion';
+export const INTEREST_LEARNING_KIND = 'user_interest';
 
 // A model may only be trusted to auto-approve once it has seen enough of both
 // classes and validates well. Below this bar the learned lane is disabled and

@@ -17,10 +17,17 @@ interface Prediction {
 interface EdgeModelInfo extends ModelInfo {
   autoApprove: { total: number; resolved: number; survived: number; livePrecision: number | null };
 }
+interface InterestModelInfo {
+  version: number; trainedAt: string; exampleCount: number;
+  positiveCount: number; negativeCount: number;
+  accuracy: number | null; auc: number | null;
+  weights: Weight[];
+}
 interface LearningData {
   thresholds: { minExamples: number; minAccuracy: number; autoApproveConfidence: number };
   active: ModelInfo | null;
   edge: EdgeModelInfo | null;
+  interest: InterestModelInfo | null;
   history: HistoryPoint[];
   autoApprove: { total: number; resolved: number; survived: number; livePrecision: number | null };
   recentPredictions: Prediction[];
@@ -317,6 +324,44 @@ export default function LearningDashboard() {
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-1">
                   {data.edge.weights.slice(0, 6).map(w => (
+                    <span key={w.name} className="text-[10px] font-mono">
+                      <span className="text-slate-500">{w.name}</span>{' '}
+                      <span className={w.weight >= 0 ? 'text-emerald-300' : 'text-red-300'}>
+                        {w.weight >= 0 ? '+' : ''}{w.weight.toFixed(2)}
+                      </span>
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Audience-interest neuron */}
+          <div className="p-4 rounded-xl bg-white/3 border border-white/6">
+            <div className="flex items-center gap-2 mb-2">
+              <Brain size={14} className="text-fuchsia-400" />
+              <span className="text-xs font-bold text-white">Audience-interest neuron (what pulls users in)</span>
+              {data?.interest && (
+                <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-fuchsia-900/40 text-fuchsia-300">
+                  v{data.interest.version}
+                </span>
+              )}
+            </div>
+            {!data?.interest ? (
+              <p className="text-[11px] text-slate-500">
+                Not trained yet — it learns from anonymous visitor engagement (views, dives,
+                connection hops) which topics people find magnetic, then ranks the Explore
+                feed. Needs real traffic before its first fit.
+              </p>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-x-8 gap-y-1 text-xs text-slate-400 mb-2">
+                  <span>Accuracy: <strong className="text-white">{pct(data.interest.accuracy)}</strong></span>
+                  <span>AUC: <strong className="text-white">{data.interest.auc == null ? '—' : data.interest.auc.toFixed(3)}</strong></span>
+                  <span>Examples: <strong className="text-white">{data.interest.exampleCount}</strong> (+{data.interest.positiveCount}/−{data.interest.negativeCount})</span>
+                </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  {data.interest.weights.slice(0, 6).map(w => (
                     <span key={w.name} className="text-[10px] font-mono">
                       <span className="text-slate-500">{w.name}</span>{' '}
                       <span className={w.weight >= 0 ? 'text-emerald-300' : 'text-red-300'}>

@@ -24,7 +24,7 @@ export interface Dataset {
   sources:       { publishedNodes: number; archivedNodes: number; rejectedProposals: number; rejectedDiscovered: number };
 }
 
-const NODE_SELECT = {
+export const NODE_SELECT = {
   confidenceScore: true, evidenceLevel: true, description: true, mainstreamView: true,
   _count: { select: { claims: true, criticisms: true, openQuestions: true, tags: true, edgesFrom: true, edgesTo: true } },
   // linked sources with their credibility → powers the sourceCred feature

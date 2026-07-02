@@ -29,10 +29,11 @@ embeddings · Upstash Redis (rate limit) · Resend (email). Deployed on Railway.
 - `components/admin/` — admin dashboards (cleanup, user-intel, moderation…)
 - `lib/` — business logic
   - `lib/discovery/` — autonomous node/source/relationship discovery + promoters
-  - `lib/learning/` — self-learning models (logistic "neurons"): a node-promotion
-    model AND a connection-quality (edge) model. Features are intrinsic + graph
-    signals; datasets are drawn from the whole archive (published nodes/edges as
-    positives, rejected/archived as negatives); shared trainer, scorer, auto-retrain
+  - `lib/learning/` — self-learning models (logistic "neurons"): node-promotion,
+    connection-quality (edge), and user-interest (trained on anonymous engagement
+    signals — views/dives/hops via `lib/engagement.ts` → UsageEvent — and used to
+    rank the Explore feed via `/api/explore/trending`). Features are intrinsic +
+    graph signals; shared trainer, scorer, auto-retrain
   - `lib/jobs/` — IngestionJob queue + processor
   - `lib/cron/tracker.ts` — wraps every cron handler to record a `CronRun`
   - `lib/cleanup/`, `lib/similarity/`, `lib/maturity/`, `lib/trust-score.ts`,
