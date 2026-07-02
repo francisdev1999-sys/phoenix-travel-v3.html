@@ -37,13 +37,14 @@ import CROAuditDashboard from '@/components/admin/CROAuditDashboard';
 import SourceIntelligenceDashboard from '@/components/admin/SourceIntelligenceDashboard';
 import CleanupDashboard from '@/components/admin/CleanupDashboard';
 import LearningDashboard from '@/components/admin/LearningDashboard';
+import NeuralCore from '@/components/admin/NeuralCore';
 
 type Tab =
   | 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports'
   | 'imports' | 'drafts' | 'suggestions' | 'users' | 'moderation' | 'platform'
   | 'intelligence' | 'integrity' | 'similarity' | 'ai-activity' | 'ai-audit'
   | 'source-enrichment' | 'beta-feedback' | 'beta-invites' | 'beta-analytics'
-  | 'cro-audit' | 'source-intel' | 'cleanup' | 'node-manager' | 'learning';
+  | 'cro-audit' | 'source-intel' | 'cleanup' | 'node-manager' | 'learning' | 'neural-core';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Cron job metadata
@@ -523,6 +524,7 @@ export default function AdminPanel() {
 
   const allTabs: { id: Tab; label: string; icon: React.ReactNode; ownerOnly?: boolean }[] = [
     { id: 'overview',          label: 'Overview',        icon: <ShieldCheck size={13} /> },
+    { id: 'neural-core',       label: 'Neural Core',     icon: <Cpu size={13} /> },
     { id: 'node-manager',      label: 'Node Manager',    icon: <Search size={13} />,       ownerOnly: true },
     { id: 'drafts',            label: 'Draft Queue',     icon: <InboxIcon size={13} />   },
     { id: 'imports',           label: 'Imports',         icon: <Package size={13} />     },
@@ -863,6 +865,7 @@ export default function AdminPanel() {
           {tab === 'beta-feedback'     && <BetaFeedbackAdmin />}
           {tab === 'beta-invites'      && <BetaInviteManager />}
           {tab === 'beta-analytics'    && <BetaAnalytics />}
+          {tab === 'neural-core'       && isAdmin && <NeuralCore />}
           {tab === 'learning'          && isAdmin && <LearningDashboard />}
           {tab === 'cleanup'           && isAdmin && <CleanupDashboard adminEmail={session.user?.email ?? ''} />}
           {tab === 'intelligence'      && isAdmin && <UserIntelligenceDashboard />}
