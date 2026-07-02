@@ -126,6 +126,13 @@ interface ActivityItem {
   createdAt: string;
 }
 
+interface LandingStats {
+  nodeCount:    number;
+  edgeCount:    number;
+  galaxyCount:  number;
+  yearsCovered: number;
+}
+
 function relativeTime(iso: string): string {
   const seconds = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
   if (seconds < 60)   return 'just now';
@@ -195,7 +202,23 @@ export default function LandingPage() {
   const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState('');
   const [galaxies, setGalaxies]       = useState<{ id: string; slug: string; name: string }[]>([]);
+  const [stats, setStats]             = useState<LandingStats | null>(null);
   const interestRef = useRef<HTMLElement>(null);
+
+  // Live headline stats — refreshed periodically so the numbers track the
+  // autonomous growth pipeline instead of showing stale/hardcoded values.
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => {
+      fetch('/api/stats/landing')
+        .then(r => r.ok ? r.json() : null)
+        .then((d: LandingStats | null) => { if (!cancelled && d) setStats(d); })
+        .catch(() => {});
+    };
+    load();
+    const iv = setInterval(load, 60_000);
+    return () => { cancelled = true; clearInterval(iv); };
+  }, []);
 
   // Fetch the live galaxy list — cards below are built from this, never from
   // a hardcoded slug, so a clicked card can never 404 into an empty galaxy page.
@@ -344,10 +367,10 @@ export default function LandingPage() {
       >
         <div className="flex items-center justify-center flex-wrap gap-8 sm:gap-16 max-w-3xl mx-auto px-4">
           {[
-            { icon: BookOpen, label: 'Research Nodes',  value: `${nodes.length}+` },
-            { icon: Network,  label: 'Connections',     value: `${edges.length}+` },
-            { icon: Star,     label: 'Topic Galaxies',  value: '9' },
-            { icon: Clock,    label: 'Years Covered',   value: '10,000' },
+            { icon: BookOpen, label: 'Research Nodes',  value: `${stats?.nodeCount ?? nodes.length}+` },
+            { icon: Network,  label: 'Connections',     value: `${stats?.edgeCount ?? edges.length}+` },
+            { icon: Star,     label: 'Topic Galaxies',  value: `${stats?.galaxyCount ?? (galaxies.length || 9)}` },
+            { icon: Clock,    label: 'Years Covered',   value: (stats?.yearsCovered ?? 10000).toLocaleString() },
           ].map(({ icon: Icon, label, value }) => (
             <div key={label} className="flex flex-col items-center gap-1">
               <Icon size={16} className="text-purple-400/60" />
