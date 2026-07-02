@@ -23,6 +23,7 @@ const AdminPanel        = lazy(() => import('@/components/sections/AdminPanel'))
 const RabbitHoleView    = lazy(() => import('@/components/sections/RabbitHoleView'));
 const NodeView          = lazy(() => import('@/components/sections/NodeView'));
 const IntelFeed         = lazy(() => import('@/components/sections/IntelFeed'));
+const SearchExplorer    = lazy(() => import('@/components/sections/SearchExplorer'));
 import Breadcrumb from '@/components/navigation/Breadcrumb';
 import CommandPalette from '@/components/navigation/CommandPalette';
 
@@ -161,7 +162,7 @@ export default function AppShell() {
     const VALID = [
       'graph', 'universe', 'galaxy', 'cluster', 'node', 'research-graph',
       'timeline', 'evidence-board', 'globe', 'dashboard',
-      'diagnostics', 'sources', 'admin', 'rabbit-hole', 'intel-feed',
+      'diagnostics', 'sources', 'admin', 'rabbit-hole', 'intel-feed', 'search',
     ] as const;
     const urlHash = window.location.hash.slice(1) as typeof VALID[number];
     if (urlHash && (VALID as readonly string[]).includes(urlHash)) setCurrentView(urlHash);
@@ -190,7 +191,7 @@ export default function AppShell() {
       'landing', 'graph', 'theory', 'universe',
       'galaxy', 'cluster', 'node', 'research-graph',
       'timeline', 'evidence-board', 'globe', 'dashboard',
-      'diagnostics', 'sources', 'admin', 'rabbit-hole', 'intel-feed',
+      'diagnostics', 'sources', 'admin', 'rabbit-hole', 'intel-feed', 'search',
     ];
 
     const handlePopState = (e: PopStateEvent) => {
@@ -322,6 +323,11 @@ export default function AppShell() {
                     {currentView === 'intel-feed' && (
                       <motion.div key="intel-feed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto">
                         <IntelFeed />
+                      </motion.div>
+                    )}
+                    {currentView === 'search' && (
+                      <motion.div key="search" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto">
+                        <SearchExplorer />
                       </motion.div>
                     )}
                   </AnimatePresence>

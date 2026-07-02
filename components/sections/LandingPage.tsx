@@ -238,8 +238,10 @@ export default function LandingPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
+    // Hand the query to the Search & Connections explorer — searching must
+    // show results + what they're connected to, never dump into the Universe.
     useUserStore.getState().setSearchQuery(searchQuery.trim());
-    navigateToUniverse();
+    setCurrentView('search');
   };
 
   const scrollToInterests = () => {
