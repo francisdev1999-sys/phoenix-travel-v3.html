@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import { trackEngagement } from '@/lib/engagement';
+import StanceSlider from '@/components/research/StanceSlider';
 import ConfidenceMeter from '@/components/research/ConfidenceMeter';
 import ResearchScore from '@/components/research/ResearchScore';
 import ClaimBlock from '@/components/research/ClaimBlock';
@@ -660,6 +661,11 @@ export default function NodeView() {
 
             </motion.div>
           </AnimatePresence>
+
+          {/* Where do you land? — frictionless anonymous participation */}
+          <div className="mt-8">
+            <StanceSlider nodeId={nodeId} />
+          </div>
 
           {/* Continue exploring — always visible, whatever tab is open. This is
               the rabbit-hole invitation: there is ALWAYS a next step. */}

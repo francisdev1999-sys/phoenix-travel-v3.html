@@ -1248,3 +1248,18 @@ model LearningPrediction {
   @@index([kind, outcome])
   @@index([entityType, entityId])
 }
+
+// One anonymous stance per visitor per topic — the Believer–Skeptic slider.
+// value: 0 = full skeptic … 100 = full believer. anonId is a persistent
+// client-generated id (localStorage), never tied to an account.
+model TopicStance {
+  id        String   @id @default(cuid())
+  nodeId    String
+  anonId    String
+  value     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([nodeId, anonId])
+  @@index([nodeId])
+}

@@ -4,11 +4,12 @@ import { motion } from 'framer-motion';
 import {
   Search, ArrowRight, BookOpen, Network, Globe2,
   Landmark, Rocket, ShieldAlert, Scroll, Dna, Users, Atom,
-  Star, Clock, TrendingUp, ChevronRight, LogIn,
+  Star, Clock, TrendingUp, ChevronRight, LogIn, HelpCircle, Sparkles,
 } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import { useNodes, useEdges } from '@/lib/graph/useNodes';
 import { useSession, signIn } from 'next-auth/react';
+import { trackEngagement } from '@/lib/engagement';
 
 // ── Galaxy card styling, keyed by live galaxy slug ────────────────────────────
 // Cards are built from the live /api/galaxies response (see `galaxies` state
@@ -193,6 +194,126 @@ function LiveActivityFeed() {
   );
 }
 
+// ── Today's Mystery ───────────────────────────────────────────────────────────
+// One unresolved open question, rotating at UTC midnight — the daily-habit
+// hook. Every visitor sees the same mystery; come back tomorrow for a new one.
+
+interface DailyMystery {
+  question:      string | null;
+  nodeId?:       string;
+  nodeTitle?:    string;
+  icon?:         string | null;
+  evidenceLevel?: string | null;
+}
+
+function DailyMysteryCard() {
+  const { navigateToNode } = useUserStore();
+  const [mystery, setMystery] = useState<DailyMystery | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/explore/daily-mystery')
+      .then(r => (r.ok ? r.json() : null))
+      .then((d: DailyMystery | null) => { if (!cancelled && d?.question) setMystery(d); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  if (!mystery?.question || !mystery.nodeId) return null;
+
+  const open = () => {
+    trackEngagement('node_dive', mystery.nodeId!);
+    navigateToNode(mystery.nodeId!, mystery.nodeTitle ?? '');
+  };
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.25 }}
+      className="max-w-3xl mx-auto px-4 pt-10"
+    >
+      <button
+        onClick={open}
+        className="group w-full text-left p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-indigo-950/60 to-purple-950/40 border border-indigo-500/25 hover:border-indigo-400/50 hover:shadow-lg hover:shadow-indigo-900/30 transition-all"
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <HelpCircle size={14} className="text-indigo-400" />
+          <span className="text-[11px] font-black text-indigo-300 uppercase tracking-widest">Today&apos;s Mystery</span>
+          <span className="text-[10px] text-slate-600 ml-auto">changes daily</span>
+        </div>
+        <p className="text-base sm:text-lg font-semibold text-white leading-snug mb-3">
+          {mystery.question}
+        </p>
+        <div className="flex items-center gap-2 text-xs text-slate-400">
+          {mystery.icon && <span>{mystery.icon}</span>}
+          <span className="text-slate-300">{mystery.nodeTitle}</span>
+          <span className="flex items-center gap-1 text-indigo-400 font-semibold ml-auto group-hover:text-indigo-300 transition-colors">
+            Dig into it <ArrowRight size={12} />
+          </span>
+        </div>
+      </button>
+    </motion.section>
+  );
+}
+
+// ── "New since your last visit" banner ───────────────────────────────────────
+// Shown only to returning visitors (≥6h gap) when the archive actually grew —
+// proof the autonomous pipeline kept working while they were away.
+
+const LAST_VISIT_KEY  = 'nexus_last_visit';
+const MIN_VISIT_GAP_MS = 6 * 60 * 60 * 1000;
+
+function NewSinceVisitBanner() {
+  const { setCurrentView } = useUserStore();
+  const [growth, setGrowth] = useState<{ newNodes: number; newConnections: number } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    try {
+      const prev = Number(localStorage.getItem(LAST_VISIT_KEY));
+      const now  = Date.now();
+      localStorage.setItem(LAST_VISIT_KEY, String(now));
+      if (!Number.isFinite(prev) || prev <= 0 || now - prev < MIN_VISIT_GAP_MS) return;
+
+      fetch(`/api/stats/changes?since=${prev}`)
+        .then(r => (r.ok ? r.json() : null))
+        .then((d: { newNodes?: number; newConnections?: number } | null) => {
+          if (cancelled || !d) return;
+          if ((d.newNodes ?? 0) + (d.newConnections ?? 0) > 0) {
+            setGrowth({ newNodes: d.newNodes ?? 0, newConnections: d.newConnections ?? 0 });
+          }
+        })
+        .catch(() => {});
+    } catch { /* localStorage unavailable — skip silently */ }
+    return () => { cancelled = true; };
+  }, []);
+
+  if (!growth) return null;
+
+  const parts: string[] = [];
+  if (growth.newNodes > 0)       parts.push(`${growth.newNodes} new topic${growth.newNodes !== 1 ? 's' : ''}`);
+  if (growth.newConnections > 0) parts.push(`${growth.newConnections} new connection${growth.newConnections !== 1 ? 's' : ''}`);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="max-w-3xl mx-auto px-4 pt-4"
+    >
+      <button
+        onClick={() => setCurrentView('explore')}
+        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/25 hover:border-emerald-400/50 text-xs text-emerald-300 font-semibold transition-all"
+      >
+        <Sparkles size={13} className="text-emerald-400" />
+        While you were away: {parts.join(' and ')} joined the archive
+        <ArrowRight size={12} />
+      </button>
+    </motion.div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
@@ -292,6 +413,8 @@ export default function LandingPage() {
           )}
         </div>
       </header>
+
+      <NewSinceVisitBanner />
 
       {/* ── Hero ── */}
       <section className="relative flex flex-col items-center justify-center text-center px-4 pt-20 pb-16 sm:pt-28 sm:pb-20">
@@ -395,6 +518,8 @@ export default function LandingPage() {
           ))}
         </div>
       </motion.section>
+
+      <DailyMysteryCard />
 
       <LiveActivityFeed />
 
