@@ -64,17 +64,21 @@ describe('train / evaluate', () => {
 describe('feature extraction', () => {
   it('produces a fixed-length, bounded vector', () => {
     const f = extractFeatures(candidateFromDiscovered({
-      relevanceScore: 0.9, qualityScore: 0.8, noveltyScore: 0.7, confidenceScore: 0.6,
-      evidenceLevel: 'strong_evidence',
-      claims: ['a', 'b', 'c'], criticisms: ['x'], tags: ['t1', 't2'],
+      confidenceScore: 0.6, evidenceLevel: 'strong_evidence',
+      claims: ['a', 'b', 'c'], criticisms: ['x'], tags: ['t1', 't2'], openQuestions: ['q1'],
       description: 'x'.repeat(600), sourceUrl: 'https://en.wikipedia.org/wiki/Test',
+      relatedNodeIds: ['n1', 'n2', 'n3'], mainstreamView: 'the consensus view',
     }));
     expect(f).toHaveLength(FEATURE_COUNT);
     expect(f.every(v => v >= 0 && v <= 1)).toBe(true);
-    // strong_evidence one-hot set, verified not set
+    // index 5 = sources (has a source url → 1/5)
+    expect(f[5]).toBeGreaterThan(0);
+    // index 6 = connections (3 related ids → 3/8)
+    expect(f[6]).toBeCloseTo(3 / 8, 6);
+    // index 7 = hasMainstream (present → 1)
+    expect(f[7]).toBe(1);
+    // strong_evidence one-hot at index 10, verified (index 9) not set
     expect(f[10]).toBe(1);
     expect(f[9]).toBe(0);
-    // hasSource true
-    expect(f[6]).toBe(1);
   });
 });

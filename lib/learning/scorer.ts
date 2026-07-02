@@ -81,7 +81,6 @@ export function passesLearnedSafetyGuards(c: CandidateInput): boolean {
   const ev = (c.evidenceLevel || '').toLowerCase();
   if (ev === 'mythological') return false; // never auto-publish pure myth via the learned lane
   if (c.claimCount < 1) return false;      // must actually assert something
-  if (c.relevanceScore < 0.4) return false;
-  if (c.noveltyScore < 0.4) return false;
+  if (c.sourceCount < 1) return false;     // must cite at least one source
   return true;
 }

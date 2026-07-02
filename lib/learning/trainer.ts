@@ -27,6 +27,7 @@ export interface LearningPassResult {
   recall?:        number;
   auc?:           number;
   predictionsResolved?: number;
+  sources?:       { publishedNodes: number; archivedNodes: number; rejectedProposals: number; rejectedDiscovered: number };
 }
 
 // Below this we don't have enough signal to train a meaningful model yet.
@@ -42,7 +43,7 @@ function splitDataset(examples: TrainExample[]): { train: TrainExample[]; test: 
 }
 
 export async function runLearningPass(): Promise<LearningPassResult> {
-  const { examples, positiveCount, negativeCount } = await buildNodePromotionDataset();
+  const { examples, positiveCount, negativeCount, sources } = await buildNodePromotionDataset();
 
   const predictionsResolved = await resolvePredictions();
 
@@ -53,6 +54,7 @@ export async function runLearningPass(): Promise<LearningPassResult> {
       exampleCount: examples.length,
       positiveCount, negativeCount,
       predictionsResolved,
+      sources,
     };
   }
 
@@ -107,6 +109,7 @@ export async function runLearningPass(): Promise<LearningPassResult> {
     recall: metrics.recall,
     auc: metrics.auc,
     predictionsResolved,
+    sources,
   };
 }
 

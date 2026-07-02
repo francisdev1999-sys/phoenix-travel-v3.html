@@ -1,23 +1,26 @@
 /**
  * Feature extraction for the node-promotion learning model.
  *
- * A candidate (a DiscoveredNode) is turned into a FIXED, named numeric vector.
- * Keeping the order/length stable is what lets model weights stay meaningful
- * across nightly retrains (warm-start). All features are roughly 0..1 scaled so
- * a single learning rate behaves well and the learned weights are comparable.
+ * Features are INTRINSIC + GRAPH signals that exist for BOTH an existing archive
+ * node and a fresh discovery candidate, so the model can learn from everything
+ * the Nexus Archive already contains — published nodes (what "good" looks like),
+ * their source backing and connection degree, content richness, evidence level —
+ * not just the discovery pipeline's own history.
+ *
+ * The vector is FIXED and named; order must never change (weights are positional).
+ * All values are ~0..1 scaled.
  */
 
-// Order matters and must never be reordered — weights are positional.
 export const FEATURE_NAMES = [
-  'relevance',
-  'quality',
-  'novelty',
   'confidence',
   'claims',        // normalized claim count
   'criticisms',    // normalized criticism count
-  'hasSource',     // 0/1
-  'descLength',    // normalized description length
   'tags',          // normalized tag count
+  'descLength',    // normalized description length
+  'sources',       // normalized cited-source count
+  'connections',   // normalized graph degree (edges / proposed links)
+  'hasMainstream', // 0/1 — carries a mainstream view (balance signal)
+  'openQuestions', // normalized open-question count
   'ev_verified',
   'ev_strong',
   'ev_debated',
@@ -29,33 +32,32 @@ export type FeatureName = typeof FEATURE_NAMES[number];
 export const FEATURE_COUNT = FEATURE_NAMES.length;
 
 export interface CandidateInput {
-  relevanceScore:  number;
-  qualityScore:    number;
-  noveltyScore:    number;
-  confidenceScore: number;
-  evidenceLevel:   string;
-  claimCount:      number;
-  criticismCount:  number;
-  tagCount:        number;
-  descriptionLen:  number;
-  hasSource:       boolean;
+  confidenceScore:   number;
+  evidenceLevel:     string;
+  claimCount:        number;
+  criticismCount:    number;
+  tagCount:          number;
+  openQuestionCount: number;
+  descriptionLen:    number;
+  sourceCount:       number;
+  connectionCount:   number;
+  hasMainstreamView: boolean;
 }
 
 const clamp01 = (n: number) => (Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : 0);
 
-/** Produce the fixed-length feature vector for a candidate. */
 export function extractFeatures(c: CandidateInput): number[] {
   const ev = (c.evidenceLevel || '').toLowerCase();
   return [
-    clamp01(c.relevanceScore),
-    clamp01(c.qualityScore),
-    clamp01(c.noveltyScore),
     clamp01(c.confidenceScore),
     clamp01(c.claimCount / 6),
     clamp01(c.criticismCount / 4),
-    c.hasSource ? 1 : 0,
-    clamp01(c.descriptionLen / 1200),
     clamp01(c.tagCount / 8),
+    clamp01(c.descriptionLen / 1200),
+    clamp01(c.sourceCount / 5),
+    clamp01(c.connectionCount / 8),
+    c.hasMainstreamView ? 1 : 0,
+    clamp01(c.openQuestionCount / 4),
     ev === 'verified' ? 1 : 0,
     ev === 'strong_evidence' ? 1 : 0,
     ev === 'debated' ? 1 : 0,
@@ -64,30 +66,81 @@ export function extractFeatures(c: CandidateInput): number[] {
   ];
 }
 
-/** Convenience: build a CandidateInput from a DiscoveredNode-shaped row. */
+const arrLen = (v: unknown) => (Array.isArray(v) ? v.length : 0);
+
+/** From a DiscoveredNode-shaped row (discovery candidate). */
 export function candidateFromDiscovered(d: {
-  relevanceScore:  number;
-  qualityScore:    number;
-  noveltyScore:    number;
   confidenceScore: number;
   evidenceLevel:   string;
   claims:          unknown;
   criticisms:      unknown;
   tags:            unknown;
+  openQuestions:   unknown;
   description:     string | null;
   sourceUrl:       string | null;
+  relatedNodeIds:  unknown;
+  mainstreamView:  string | null;
 }): CandidateInput {
-  const len = (v: unknown) => (Array.isArray(v) ? v.length : 0);
   return {
-    relevanceScore:  d.relevanceScore,
-    qualityScore:    d.qualityScore,
-    noveltyScore:    d.noveltyScore,
-    confidenceScore: d.confidenceScore,
-    evidenceLevel:   d.evidenceLevel,
-    claimCount:      len(d.claims),
-    criticismCount:  len(d.criticisms),
-    tagCount:        len(d.tags),
-    descriptionLen:  (d.description ?? '').length,
-    hasSource:       !!d.sourceUrl,
+    confidenceScore:   d.confidenceScore,
+    evidenceLevel:     d.evidenceLevel,
+    claimCount:        arrLen(d.claims),
+    criticismCount:    arrLen(d.criticisms),
+    tagCount:          arrLen(d.tags),
+    openQuestionCount: arrLen(d.openQuestions),
+    descriptionLen:    (d.description ?? '').length,
+    sourceCount:       d.sourceUrl ? 1 : 0,
+    connectionCount:   arrLen(d.relatedNodeIds),
+    hasMainstreamView: !!d.mainstreamView,
+  };
+}
+
+/** From a live archive Node with relation counts. */
+export function candidateFromNode(n: {
+  confidenceScore: number;
+  evidenceLevel:   string;
+  description:     string | null;
+  mainstreamView:  string | null;
+  _count: {
+    claims: number; criticisms: number; openQuestions: number; tags: number;
+    sourceLinks: number; edgesFrom: number; edgesTo: number;
+  };
+}): CandidateInput {
+  return {
+    confidenceScore:   n.confidenceScore,
+    evidenceLevel:     n.evidenceLevel,
+    claimCount:        n._count.claims,
+    criticismCount:    n._count.criticisms,
+    tagCount:          n._count.tags,
+    openQuestionCount: n._count.openQuestions,
+    descriptionLen:    (n.description ?? '').length,
+    sourceCount:       n._count.sourceLinks,
+    connectionCount:   n._count.edgesFrom + n._count.edgesTo,
+    hasMainstreamView: !!n.mainstreamView,
+  };
+}
+
+/** From a ProposedNode (user submission) row. */
+export function candidateFromProposal(p: {
+  confidence:     number;
+  evidenceLevel:  string;
+  claims:         unknown;
+  criticisms:     unknown;
+  tags:           unknown;
+  openQuestions:  unknown;
+  description:    string | null;
+  mainstreamView: string | null;
+}): CandidateInput {
+  return {
+    confidenceScore:   p.confidence,
+    evidenceLevel:     p.evidenceLevel,
+    claimCount:        arrLen(p.claims),
+    criticismCount:    arrLen(p.criticisms),
+    tagCount:          arrLen(p.tags),
+    openQuestionCount: arrLen(p.openQuestions),
+    descriptionLen:    (p.description ?? '').length,
+    sourceCount:       0,
+    connectionCount:   0,
+    hasMainstreamView: !!p.mainstreamView,
   };
 }

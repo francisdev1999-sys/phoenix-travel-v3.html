@@ -29,8 +29,9 @@ embeddings · Upstash Redis (rate limit) · Resend (email). Deployed on Railway.
 - `components/admin/` — admin dashboards (cleanup, user-intel, moderation…)
 - `lib/` — business logic
   - `lib/discovery/` — autonomous node/source/relationship discovery + promoters
-  - `lib/learning/` — self-learning promotion model (logistic "neuron": features,
-    model math, dataset from approve/survival outcomes, scorer, nightly trainer)
+  - `lib/learning/` — self-learning promotion model (logistic "neuron": intrinsic
+    + graph features, model math, dataset drawn from the whole archive — published
+    nodes as positives / rejected+archived as negatives — scorer, nightly trainer)
   - `lib/jobs/` — IngestionJob queue + processor
   - `lib/cron/tracker.ts` — wraps every cron handler to record a `CronRun`
   - `lib/cleanup/`, `lib/similarity/`, `lib/maturity/`, `lib/trust-score.ts`,
@@ -59,9 +60,10 @@ suggest/auto-approve relationships → discover/auto-approve sources → similar
 `CronRun`; the admin panel surfaces per-job health (`/api/admin/cron-health`).
 
 The **learned lane**: an online-learning model (`lib/learning/`) trained nightly
-on approval/survival outcomes scores each discovered candidate. When the strict
-static gate declines, a *mature* model (enough labeled data + accuracy bar) may
-auto-approve a high-confidence candidate that also clears hard safety guards.
+on the whole archive (published nodes + their sources/connections as positives,
+rejected/archived items as negatives) scores each discovered candidate. When the
+strict static gate declines, a *mature* model (enough labeled data + accuracy bar)
+may auto-approve a high-confidence candidate that also clears hard safety guards.
 A cold/immature model has no authority, so it never publishes junk on day one.
 The admin **Learning** tab shows weights, accuracy history, and live precision.
 

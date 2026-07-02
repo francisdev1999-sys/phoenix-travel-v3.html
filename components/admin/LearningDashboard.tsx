@@ -37,8 +37,8 @@ const REFRESH_MS = 10_000;
 
 // Neutral-ish starting inputs for the playground (a plausible mid candidate).
 const NEUTRAL: Record<string, number> = {
-  relevance: 0.6, quality: 0.6, novelty: 0.6, confidence: 0.6,
-  claims: 0.4, criticisms: 0.3, hasSource: 1, descLength: 0.5, tags: 0.4,
+  confidence: 0.6, claims: 0.4, criticisms: 0.3, tags: 0.4, descLength: 0.5,
+  sources: 0.4, connections: 0.4, hasMainstream: 1, openQuestions: 0.3,
   ev_verified: 0, ev_strong: 1, ev_debated: 0, ev_speculative: 0, ev_mythological: 0,
 };
 
@@ -87,8 +87,10 @@ export default function LearningDashboard() {
       });
       const d = await r.json();
       const res = d?.data;
+      const src = res?.sources;
       setMsg(res?.trained
-        ? `Trained v${res.version} · acc ${pct(res.accuracy)} · ${res.exampleCount} examples`
+        ? `Trained v${res.version} · acc ${pct(res.accuracy)} · learned from ${res.exampleCount} examples`
+          + (src ? ` (${src.publishedNodes} published nodes, ${res.negativeCount} rejected/archived)` : '')
         : `No retrain: ${res?.reason ?? 'unknown'}`);
       await load();
     } catch (e) {
@@ -107,9 +109,8 @@ export default function LearningDashboard() {
       return { name: w.name, weight: w.weight, value, contribution: c };
     });
     const p = sigmoid(z);
-    const ev = { myth: inputs['ev_mythological'] ?? 0, claims: inputs['claims'] ?? 0,
-                 relevance: inputs['relevance'] ?? 0, novelty: inputs['novelty'] ?? 0 };
-    const safe = ev.myth < 0.5 && ev.claims >= 1 / 6 - 1e-6 && ev.relevance >= 0.4 && ev.novelty >= 0.4;
+    const g = { myth: inputs['ev_mythological'] ?? 0, claims: inputs['claims'] ?? 0, sources: inputs['sources'] ?? 0 };
+    const safe = g.myth < 0.5 && g.claims >= 1 / 6 - 1e-6 && g.sources >= 1 / 5 - 1e-6;
     const conf = data?.thresholds.autoApproveConfidence ?? 0.9;
     const wouldAutoApprove = !!m.mature && p >= conf && safe;
     return { z, p, contribs, safe, wouldAutoApprove, conf };
@@ -167,8 +168,9 @@ export default function LearningDashboard() {
 
       {!m ? (
         <div className="p-6 rounded-xl bg-white/3 border border-white/6 text-sm text-slate-400">
-          No model has been trained yet. Once the archive has enough approve/reject
-          history, hit <span className="text-purple-300 font-semibold">Train now</span> (or wait for the
+          No model has been trained yet. It learns from the whole archive — every
+          published node (with its sources + connections) as a positive example, and
+          rejected/archived items as negatives. Hit <span className="text-purple-300 font-semibold">Train now</span> (or wait for the
           nightly Learning Pass) to fit the first neuron. It needs at least{' '}
           <strong>{data?.thresholds.minExamples}</strong> labeled examples and{' '}
           <strong>{pct(data?.thresholds.minAccuracy)}</strong> accuracy before it may auto-approve anything.

@@ -446,23 +446,26 @@ export async function runNodeDiscovery(opts: {
       let learnedDecision: { score: number; modelId: string } | null = null;
       if (!autoApprove) {
         const candidateInput = {
-          relevanceScore:  scores.relevanceScore,
-          qualityScore:    scores.qualityScore,
-          noveltyScore:    scores.noveltyScore,
-          confidenceScore: proposal.confidence_score,
-          evidenceLevel:   proposal.evidence_level,
-          claimCount:      proposal.claims.length,
-          criticismCount:  proposal.criticisms.length,
-          tagCount:        proposal.tags.length,
-          descriptionLen:  proposal.description.length,
-          hasSource:       true, // node-discovery always cites a Wikipedia source
+          confidenceScore:   proposal.confidence_score,
+          evidenceLevel:     proposal.evidence_level,
+          claimCount:        proposal.claims.length,
+          criticismCount:    proposal.criticisms.length,
+          tagCount:          proposal.tags.length,
+          openQuestionCount: proposal.open_questions.length,
+          descriptionLen:    proposal.description.length,
+          sourceCount:       1, // node-discovery always cites a Wikipedia source
+          connectionCount:   relatedNodeIds.length,
+          hasMainstreamView: !!proposal.mainstream_view,
         };
         const scored = await scoreCandidate(candidateInput).catch(() => null);
         if (scored) {
           learnedDecision = { score: scored.score, modelId: scored.modelId };
+          // Learned lane may only extend the strict gate — the discovery-side
+          // relevance/novelty floors still apply as a hard guard here.
           if (scored.mature &&
               scored.score >= LEARNED_AUTO_APPROVE_THRESHOLD &&
-              passesLearnedSafetyGuards(candidateInput)) {
+              passesLearnedSafetyGuards(candidateInput) &&
+              scores.relevanceScore >= 0.4 && scores.noveltyScore >= 0.4) {
             autoApprove = true;
           }
         }
