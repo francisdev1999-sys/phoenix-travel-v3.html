@@ -658,6 +658,23 @@ export default function NodeView() {
 
             </motion.div>
           </AnimatePresence>
+
+          {/* Continue exploring — always visible, whatever tab is open. This is
+              the rabbit-hole invitation: there is ALWAYS a next step. */}
+          {neighbours.length > 0 && (
+            <div className="mt-10 pt-6 border-t border-white/8">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                <h3 className="text-sm font-black text-white uppercase tracking-wide">Continue exploring</h3>
+                <span className="text-[11px] text-slate-500">where this topic leads</span>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {neighbours.slice(0, 4).map(item => (
+                  <ContinueCard key={`cont-${item.edge.id}`} item={item} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -689,5 +706,29 @@ export default function NodeView() {
         </div>
       </div>
     </div>
+  );
+}
+
+// ── Continue-exploring card (always-visible next steps) ───────────────────────
+function ContinueCard({ item }: { item: DBNeighbour }) {
+  const { navigateToNode } = useUserStore();
+  const { edge, neighbour } = item;
+  return (
+    <button
+      onClick={() => navigateToNode(neighbour.id, neighbour.title)}
+      className="text-left p-4 rounded-xl bg-white/[0.03] border border-white/8 hover:border-cyan-700/50 hover:bg-white/[0.05] transition-all group"
+    >
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors">
+          {neighbour.icon ? `${neighbour.icon} ` : ''}{neighbour.title}
+        </span>
+        <span className="text-[10px] text-slate-500 shrink-0">
+          {edge.relationshipType.replace(/_/g, ' ')} · {Math.round(edge.confidenceScore * 100)}%
+        </span>
+      </div>
+      {edge.explanation && (
+        <p className="text-[12px] text-slate-500 mt-1 line-clamp-2 leading-snug">{edge.explanation}</p>
+      )}
+    </button>
   );
 }
