@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
  * Protected by CRON_SECRET (enforced in middleware). Suggested: daily.
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { runLearningPass } from '@/lib/learning/trainer';
+import { runLearningPass, runEdgeLearningPass } from '@/lib/learning/trainer';
 
 const CRON_SECRET = process.env.CRON_SECRET;
 
@@ -25,8 +25,17 @@ async function handler(req: NextRequest) {
   if (!isAuthorized(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  const result = await runLearningPass();
-  return NextResponse.json(result);
+  // Train both learners; one failing must not stop the other.
+  const [nodeResult, edgeResult] = await Promise.allSettled([
+    runLearningPass(),
+    runEdgeLearningPass(),
+  ]);
+  const unwrap = (r: PromiseSettledResult<unknown>) =>
+    r.status === 'fulfilled' ? r.value : { trained: false, reason: String(r.reason) };
+  const node = unwrap(nodeResult) as { trained: boolean };
+  const edge = unwrap(edgeResult) as { trained: boolean };
+  // Keep top-level fields for backward compatibility with the dashboard.
+  return NextResponse.json({ ...node, node, edge });
 }
 
 export const POST = withCronTracking('learning-pass', handler);

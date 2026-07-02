@@ -4,6 +4,9 @@ import { describe, it, expect } from 'vitest';
 // powers the adaptive promotion model actually learns, evaluates, and evolves.
 import { train, evaluate, predict, sigmoid, type TrainExample } from '@/lib/learning/model';
 import { extractFeatures, FEATURE_COUNT, candidateFromDiscovered } from '@/lib/learning/features';
+import {
+  extractEdgeFeatures, edgeCandidateFromParts, evidenceLadder, EDGE_FEATURE_COUNT,
+} from '@/lib/learning/edge-features';
 
 describe('sigmoid', () => {
   it('maps 0 → 0.5 and is monotonic / bounded', () => {
@@ -83,5 +86,47 @@ describe('feature extraction', () => {
     // strong_evidence one-hot at index 11, verified (index 10) not set
     expect(f[11]).toBe(1);
     expect(f[10]).toBe(0);
+  });
+});
+
+describe('edge feature extraction', () => {
+  const endpoint = (evidenceLevel: string, degree: number, categoryId: string | null) => ({
+    evidenceLevel, categoryId,
+    _count: { edgesFrom: degree, edgesTo: 0 },
+  });
+
+  it('evidence ladder is ordered', () => {
+    expect(evidenceLadder('verified')).toBeGreaterThan(evidenceLadder('strong_evidence'));
+    expect(evidenceLadder('strong_evidence')).toBeGreaterThan(evidenceLadder('debated'));
+    expect(evidenceLadder('debated')).toBeGreaterThan(evidenceLadder('speculative'));
+    expect(evidenceLadder('speculative')).toBeGreaterThan(evidenceLadder('mythological'));
+  });
+
+  it('produces a fixed-length, bounded vector with correct signals', () => {
+    const f = extractEdgeFeatures(edgeCandidateFromParts({
+      confidence: 0.8,
+      explanation: 'x'.repeat(200),
+      relationshipType: 'thematic',
+      from: endpoint('strong_evidence', 4, 'cat-1'),
+      to:   endpoint('debated', 2, 'cat-1'),
+    }));
+    expect(f).toHaveLength(EDGE_FEATURE_COUNT);
+    expect(f.every(v => v >= 0 && v <= 1)).toBe(true);
+    expect(f[0]).toBeCloseTo(0.8, 6);        // confidence
+    expect(f[2]).toBeCloseTo(4 / 8, 6);      // fromDegree
+    expect(f[4]).toBeCloseTo(0.75, 6);       // fromEvidence (strong)
+    expect(f[6]).toBe(1);                    // sameCategory
+    expect(f[7]).toBe(1);                    // rt_thematic
+    expect(f[11]).toBe(0);                   // not rt_other
+  });
+
+  it('buckets unknown relationship types as other', () => {
+    const f = extractEdgeFeatures(edgeCandidateFromParts({
+      confidence: 0.5, explanation: 'why', relationshipType: 'related_to',
+      from: endpoint('verified', 1, 'a'), to: endpoint('verified', 1, 'b'),
+    }));
+    expect(f[7]).toBe(0);
+    expect(f[11]).toBe(1); // rt_other
+    expect(f[6]).toBe(0);  // different categories
   });
 });

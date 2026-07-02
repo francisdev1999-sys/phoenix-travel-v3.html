@@ -11,11 +11,12 @@
 
 import { prisma } from '@/lib/db';
 import { enqueue, type JobType } from '@/lib/jobs/queue';
-import { maybeAutoTrain } from '@/lib/learning/trainer';
+import { maybeAutoTrain, maybeAutoTrainEdges } from '@/lib/learning/trainer';
 
-// Events that change the learning model's labeled dataset (fresh positive /
+// Events that change the learning models' labeled datasets (fresh positive /
 // negative signal) and should trigger a background auto-retrain check.
-const AUTO_TRAIN_EVENTS = new Set(['node.published', 'node.archived']);
+const AUTO_TRAIN_NODE_EVENTS = new Set(['node.published', 'node.archived']);
+const AUTO_TRAIN_EDGE_EVENTS = new Set(['edge.published', 'edge.created', 'node.archived']);
 
 // ── Event catalogue ───────────────────────────────────────────────────────────
 
@@ -112,10 +113,13 @@ export async function emit(
     console.error(`[orchestration] Failed to write ArchiveEvent (${eventType}/${entityId}):`, err);
   }
 
-  // As the archive grows, let the model retrain itself on the new labeled data.
-  // Fire-and-forget: gated + de-duped inside, and it must never block the caller.
-  if (AUTO_TRAIN_EVENTS.has(eventType)) {
+  // As the archive grows, let the models retrain themselves on the new labeled
+  // data. Fire-and-forget: gated + de-duped inside, never blocks the caller.
+  if (AUTO_TRAIN_NODE_EVENTS.has(eventType)) {
     void maybeAutoTrain().catch(() => {});
+  }
+  if (AUTO_TRAIN_EDGE_EVENTS.has(eventType)) {
+    void maybeAutoTrainEdges().catch(() => {});
   }
 
   // Node-keyed jobs need a real nodeId. For edge events that's the edge's two

@@ -9,8 +9,10 @@
 import { prisma } from '@/lib/db';
 import { predict } from '@/lib/learning/model';
 import { extractFeatures, type CandidateInput } from '@/lib/learning/features';
+import { extractEdgeFeatures, type EdgeCandidateInput } from '@/lib/learning/edge-features';
 
-export const LEARNING_KIND = 'node_promotion';
+export const LEARNING_KIND      = 'node_promotion';
+export const EDGE_LEARNING_KIND = 'edge_promotion';
 
 // A model may only be trusted to auto-approve once it has seen enough of both
 // classes and validates well. Below this bar the learned lane is disabled and
@@ -30,15 +32,16 @@ export interface ActiveModel {
   accuracy:      number | null;
 }
 
-let cache: { model: ActiveModel | null; at: number } | null = null;
+const caches = new Map<string, { model: ActiveModel | null; at: number }>();
 const TTL_MS = 5 * 60 * 1000;
 
-export async function getActiveModel(force = false): Promise<ActiveModel | null> {
+export async function getActiveModel(force = false, kind: string = LEARNING_KIND): Promise<ActiveModel | null> {
   const now = Date.now();
-  if (!force && cache && now - cache.at < TTL_MS) return cache.model;
+  const cached = caches.get(kind);
+  if (!force && cached && now - cached.at < TTL_MS) return cached.model;
 
   const row = await prisma.learningModel.findFirst({
-    where:   { kind: LEARNING_KIND, active: true },
+    where:   { kind, active: true },
     orderBy: { version: 'desc' },
     select: {
       id: true, weights: true, bias: true,
@@ -46,7 +49,7 @@ export async function getActiveModel(force = false): Promise<ActiveModel | null>
     },
   });
 
-  cache = { model: row, at: now };
+  caches.set(kind, { model: row, at: now });
   return row;
 }
 
@@ -63,12 +66,35 @@ export interface ScoreResult {
   mature:  boolean;     // whether the model is trusted to auto-approve
 }
 
-/** Score a candidate with the active model. Returns null if no model exists yet. */
+/** Score a node candidate with the active node model. Returns null if no model exists yet. */
 export async function scoreCandidate(input: CandidateInput): Promise<ScoreResult | null> {
   const model = await getActiveModel();
   if (!model || model.weights.length === 0) return null;
   const score = predict({ weights: model.weights, bias: model.bias }, extractFeatures(input));
   return { score, modelId: model.id, mature: isModelMature(model) };
+}
+
+/** Score a connection candidate with the active edge model. Returns null if no model exists yet. */
+export async function scoreEdgeCandidate(input: EdgeCandidateInput): Promise<ScoreResult | null> {
+  const model = await getActiveModel(false, EDGE_LEARNING_KIND);
+  if (!model || model.weights.length === 0) return null;
+  const score = predict({ weights: model.weights, bias: model.bias }, extractEdgeFeatures(input));
+  return { score, modelId: model.id, mature: isModelMature(model) };
+}
+
+/**
+ * Hard safety guards for the learned EDGE lane. Speculative/contradictory
+ * connections and mythological endpoints always require a human, no matter how
+ * confident the model is.
+ */
+const EDGE_BLOCKED_TYPES = new Set(['speculative', 'contradictory', 'contradiction']);
+
+export function passesLearnedEdgeSafetyGuards(c: EdgeCandidateInput): boolean {
+  if (EDGE_BLOCKED_TYPES.has((c.relationshipType || '').toLowerCase())) return false;
+  if ((c.fromEvidenceLevel || '').toLowerCase() === 'mythological') return false;
+  if ((c.toEvidenceLevel || '').toLowerCase() === 'mythological') return false;
+  if (c.explanationLen < 40) return false; // must carry a real explanation
+  return true;
 }
 
 /**

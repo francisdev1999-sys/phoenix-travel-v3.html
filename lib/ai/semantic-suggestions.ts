@@ -24,6 +24,8 @@
 
 import { prisma } from '@/lib/db';
 import { qualifiesForRelationshipAutoApprove, promoteRelationshipSuggestion } from '@/lib/discovery/relationship-promoter';
+import { scoreEdgeCandidate, passesLearnedEdgeSafetyGuards, LEARNED_AUTO_APPROVE_THRESHOLD } from '@/lib/learning/scorer';
+import { edgeCandidateFromParts } from '@/lib/learning/edge-features';
 
 const MODEL      = 'claude-opus-4-8';
 const MAX_TOKENS = 1200;
@@ -207,9 +209,9 @@ export async function generateAiSemanticSuggestions(nodeId: string): Promise<voi
       });
 
       const toEvidenceLevel = toEvidenceLevelById.get(r.candidateId);
+      if (suggestion.status !== 'pending' || !toEvidenceLevel) continue;
+
       if (
-        suggestion.status === 'pending' &&
-        toEvidenceLevel &&
         qualifiesForRelationshipAutoApprove({
           confidence:        r.confidence,
           relationshipType:  r.relationshipType,
@@ -221,6 +223,57 @@ export async function generateAiSemanticSuggestions(nodeId: string): Promise<voi
         await promoteRelationshipSuggestion(suggestion).catch(err =>
           console.error('[semantic-suggestions] auto-approve failed:', err),
         );
+        continue;
+      }
+
+      // Learned edge lane: the static gate declined — consult the connection-
+      // quality model. A mature model may promote a borderline edge only at
+      // high confidence AND behind hard safety guards (never speculative/
+      // contradictory types or mythological endpoints). Every evaluation is
+      // recorded so the nightly pass can grade the model against reality.
+      try {
+        const endpointSelect = {
+          evidenceLevel: true, categoryId: true,
+          _count: { select: { edgesFrom: true, edgesTo: true } },
+        } as const;
+        const [fromSlice, toSlice] = await Promise.all([
+          prisma.node.findUnique({ where: { id: nodeId },         select: endpointSelect }),
+          prisma.node.findUnique({ where: { id: r.candidateId },  select: endpointSelect }),
+        ]);
+        if (!fromSlice || !toSlice) continue;
+
+        const edgeCandidate = edgeCandidateFromParts({
+          confidence:       r.confidence,
+          explanation:      r.reason,
+          relationshipType: r.relationshipType,
+          from:             fromSlice,
+          to:               toSlice,
+        });
+        const scored = await scoreEdgeCandidate(edgeCandidate);
+        if (!scored) continue;
+
+        const approve = scored.mature &&
+          scored.score >= LEARNED_AUTO_APPROVE_THRESHOLD &&
+          passesLearnedEdgeSafetyGuards(edgeCandidate);
+
+        await prisma.learningPrediction.create({
+          data: {
+            kind:       'edge_promotion',
+            modelId:    scored.modelId,
+            entityType: 'relationship_suggestion',
+            entityId:   suggestion.id,
+            score:      scored.score,
+            decision:   approve ? 'learned_auto_approved' : 'queued',
+          },
+        }).catch(() => {});
+
+        if (approve) {
+          await promoteRelationshipSuggestion(suggestion).catch(err =>
+            console.error('[semantic-suggestions] learned auto-approve failed:', err),
+          );
+        }
+      } catch {
+        /* learned lane is best-effort — suggestion stays queued for review */
       }
     }
   } catch (err) {

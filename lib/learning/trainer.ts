@@ -11,9 +11,11 @@
 
 import { prisma } from '@/lib/db';
 import { buildNodePromotionDataset } from '@/lib/learning/dataset';
+import { buildEdgePromotionDataset } from '@/lib/learning/edge-dataset';
 import { train, evaluate, type TrainExample } from '@/lib/learning/model';
 import { FEATURE_NAMES, FEATURE_COUNT } from '@/lib/learning/features';
-import { LEARNING_KIND, getActiveModel } from '@/lib/learning/scorer';
+import { EDGE_FEATURE_NAMES, EDGE_FEATURE_COUNT } from '@/lib/learning/edge-features';
+import { LEARNING_KIND, EDGE_LEARNING_KIND, getActiveModel } from '@/lib/learning/scorer';
 
 // ── Auto-retrain: fire as new labeled data accumulates in the archive ─────────
 // New published/archived/rejected items become training signal; once enough new
@@ -69,6 +71,50 @@ export async function maybeAutoTrain(): Promise<void> {
   }
 }
 
+/**
+ * Same gated background retrain for the edge/connection model — fired from
+ * emit() on edge.published / edge.archived. Safe to call constantly.
+ */
+let edgeAutoTrainInFlight = false;
+
+export async function maybeAutoTrainEdges(): Promise<void> {
+  if (edgeAutoTrainInFlight) return;
+
+  const active = await prisma.learningModel.findFirst({
+    where:   { kind: EDGE_LEARNING_KIND, active: true },
+    orderBy: { version: 'desc' },
+    select:  { exampleCount: true, trainedAt: true },
+  }).catch(() => null);
+
+  const [pub, arch, rej] = await Promise.all([
+    prisma.edge.count({ where: { status: 'published' } }),
+    prisma.edge.count({ where: { status: 'archived' } }),
+    prisma.relationshipSuggestion.count({ where: { status: 'rejected' } }),
+  ]).catch(() => [0, 0, 0]);
+
+  const negatives = arch + rej;
+  if (pub === 0 || negatives === 0) return;
+
+  const positives = Math.min(pub, Math.max(50, negatives * 3));
+  const currentExamples = positives + negatives;
+
+  if (active) {
+    if (currentExamples - active.exampleCount < AUTO_RETRAIN_MIN_NEW_EXAMPLES) return;
+    if (Date.now() - new Date(active.trainedAt).getTime() < AUTO_RETRAIN_MIN_INTERVAL_MS) return;
+  } else if (currentExamples < MIN_EXAMPLES_TO_TRAIN) {
+    return;
+  }
+
+  edgeAutoTrainInFlight = true;
+  try {
+    await runEdgeLearningPass();
+  } catch {
+    /* best-effort */
+  } finally {
+    edgeAutoTrainInFlight = false;
+  }
+}
+
 export interface LearningPassResult {
   trained:        boolean;
   reason?:        string;
@@ -112,12 +158,47 @@ export async function runLearningPass(): Promise<LearningPassResult> {
     };
   }
 
-  const prev = await getActiveModel(true);
-  const warmWeights = prev && prev.weights.length === FEATURE_COUNT ? prev.weights : undefined;
+  const fit = await fitAndSave(LEARNING_KIND, [...FEATURE_NAMES], FEATURE_COUNT, examples, positiveCount, negativeCount);
+
+  return { trained: true, ...fit, predictionsResolved, sources };
+}
+
+/** Nightly/auto pass for the edge/connection-quality model. */
+export async function runEdgeLearningPass(): Promise<LearningPassResult> {
+  const { examples, positiveCount, negativeCount } = await buildEdgePromotionDataset();
+
+  const predictionsResolved = await resolveEdgePredictions();
+
+  if (examples.length < MIN_EXAMPLES_TO_TRAIN || positiveCount === 0 || negativeCount === 0) {
+    return {
+      trained: false,
+      reason: `insufficient labeled data (examples=${examples.length}, +${positiveCount}/-${negativeCount})`,
+      exampleCount: examples.length,
+      positiveCount, negativeCount,
+      predictionsResolved,
+    };
+  }
+
+  const fit = await fitAndSave(EDGE_LEARNING_KIND, [...EDGE_FEATURE_NAMES], EDGE_FEATURE_COUNT, examples, positiveCount, negativeCount);
+
+  return { trained: true, ...fit, predictionsResolved };
+}
+
+/** Shared: warm-start fit, held-out eval, save as the new active version. */
+async function fitAndSave(
+  kind: string,
+  featureNames: string[],
+  featureCount: number,
+  examples: TrainExample[],
+  positiveCount: number,
+  negativeCount: number,
+) {
+  const prev = await getActiveModel(true, kind);
+  const warmWeights = prev && prev.weights.length === featureCount ? prev.weights : undefined;
   const warmBias    = prev ? prev.bias : undefined;
 
   const { train: trainSet, test: testSet } = splitDataset(examples);
-  const model = train(trainSet, FEATURE_COUNT, {
+  const model = train(trainSet, featureCount, {
     epochs: 300,
     learningRate: 0.05,
     l2: 0.001,
@@ -126,20 +207,20 @@ export async function runLearningPass(): Promise<LearningPassResult> {
   });
   const metrics = evaluate(model, testSet);
 
-  const nextVersion = (prev ? await currentMaxVersion() : 0) + 1;
+  const nextVersion = (await currentMaxVersion(kind)) + 1;
 
   // Deactivate old, insert new active version (history is preserved).
   await prisma.$transaction([
     prisma.learningModel.updateMany({
-      where: { kind: LEARNING_KIND, active: true },
+      where: { kind, active: true },
       data:  { active: false },
     }),
     prisma.learningModel.create({
       data: {
-        kind:          LEARNING_KIND,
+        kind,
         version:       nextVersion,
         active:        true,
-        features:      [...FEATURE_NAMES],
+        features:      featureNames,
         weights:       model.weights,
         bias:          model.bias,
         exampleCount:  examples.length,
@@ -154,7 +235,6 @@ export async function runLearningPass(): Promise<LearningPassResult> {
   ]);
 
   return {
-    trained: true,
     version: nextVersion,
     exampleCount: examples.length,
     positiveCount, negativeCount,
@@ -162,14 +242,12 @@ export async function runLearningPass(): Promise<LearningPassResult> {
     precision: metrics.precision,
     recall: metrics.recall,
     auc: metrics.auc,
-    predictionsResolved,
-    sources,
   };
 }
 
-async function currentMaxVersion(): Promise<number> {
+async function currentMaxVersion(kind: string): Promise<number> {
   const top = await prisma.learningModel.findFirst({
-    where:   { kind: LEARNING_KIND },
+    where:   { kind },
     orderBy: { version: 'desc' },
     select:  { version: true },
   });
@@ -212,6 +290,52 @@ async function resolvePredictions(): Promise<number> {
       if (st === 'published') outcome = 'approved_survived';
       else if (st === undefined || st === 'archived' || st === 'deleted') outcome = 'rejected_removed';
     } else if (d.status === 'rejected' || d.status === 'dismissed') {
+      outcome = 'rejected_removed';
+    }
+
+    if (!outcome) continue;
+    await prisma.learningPrediction.update({
+      where: { id: p.id },
+      data:  { outcome, resolvedAt: new Date() },
+    }).catch(() => {});
+    resolved++;
+  }
+
+  return resolved;
+}
+
+/** Resolve pending edge-lane predictions against what happened to the suggestion/edge. */
+async function resolveEdgePredictions(): Promise<number> {
+  const pending = await prisma.learningPrediction.findMany({
+    where:  { kind: EDGE_LEARNING_KIND, outcome: 'pending' },
+    select: { id: true, entityId: true },
+    take:   2000,
+  });
+  if (pending.length === 0) return 0;
+
+  const suggestions = await prisma.relationshipSuggestion.findMany({
+    where:  { id: { in: pending.map(p => p.entityId) } },
+    select: { id: true, status: true, promotedEdgeId: true },
+  });
+  const sById = new Map(suggestions.map(s => [s.id, s]));
+
+  const edgeIds = suggestions.map(s => s.promotedEdgeId).filter((x): x is string => !!x);
+  const edges = edgeIds.length
+    ? await prisma.edge.findMany({ where: { id: { in: edgeIds } }, select: { id: true, status: true } })
+    : [];
+  const edgeStatus = new Map(edges.map(e => [e.id, e.status]));
+
+  let resolved = 0;
+  for (const p of pending) {
+    const s = sById.get(p.entityId);
+    if (!s) continue;
+
+    let outcome: 'approved_survived' | 'rejected_removed' | null = null;
+    if (s.promotedEdgeId) {
+      const st = edgeStatus.get(s.promotedEdgeId);
+      if (st === 'published') outcome = 'approved_survived';
+      else if (st === undefined || st === 'archived') outcome = 'rejected_removed';
+    } else if (s.status === 'rejected') {
       outcome = 'rejected_removed';
     }
 

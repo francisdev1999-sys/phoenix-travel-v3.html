@@ -14,9 +14,13 @@ interface Prediction {
   id: string; entityId: string; score: number; decision: string; outcome: string;
   createdAt: string; resolvedAt: string | null;
 }
+interface EdgeModelInfo extends ModelInfo {
+  autoApprove: { total: number; resolved: number; survived: number; livePrecision: number | null };
+}
 interface LearningData {
   thresholds: { minExamples: number; minAccuracy: number; autoApproveConfidence: number };
   active: ModelInfo | null;
+  edge: EdgeModelInfo | null;
   history: HistoryPoint[];
   autoApprove: { total: number; resolved: number; survived: number; livePrecision: number | null };
   recentPredictions: Prediction[];
@@ -283,6 +287,46 @@ export default function LearningDashboard() {
               <span>Survived: <strong className="text-emerald-300">{data?.autoApprove.survived}</strong></span>
               <span>Live precision: <strong className="text-white">{pct(data?.autoApprove.livePrecision)}</strong></span>
             </div>
+          </div>
+
+          {/* Connection-quality (edge) model */}
+          <div className="p-4 rounded-xl bg-white/3 border border-white/6">
+            <div className="flex items-center gap-2 mb-2">
+              <Brain size={14} className="text-cyan-400" />
+              <span className="text-xs font-bold text-white">Connection-quality neuron (edges)</span>
+              {data?.edge && (
+                <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${data.edge.mature ? 'bg-emerald-900/40 text-emerald-300' : 'bg-amber-900/40 text-amber-300'}`}>
+                  {data.edge.mature ? 'Active' : 'Learning'}
+                </span>
+              )}
+            </div>
+            {!data?.edge ? (
+              <p className="text-[11px] text-slate-500">
+                Not trained yet — it learns which relationships are strong from the graph&apos;s
+                existing published edges (positives) vs archived edges + rejected suggestions
+                (negatives). Trains alongside the node model.
+              </p>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-x-8 gap-y-1 text-xs text-slate-400 mb-2">
+                  <span>v<strong className="text-white">{data.edge.version}</strong></span>
+                  <span>Accuracy: <strong className="text-white">{pct(data.edge.accuracy)}</strong></span>
+                  <span>AUC: <strong className="text-white">{data.edge.auc == null ? '—' : data.edge.auc.toFixed(3)}</strong></span>
+                  <span>Examples: <strong className="text-white">{data.edge.exampleCount}</strong> (+{data.edge.positiveCount}/−{data.edge.negativeCount})</span>
+                  <span>Lane: <strong className="text-white">{data.edge.autoApprove.total}</strong> approved · precision <strong className="text-white">{pct(data.edge.autoApprove.livePrecision)}</strong></span>
+                </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  {data.edge.weights.slice(0, 6).map(w => (
+                    <span key={w.name} className="text-[10px] font-mono">
+                      <span className="text-slate-500">{w.name}</span>{' '}
+                      <span className={w.weight >= 0 ? 'text-emerald-300' : 'text-red-300'}>
+                        {w.weight >= 0 ? '+' : ''}{w.weight.toFixed(2)}
+                      </span>
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Accuracy history */}

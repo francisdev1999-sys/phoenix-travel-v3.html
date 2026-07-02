@@ -12,14 +12,18 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import {
-  LEARNING_KIND, isModelMature,
+  LEARNING_KIND, EDGE_LEARNING_KIND, isModelMature,
   MIN_EXAMPLES_FOR_AUTHORITY, MIN_ACCURACY_FOR_AUTHORITY, LEARNED_AUTO_APPROVE_THRESHOLD,
 } from '@/lib/learning/scorer';
 
 export async function GET() {
-  const [active, history, recentPredictions, resolved] = await Promise.all([
+  const [active, edgeActive, history, recentPredictions, resolved, edgeResolved] = await Promise.all([
     prisma.learningModel.findFirst({
       where: { kind: LEARNING_KIND, active: true },
+      orderBy: { version: 'desc' },
+    }),
+    prisma.learningModel.findFirst({
+      where: { kind: EDGE_LEARNING_KIND, active: true },
       orderBy: { version: 'desc' },
     }),
     prisma.learningModel.findMany({
@@ -38,6 +42,10 @@ export async function GET() {
       where:   { kind: LEARNING_KIND, decision: 'learned_auto_approved', outcome: { not: 'pending' } },
       select:  { outcome: true },
     }),
+    prisma.learningPrediction.findMany({
+      where:   { kind: EDGE_LEARNING_KIND, decision: 'learned_auto_approved', outcome: { not: 'pending' } },
+      select:  { outcome: true },
+    }),
   ]);
 
   const weights = active
@@ -45,11 +53,22 @@ export async function GET() {
         .sort((a, b) => Math.abs(b.weight) - Math.abs(a.weight))
     : [];
 
-  const autoApprovedTotal = await prisma.learningPrediction.count({
-    where: { kind: LEARNING_KIND, decision: 'learned_auto_approved' },
-  });
+  const [autoApprovedTotal, edgeAutoApprovedTotal] = await Promise.all([
+    prisma.learningPrediction.count({
+      where: { kind: LEARNING_KIND, decision: 'learned_auto_approved' },
+    }),
+    prisma.learningPrediction.count({
+      where: { kind: EDGE_LEARNING_KIND, decision: 'learned_auto_approved' },
+    }),
+  ]);
   const survived = resolved.filter(r => r.outcome === 'approved_survived').length;
   const livePrecision = resolved.length ? survived / resolved.length : null;
+  const edgeSurvived = edgeResolved.filter(r => r.outcome === 'approved_survived').length;
+
+  const edgeWeights = edgeActive
+    ? edgeActive.features.map((name, i) => ({ name, weight: edgeActive.weights[i] ?? 0 }))
+        .sort((a, b) => Math.abs(b.weight) - Math.abs(a.weight))
+    : [];
 
   return NextResponse.json({
     thresholds: {
@@ -83,6 +102,32 @@ export async function GET() {
       resolved:      resolved.length,
       survived,
       livePrecision,
+    },
+    edge: edgeActive && {
+      version:       edgeActive.version,
+      trainedAt:     edgeActive.trainedAt,
+      bias:          edgeActive.bias,
+      exampleCount:  edgeActive.exampleCount,
+      positiveCount: edgeActive.positiveCount,
+      negativeCount: edgeActive.negativeCount,
+      accuracy:      edgeActive.accuracy,
+      precision:     edgeActive.precision,
+      recall:        edgeActive.recall,
+      auc:           edgeActive.auc,
+      mature:        isModelMature({
+        exampleCount:  edgeActive.exampleCount,
+        positiveCount: edgeActive.positiveCount,
+        negativeCount: edgeActive.negativeCount,
+        accuracy:      edgeActive.accuracy,
+        id: edgeActive.id, weights: edgeActive.weights, bias: edgeActive.bias,
+      }),
+      weights: edgeWeights,
+      autoApprove: {
+        total:         edgeAutoApprovedTotal,
+        resolved:      edgeResolved.length,
+        survived:      edgeSurvived,
+        livePrecision: edgeResolved.length ? edgeSurvived / edgeResolved.length : null,
+      },
     },
     recentPredictions,
   });
