@@ -46,8 +46,9 @@ const CATEGORY_META: Record<string, { color: string; icon: string }> = {
   'Space/Astronomy':       { color: '#1e3a5f', icon: '🌌' },
 };
 
-// Discovery seeds — queries that surface novel archive-relevant topics
-const DISCOVERY_SEEDS = [
+// Discovery seeds — queries that surface novel archive-relevant topics.
+// Exported so the node-discovery cron can compose them with gap-driven seeds.
+export const DISCOVERY_SEEDS = [
   // Ancient civilisations & archaeology
   'ancient civilisation discovery archaeology',
   'lost civilisation underwater archaeology',

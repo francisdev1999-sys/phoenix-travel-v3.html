@@ -16,6 +16,8 @@ import { prisma } from '@/lib/db';
 import { runNodeRules } from '@/lib/cleanup/rules';
 import { checkApiKey, checkGeminiKey } from '@/lib/cleanup/analyzer';
 import { runNodeCleanupAudit } from '@/lib/cleanup/run-audit';
+import { autoApplySafeFindings } from '@/lib/cleanup/auto-fix';
+import { checkBudget } from '@/lib/budget/tracker';
 
 const CRON_SECRET    = process.env.CRON_SECRET;
 const AUDIT_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
@@ -34,6 +36,12 @@ async function handler(req: NextRequest) {
   // Skip if no AI key configured (avoid creating failed runs)
   if (!checkApiKey() && !checkGeminiKey()) {
     return NextResponse.json({ skipped: true, reason: 'no AI key configured' });
+  }
+
+  // Respect the AI spend caps — same guard the discovery engines use.
+  const budget = await checkBudget();
+  if (!budget.ok) {
+    return NextResponse.json({ skipped: true, reason: `budget: ${budget.reason ?? 'cap reached'}` });
   }
 
   // Skip if a run already completed in the last 24 hours
@@ -72,10 +80,19 @@ async function handler(req: NextRequest) {
     );
   }
 
+  // Guarded auto-fix: apply high-confidence, low-risk ARCHIVE findings from
+  // this run automatically (reversible, capped, snapshotted, audit-logged).
+  // Best-effort — a failure here never fails the audit itself.
+  let autoFix = null;
+  if (result.kind === 'completed' && !result.allFailed) {
+    autoFix = await autoApplySafeFindings(result.run.id).catch(() => null);
+  }
+
   return NextResponse.json({
     triggered:  true,
     candidates: candidates.length,
     run:        result.kind === 'completed' ? result.run : result,
+    autoFix,
   });
 }
 

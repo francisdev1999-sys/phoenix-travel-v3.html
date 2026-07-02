@@ -85,15 +85,46 @@ jobs:
             exit 1
           fi
           url="${SITE_URL:-https://nexusarchive.up.railway.app}/api/cron/${JOB}"
-          status=$(curl -sS -o /tmp/response.json -w '%{http_code}' -X POST "$url" \
-            -H "Authorization: Bearer ${CRON_SECRET}" \
-            -H "x-cron-secret: ${CRON_SECRET}" \
-            -H "Content-Type: application/json" \
-            -d '{}')
-          echo "HTTP status: $status"
-          cat /tmp/response.json
-          echo
-          if [ "$status" -ge 400 ]; then
-            echo "Cron job '$JOB' failed with status $status" >&2
-            exit 1
-          fi
+          # Retry transient failures (network errors / 5xx) with backoff.
+          # 4xx means auth/config — retrying won't help, fail immediately.
+          for attempt in 1 2 3; do
+            status=$(curl -sS -o /tmp/response.json -w '%{http_code}' -X POST "$url" \
+              -H "Authorization: Bearer ${CRON_SECRET}" \
+              -H "x-cron-secret: ${CRON_SECRET}" \
+              -H "Content-Type: application/json" \
+              --max-time 290 \
+              -d '{}') || status=0
+            echo "Attempt $attempt — HTTP status: $status"
+            cat /tmp/response.json 2>/dev/null
+            echo
+            if [ "$status" -ge 200 ] && [ "$status" -lt 400 ]; then
+              exit 0
+            fi
+            if [ "$status" -ge 400 ] && [ "$status" -lt 500 ]; then
+              echo "Cron job '$JOB' failed with client error $status — not retrying." >&2
+              exit 1
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              sleep $((attempt * 20))
+            fi
+          done
+          echo "Cron job '$JOB' failed after 3 attempts (last status $status)" >&2
+          exit 1
+
+  # GitHub disables scheduled workflows after ~60 days without repository
+  # activity. Hitting the workflow "enable" API resets that timer, keeping the
+  # autonomous pipeline alive indefinitely. Runs on the monthly schedule.
+  keepalive:
+    name: Keep scheduled workflows alive
+    if: github.event.schedule == '0 0 1 * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Reset the 60-day scheduled-workflow timer
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api -X PUT \
+            "repos/${{ github.repository }}/actions/workflows/autonomous-growth-cron.yml/enable"
+          echo "Keepalive OK — schedule disable timer reset."
