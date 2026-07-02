@@ -171,7 +171,8 @@ export default function LearningDashboard() {
         <div className="p-6 rounded-xl bg-white/3 border border-white/6 text-sm text-slate-400">
           No model has been trained yet. It learns from the whole archive — every
           published node (with its sources + connections) as a positive example, and
-          rejected/archived items as negatives. Hit <span className="text-purple-300 font-semibold">Train now</span> (or wait for the
+          rejected/archived items as negatives. It also <span className="text-cyan-300">retrains itself
+          automatically</span> as new data enters the archive. Hit <span className="text-purple-300 font-semibold">Train now</span> (or wait for the
           nightly Learning Pass) to fit the first neuron. It needs at least{' '}
           <strong>{data?.thresholds.minExamples}</strong> labeled examples and{' '}
           <strong>{pct(data?.thresholds.minAccuracy)}</strong> accuracy before it may auto-approve anything.

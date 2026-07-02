@@ -65,6 +65,8 @@ rejected/archived items as negatives) scores each discovered candidate. When the
 strict static gate declines, a *mature* model (enough labeled data + accuracy bar)
 may auto-approve a high-confidence candidate that also clears hard safety guards.
 A cold/immature model has no authority, so it never publishes junk on day one.
+Besides the nightly pass, `emit()` fires a gated background retrain as the archive
+grows (`maybeAutoTrain`), so the model keeps learning from new data automatically.
 The admin **Learning** tab shows weights, accuracy history, and live precision.
 
 ## Commands

@@ -15,6 +15,60 @@ import { train, evaluate, type TrainExample } from '@/lib/learning/model';
 import { FEATURE_NAMES, FEATURE_COUNT } from '@/lib/learning/features';
 import { LEARNING_KIND, getActiveModel } from '@/lib/learning/scorer';
 
+// ── Auto-retrain: fire as new labeled data accumulates in the archive ─────────
+// New published/archived/rejected items become training signal; once enough new
+// examples land (and a min interval has passed) the model retrains itself.
+const AUTO_RETRAIN_MIN_NEW_EXAMPLES = 20;
+const AUTO_RETRAIN_MIN_INTERVAL_MS  = 3 * 60 * 60 * 1000; // 3h — don't thrash
+let   autoTrainInFlight = false;
+
+/**
+ * Cheap gate + background retrain, meant to be called fire-and-forget from the
+ * orchestration layer whenever the archive grows. Retrains only when there's
+ * meaningfully more labeled data than the active model saw, and not too often.
+ * Safe to call constantly — it no-ops until the thresholds are crossed.
+ */
+export async function maybeAutoTrain(): Promise<void> {
+  if (autoTrainInFlight) return;
+
+  const active = await prisma.learningModel.findFirst({
+    where:   { kind: LEARNING_KIND, active: true },
+    orderBy: { version: 'desc' },
+    select:  { exampleCount: true, trainedAt: true },
+  }).catch(() => null);
+
+  const [pub, arch, rejP, rejD] = await Promise.all([
+    prisma.node.count({ where: { status: 'published' } }),
+    prisma.node.count({ where: { status: { in: ['archived', 'deleted'] } } }),
+    prisma.proposedNode.count({ where: { status: 'rejected' } }),
+    prisma.discoveredNode.count({ where: { status: { in: ['rejected', 'dismissed'] } } }),
+  ]).catch(() => [0, 0, 0, 0]);
+
+  const negatives = arch + rejP + rejD;
+  if (pub === 0 || negatives === 0) return; // need both classes to learn
+
+  // Mirror the dataset's class-balancing so the count is comparable to the
+  // model's stored exampleCount.
+  const positives = Math.min(pub, Math.max(50, negatives * 3));
+  const currentExamples = positives + negatives;
+
+  if (active) {
+    if (currentExamples - active.exampleCount < AUTO_RETRAIN_MIN_NEW_EXAMPLES) return;
+    if (Date.now() - new Date(active.trainedAt).getTime() < AUTO_RETRAIN_MIN_INTERVAL_MS) return;
+  } else if (currentExamples < MIN_EXAMPLES_TO_TRAIN) {
+    return;
+  }
+
+  autoTrainInFlight = true;
+  try {
+    await runLearningPass();
+  } catch {
+    /* best-effort — never surfaced to the triggering request */
+  } finally {
+    autoTrainInFlight = false;
+  }
+}
+
 export interface LearningPassResult {
   trained:        boolean;
   reason?:        string;
