@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Cpu, Activity, Zap, Database, GitBranch, Radio, Gauge, ShieldCheck } from 'lucide-react';
+import { Cpu, Activity, Database, Radio, Gauge, ShieldCheck, Maximize2, Minimize2, MousePointerClick } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Neural Core — a futuristic command-center view of the adaptive engine.
@@ -26,6 +26,17 @@ interface Stats { nodeCount: number; edgeCount: number; galaxyCount: number; yea
 const LAYERS = [8, 7, 6, 3]; // input, hidden1, hidden2, output
 const NEON = { cyan: '#22d3ee', violet: '#a78bfa', emerald: '#34d399', red: '#f87171', amber: '#fbbf24' };
 
+const BOOT_LINES = [
+  '> INITIALIZING NEURAL CORE',
+  '> MOUNTING /dev/synapse … OK',
+  '> LOADING MODEL WEIGHTS … OK',
+  '> CALIBRATING ACTIVATION FUNCTIONS … OK',
+  '> LINKING SUBSYSTEM REACTORS … OK',
+  '> ESTABLISHING INFERENCE MESH … OK',
+  '> ENGAGING AUTONOMOUS PIPELINE … OK',
+  '> CORE ONLINE',
+];
+
 interface Node { x: number; y: number; layer: number; idx: number; r: number; hue: string }
 interface Edge { from: number; to: number; w: number }
 interface Pulse { edge: number; t: number; speed: number }
@@ -33,15 +44,21 @@ interface Pulse { edge: number; t: number; speed: number }
 export default function NeuralCore() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef   = useRef<HTMLDivElement | null>(null);
+  const rootRef   = useRef<HTMLDivElement | null>(null);
   const rafRef    = useRef<number>(0);
   const netRef    = useRef<{ nodes: Node[]; edges: Edge[]; pulses: Pulse[] } | null>(null);
   const weightsRef = useRef<Weight[]>([]);
+  const ripplesRef = useRef<{ x: number; y: number; t: number }[]>([]);
+  const isFullRef  = useRef(false);
 
   const [learning, setLearning] = useState<Learning | null>(null);
   const [health, setHealth]     = useState<JobHealth[]>([]);
   const [feed, setFeed]         = useState<FeedItem[]>([]);
   const [stats, setStats]       = useState<Stats | null>(null);
   const [tick, setTick]         = useState(0);
+  const [isFull, setIsFull]     = useState(false);
+  const [bootStep, setBootStep] = useState(0);
+  const [booting, setBooting]   = useState(true);
 
   const loadAll = useCallback(async () => {
     const safe = <T,>(p: Promise<Response>): Promise<T | null> =>
@@ -70,6 +87,33 @@ export default function NeuralCore() {
     return () => clearInterval(iv);
   }, []);
 
+  // Boot-up sequence — reveals init lines, then the core comes online.
+  useEffect(() => {
+    if (!booting) return;
+    if (bootStep >= BOOT_LINES.length) {
+      const done = setTimeout(() => setBooting(false), 550);
+      return () => clearTimeout(done);
+    }
+    const t = setTimeout(() => setBootStep(s => s + 1), bootStep === 0 ? 250 : 230);
+    return () => clearTimeout(t);
+  }, [booting, bootStep]);
+
+  const skipBoot = () => { setBootStep(BOOT_LINES.length); setBooting(false); };
+
+  // Fullscreen command-center mode.
+  const toggleFull = useCallback(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    if (!document.fullscreenElement) el.requestFullscreen?.().catch(() => {});
+    else document.exitFullscreen?.().catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const onChange = () => { const f = !!document.fullscreenElement; setIsFull(f); isFullRef.current = f; };
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+
   // ── Canvas network animation ───────────────────────────────────────────────
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -83,7 +127,9 @@ export default function NeuralCore() {
     const layout = () => {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       W = wrap.clientWidth;
-      H = Math.max(320, Math.min(460, wrap.clientWidth * 0.5));
+      H = isFullRef.current
+        ? Math.max(420, Math.min(760, window.innerHeight * 0.6))
+        : Math.max(320, Math.min(460, wrap.clientWidth * 0.5));
       canvas.width = W * dpr; canvas.height = H * dpr;
       canvas.style.width = `${W}px`; canvas.style.height = `${H}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -180,6 +226,18 @@ export default function NeuralCore() {
         ctx.shadowBlur = 0;
       }
 
+      // shockwave ripples from clicks
+      const ripples = ripplesRef.current;
+      for (let i = ripples.length - 1; i >= 0; i--) {
+        const r = ripples[i];
+        r.t += dt / 700;
+        if (r.t >= 1) { ripples.splice(i, 1); continue; }
+        const rad = r.t * 90;
+        ctx.strokeStyle = `rgba(34,211,238,${(1 - r.t) * 0.6})`;
+        ctx.lineWidth = 2 * (1 - r.t);
+        ctx.beginPath(); ctx.arc(r.x, r.y, rad, 0, Math.PI * 2); ctx.stroke();
+      }
+
       // nodes (subtle breathing)
       const t = now / 1000;
       for (const n of nodes) {
@@ -206,11 +264,35 @@ export default function NeuralCore() {
       rafRef.current = requestAnimationFrame(frame);
     };
 
+    // Click-to-fire: inject a burst of signals + a shockwave from the click.
+    const onPointer = (ev: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = ev.clientX - rect.left;
+      const y = ev.clientY - rect.top;
+      ripplesRef.current.push({ x, y, t: 0 });
+      const net = netRef.current;
+      if (!net) return;
+      const inputEdges = net.edges
+        .map((e, i) => ({ e, i }))
+        .filter(o => net.nodes[o.e.from].layer === 0)
+        .sort((a, b) => Math.abs(net.nodes[a.e.from].y - y) - Math.abs(net.nodes[b.e.from].y - y))
+        .slice(0, 14);
+      for (const o of inputEdges) if (net.pulses.length < 130) net.pulses.push({ edge: o.i, t: 0, speed: 1.1 + Math.random() * 0.9 });
+    };
+    canvas.addEventListener('pointerdown', onPointer);
+
     layout();
     rafRef.current = requestAnimationFrame(frame);
     const ro = new ResizeObserver(layout);
     ro.observe(wrap);
-    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };
+    const onFsResize = () => layout();
+    document.addEventListener('fullscreenchange', onFsResize);
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      ro.disconnect();
+      canvas.removeEventListener('pointerdown', onPointer);
+      document.removeEventListener('fullscreenchange', onFsResize);
+    };
   }, []);
 
   const m = learning?.active ?? null;
@@ -220,11 +302,35 @@ export default function NeuralCore() {
   const signals  = 40 + Math.round((Math.sin(tick / 2) + 1) * 30) + (m ? m.exampleCount % 20 : 0);
 
   return (
-    <div className="relative min-h-full text-slate-200 font-mono">
+    <div ref={rootRef} className={`relative min-h-full text-slate-200 font-mono ${isFull ? 'bg-[#000008] overflow-auto p-5' : ''}`}>
       {/* animated grid + scanline backdrop */}
       <div className="pointer-events-none absolute inset-0 opacity-[0.18]"
         style={{ backgroundImage: 'linear-gradient(rgba(34,211,238,0.25) 1px,transparent 1px),linear-gradient(90deg,rgba(34,211,238,0.25) 1px,transparent 1px)', backgroundSize: '38px 38px' }} />
       <div className="pointer-events-none absolute inset-0 scanlines" />
+
+      {/* Boot-up sequence overlay */}
+      {booting && (
+        <div className="absolute inset-0 z-30 bg-[#000008]/95 flex flex-col items-center justify-center gap-4 cursor-pointer" onClick={skipBoot}>
+          <div className="w-full max-w-md px-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Cpu size={18} className="text-cyan-300 animate-pulse" />
+              <span className="text-sm font-bold tracking-[0.3em] text-cyan-200">NEURAL CORE</span>
+            </div>
+            <div className="space-y-1 min-h-[160px]">
+              {BOOT_LINES.slice(0, bootStep).map((line, i) => (
+                <div key={i} className="text-[11px] text-emerald-400/90 tracking-wide">
+                  {line}{i === bootStep - 1 && bootStep < BOOT_LINES.length && <span className="animate-pulse">_</span>}
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 h-1 rounded-full bg-white/5 overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-cyan-400 to-emerald-400 transition-all duration-200"
+                style={{ width: `${(bootStep / BOOT_LINES.length) * 100}%` }} />
+            </div>
+            <div className="mt-3 text-[9px] text-slate-600 tracking-widest text-center">CLICK TO SKIP</div>
+          </div>
+        </div>
+      )}
 
       <div className="relative z-10 space-y-4 p-1">
         {/* Command bar */}
@@ -244,6 +350,10 @@ export default function NeuralCore() {
             <Readout label="UPTIME" value={uptime} />
             <Readout label="SIGNALS/s" value={`${signals}`} color={NEON.cyan} />
             <Readout label="INTEGRITY" value={alerting ? `${alerting} ALERT` : 'NOMINAL'} color={alerting ? NEON.red : NEON.emerald} />
+            <button onClick={toggleFull} title={isFull ? 'Exit fullscreen' : 'Fullscreen'}
+              className="p-2 rounded-lg text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30">
+              {isFull ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+            </button>
           </div>
         </div>
 
@@ -252,6 +362,9 @@ export default function NeuralCore() {
           <div className="lg:col-span-2 relative border border-violet-500/20 rounded-xl bg-black/50 overflow-hidden hud-corners">
             <div className="absolute top-2 left-3 z-10 text-[10px] tracking-widest text-violet-300/80 flex items-center gap-1.5">
               <Radio size={11} className="animate-pulse text-emerald-400" /> LIVE INFERENCE MESH
+            </div>
+            <div className="absolute top-2 right-3 z-10 text-[9px] tracking-widest text-cyan-300/60 flex items-center gap-1">
+              <MousePointerClick size={10} /> CLICK TO INJECT SIGNAL
             </div>
             <div ref={wrapRef} className="w-full">
               <canvas ref={canvasRef} className="w-full block" />
