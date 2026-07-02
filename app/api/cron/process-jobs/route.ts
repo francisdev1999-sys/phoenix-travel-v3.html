@@ -17,8 +17,13 @@ import { dequeue, completeJob, failJob } from '@/lib/jobs/queue';
 import { processJob } from '@/lib/jobs/process-job';
 
 const CRON_SECRET   = process.env.CRON_SECRET;
-const MAX_JOBS       = 30;
-const TIME_BUDGET_MS = 50_000;
+// The queue worker shares ONE Node process with live visitor traffic —
+// similarity/embedding jobs are CPU-heavy, and a 30-job/50s drain was starving
+// user requests (multi-second landing-latency spikes every 5 minutes). Smaller
+// batches + a shorter budget + an event-loop yield between jobs keep the site
+// responsive; at the 5-minute cadence the queue still drains ~96 jobs/hour.
+const MAX_JOBS       = 8;
+const TIME_BUDGET_MS = 15_000;
 
 function isAuthorized(req: NextRequest): boolean {
   if (process.env.NODE_ENV !== 'production') return true;
@@ -50,6 +55,9 @@ async function handler(req: NextRequest) {
       failed++;
       failures.push({ jobId: job.id, type: job.type, error: message });
     }
+
+    // Yield the event loop between jobs so queued user requests get served.
+    await new Promise(resolve => setImmediate(resolve));
   }
 
   return NextResponse.json({ processed, failed, failures, ms: Date.now() - start });

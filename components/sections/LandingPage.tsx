@@ -205,6 +205,19 @@ export default function LandingPage() {
   const [stats, setStats]             = useState<LandingStats | null>(null);
   const interestRef = useRef<HTMLElement>(null);
 
+  // Pre-warm the destination chunks while the visitor reads the hero, so the
+  // first click doesn't sit on the "LOADING ARCHIVE..." spinner.
+  useEffect(() => {
+    const warm = () => {
+      void import('@/components/sections/ExploreFeed');
+      void import('@/components/sections/SearchExplorer');
+      void import('@/components/sections/GalaxyView');
+    };
+    const w = window as unknown as { requestIdleCallback?: (fn: () => void, o?: { timeout: number }) => number };
+    if (w.requestIdleCallback) w.requestIdleCallback(warm, { timeout: 3000 });
+    else setTimeout(warm, 1500);
+  }, []);
+
   // Live headline stats — refreshed periodically so the numbers track the
   // autonomous growth pipeline instead of showing stale/hardcoded values.
   useEffect(() => {

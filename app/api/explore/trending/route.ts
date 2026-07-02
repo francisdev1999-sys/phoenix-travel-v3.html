@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
  */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { cachedJson } from '@/lib/cache/api-cache';
 import { getEngagementScores } from '@/lib/learning/interest';
 import { getActiveModel, INTEREST_LEARNING_KIND } from '@/lib/learning/scorer';
 import { predict } from '@/lib/learning/model';
@@ -16,6 +17,13 @@ import { extractFeatures, candidateFromNode } from '@/lib/learning/features';
 import { NODE_SELECT } from '@/lib/learning/dataset';
 
 export async function GET() {
+  const payload = await cachedJson('explore:trending', 300_000, () => computeTrending());
+  return NextResponse.json(payload, {
+    headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600' },
+  });
+}
+
+async function computeTrending() {
   const [scores, model] = await Promise.all([
     getEngagementScores(7),
     getActiveModel(false, INTEREST_LEARNING_KIND),
@@ -44,5 +52,5 @@ export async function GET() {
       .slice(0, 10);
   }
 
-  return NextResponse.json({ trending, predicted });
+  return { trending, predicted };
 }

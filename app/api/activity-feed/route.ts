@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic';
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { cachedJson } from '@/lib/cache/api-cache';
 
 const PAGE_SIZE = 20;
 const FEED_EVENT_TYPES = ['node.published', 'edge.published', 'source.approved'];
@@ -20,6 +21,16 @@ const FEED_EVENT_TYPES = ['node.published', 'edge.published', 'source.approved']
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const cursor = searchParams.get('cursor') ?? undefined;
+
+  // First page is polled by every landing visitor — serve it from cache.
+  if (!cursor) {
+    const payload = await cachedJson('activity:first', 30_000, () => computeFeed(undefined));
+    return NextResponse.json(payload);
+  }
+  return NextResponse.json(await computeFeed(cursor));
+}
+
+async function computeFeed(cursor: string | undefined) {
 
   const events = await prisma.archiveEvent.findMany({
     where:   { eventType: { in: FEED_EVENT_TYPES } },
@@ -41,7 +52,7 @@ export async function GET(req: NextRequest) {
     createdAt: e.createdAt,
   }));
 
-  return NextResponse.json({ items, nextCursor });
+  return { items, nextCursor };
 }
 
 function buildLabel(eventType: string, metadata: Record<string, unknown>): string {

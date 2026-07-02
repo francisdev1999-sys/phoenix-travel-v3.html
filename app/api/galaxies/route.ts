@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
  */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { cachedJson } from '@/lib/cache/api-cache';
 
 export interface GalaxyWithCounts {
   id:          string;
@@ -25,6 +26,13 @@ export interface GalaxyWithCounts {
 }
 
 export async function GET() {
+  const payload = await cachedJson('galaxies:list', 300_000, () => computeGalaxies());
+  return NextResponse.json(payload, {
+    headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600' },
+  });
+}
+
+async function computeGalaxies() {
   const galaxies = await prisma.galaxy.findMany({
     orderBy: { order: 'asc' },
     include: {
@@ -65,7 +73,5 @@ export async function GET() {
     };
   });
 
-  return NextResponse.json(result, {
-    headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600' },
-  });
+  return result;
 }
