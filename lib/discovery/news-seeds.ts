@@ -28,19 +28,36 @@ export function headlineToSeed(title: string): string | null {
 
 /**
  * Recent news headlines (fetched since `since`) as deduplicated seed queries,
- * newest first, capped at `limit`.
+ * capped at `limit`. When the news-relevance neuron is mature, headlines are
+ * ranked by predicted archive-productivity (the model has learned which
+ * categories/sources/themes actually turn into published topics); otherwise
+ * newest-first.
  */
 export async function getNewsSeeds(limit: number, since: Date): Promise<string[]> {
   const items = await prisma.newsItem.findMany({
     where:   { fetchedAt: { gte: since } },
     orderBy: { publishedAt: 'desc' },
     take:    limit * 3, // headroom for cleanup/dedupe drops
-    select:  { title: true },
+    select:  { title: true, description: true, category: true, source: true },
   });
+
+  // Learned ordering (best-effort — an untrained model or any failure falls
+  // back to the newest-first order items already have).
+  let ordered = items;
+  try {
+    const { rankHeadlines } = await import('@/lib/learning/news-relevance');
+    const ranked = await rankHeadlines(items);
+    if (ranked) {
+      const scoreByTitle = new Map(ranked.map(r => [r.title, r.score]));
+      ordered = [...items].sort(
+        (a, b) => (scoreByTitle.get(b.title) ?? 0) - (scoreByTitle.get(a.title) ?? 0),
+      );
+    }
+  } catch { /* fall back to recency */ }
 
   const seeds: string[] = [];
   const seen = new Set<string>();
-  for (const item of items) {
+  for (const item of ordered) {
     const seed = headlineToSeed(item.title);
     if (!seed) continue;
     const key = seed.toLowerCase();

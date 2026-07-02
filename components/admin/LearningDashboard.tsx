@@ -23,11 +23,18 @@ interface InterestModelInfo {
   accuracy: number | null; auc: number | null;
   weights: Weight[];
 }
+interface NewsModelInfo {
+  version: number; trainedAt: string; exampleCount: number;
+  positiveCount: number; negativeCount: number;
+  accuracy: number | null; auc: number | null;
+  weights: Weight[];
+}
 interface LearningData {
   thresholds: { minExamples: number; minAccuracy: number; autoApproveConfidence: number };
   active: ModelInfo | null;
   edge: EdgeModelInfo | null;
   interest: InterestModelInfo | null;
+  news: NewsModelInfo | null;
   history: HistoryPoint[];
   autoApprove: { total: number; resolved: number; survived: number; livePrecision: number | null };
   recentPredictions: Prediction[];
@@ -362,6 +369,45 @@ export default function LearningDashboard() {
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-1">
                   {data.interest.weights.slice(0, 6).map(w => (
+                    <span key={w.name} className="text-[10px] font-mono">
+                      <span className="text-slate-500">{w.name}</span>{' '}
+                      <span className={w.weight >= 0 ? 'text-emerald-300' : 'text-red-300'}>
+                        {w.weight >= 0 ? '+' : ''}{w.weight.toFixed(2)}
+                      </span>
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* News-relevance neuron */}
+          <div className="p-4 rounded-xl bg-white/3 border border-white/6">
+            <div className="flex items-center gap-2 mb-2">
+              <Brain size={14} className="text-orange-400" />
+              <span className="text-xs font-bold text-white">News-relevance neuron (which headlines pay off)</span>
+              {data?.news && (
+                <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-orange-900/40 text-orange-300">
+                  v{data.news.version}
+                </span>
+              )}
+            </div>
+            {!data?.news ? (
+              <p className="text-[11px] text-slate-500">
+                Not trained yet — it learns from the intel feed which headlines, categories,
+                and sources actually produce published archive topics, then spends the daily
+                news-discovery budget on the most promising ones. Needs a few days of
+                news-discovery verdicts before its first fit.
+              </p>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-x-8 gap-y-1 text-xs text-slate-400 mb-2">
+                  <span>Accuracy: <strong className="text-white">{pct(data.news.accuracy)}</strong></span>
+                  <span>AUC: <strong className="text-white">{data.news.auc == null ? '—' : data.news.auc.toFixed(3)}</strong></span>
+                  <span>Examples: <strong className="text-white">{data.news.exampleCount}</strong> (+{data.news.positiveCount}/−{data.news.negativeCount})</span>
+                </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  {data.news.weights.slice(0, 6).map(w => (
                     <span key={w.name} className="text-[10px] font-mono">
                       <span className="text-slate-500">{w.name}</span>{' '}
                       <span className={w.weight >= 0 ? 'text-emerald-300' : 'text-red-300'}>

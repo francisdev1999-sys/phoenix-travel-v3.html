@@ -12,13 +12,13 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import {
-  LEARNING_KIND, EDGE_LEARNING_KIND, INTEREST_LEARNING_KIND, isModelMature,
+  LEARNING_KIND, EDGE_LEARNING_KIND, INTEREST_LEARNING_KIND, NEWS_LEARNING_KIND, isModelMature,
   MIN_EXAMPLES_FOR_AUTHORITY, MIN_ACCURACY_FOR_AUTHORITY, LEARNED_AUTO_APPROVE_THRESHOLD,
 } from '@/lib/learning/scorer';
 import { getEngagementScores } from '@/lib/learning/interest';
 
 export async function GET() {
-  const [active, edgeActive, interestActive, history, recentPredictions, resolved, edgeResolved] = await Promise.all([
+  const [active, edgeActive, interestActive, newsActive, history, recentPredictions, resolved, edgeResolved] = await Promise.all([
     prisma.learningModel.findFirst({
       where: { kind: LEARNING_KIND, active: true },
       orderBy: { version: 'desc' },
@@ -29,6 +29,10 @@ export async function GET() {
     }),
     prisma.learningModel.findFirst({
       where: { kind: INTEREST_LEARNING_KIND, active: true },
+      orderBy: { version: 'desc' },
+    }),
+    prisma.learningModel.findFirst({
+      where: { kind: NEWS_LEARNING_KIND, active: true },
       orderBy: { version: 'desc' },
     }),
     prisma.learningModel.findMany({
@@ -98,6 +102,11 @@ export async function GET() {
     topTopics: topIds.map(([id, score]) => ({ id, title: titleById.get(id) ?? id, score })),
     engagedNodes7d: weekScores.size,
   };
+
+  const newsWeights = newsActive
+    ? newsActive.features.map((name, i) => ({ name, weight: newsActive.weights[i] ?? 0 }))
+        .sort((a, b) => Math.abs(b.weight) - Math.abs(a.weight))
+    : [];
 
   const interestWeights = interestActive
     ? interestActive.features.map((name, i) => ({ name, weight: interestActive.weights[i] ?? 0 }))
@@ -175,6 +184,16 @@ export async function GET() {
       recall:        interestActive.recall,
       auc:           interestActive.auc,
       weights:       interestWeights,
+    },
+    news: newsActive && {
+      version:       newsActive.version,
+      trainedAt:     newsActive.trainedAt,
+      exampleCount:  newsActive.exampleCount,
+      positiveCount: newsActive.positiveCount,
+      negativeCount: newsActive.negativeCount,
+      accuracy:      newsActive.accuracy,
+      auc:           newsActive.auc,
+      weights:       newsWeights,
     },
     engagement,
     recentPredictions,
