@@ -77,10 +77,14 @@ export async function scoreCandidate(input: CandidateInput): Promise<ScoreResult
  * speculative/debated territory it's confident about — but not into pure
  * mythology or empty stubs.
  */
+// Minimum average source credibility the learned lane will auto-publish behind.
+export const MIN_SOURCE_CREDIBILITY = 0.5;
+
 export function passesLearnedSafetyGuards(c: CandidateInput): boolean {
   const ev = (c.evidenceLevel || '').toLowerCase();
-  if (ev === 'mythological') return false; // never auto-publish pure myth via the learned lane
-  if (c.claimCount < 1) return false;      // must actually assert something
-  if (c.sourceCount < 1) return false;     // must cite at least one source
+  if (ev === 'mythological') return false;                 // never auto-publish pure myth
+  if (c.claimCount < 1) return false;                      // must actually assert something
+  if (c.sourceCount < 1) return false;                     // must cite at least one source
+  if (c.sourceCredibility < MIN_SOURCE_CREDIBILITY) return false; // …and a credible one
   return true;
 }

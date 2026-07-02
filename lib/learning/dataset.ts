@@ -24,11 +24,11 @@ export interface Dataset {
   sources:       { publishedNodes: number; archivedNodes: number; rejectedProposals: number; rejectedDiscovered: number };
 }
 
-const NODE_COUNT_SELECT = {
-  select: {
-    claims: true, criticisms: true, openQuestions: true, tags: true,
-    sourceLinks: true, edgesFrom: true, edgesTo: true,
-  },
+const NODE_SELECT = {
+  confidenceScore: true, evidenceLevel: true, description: true, mainstreamView: true,
+  _count: { select: { claims: true, criticisms: true, openQuestions: true, tags: true, edgesFrom: true, edgesTo: true } },
+  // linked sources with their credibility → powers the sourceCred feature
+  sourceLinks: { select: { source: { select: { credibilityScore: true } } } },
 } as const;
 
 // Keep the classes from becoming wildly imbalanced (a huge published archive vs
@@ -42,18 +42,12 @@ export async function buildNodePromotionDataset(): Promise<Dataset> {
       where: { status: 'published' },
       orderBy: { updatedAt: 'desc' },
       take: HARD_CAP,
-      select: {
-        confidenceScore: true, evidenceLevel: true, description: true, mainstreamView: true,
-        _count: NODE_COUNT_SELECT,
-      },
+      select: NODE_SELECT,
     }),
     prisma.node.findMany({
       where: { status: { in: ['archived', 'deleted'] } },
       take: HARD_CAP,
-      select: {
-        confidenceScore: true, evidenceLevel: true, description: true, mainstreamView: true,
-        _count: NODE_COUNT_SELECT,
-      },
+      select: NODE_SELECT,
     }),
     prisma.proposedNode.findMany({
       where: { status: 'rejected' },

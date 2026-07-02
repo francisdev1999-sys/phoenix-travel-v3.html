@@ -38,7 +38,7 @@ const REFRESH_MS = 10_000;
 // Neutral-ish starting inputs for the playground (a plausible mid candidate).
 const NEUTRAL: Record<string, number> = {
   confidence: 0.6, claims: 0.4, criticisms: 0.3, tags: 0.4, descLength: 0.5,
-  sources: 0.4, connections: 0.4, hasMainstream: 1, openQuestions: 0.3,
+  sources: 0.4, sourceCred: 0.65, connections: 0.4, hasMainstream: 1, openQuestions: 0.3,
   ev_verified: 0, ev_strong: 1, ev_debated: 0, ev_speculative: 0, ev_mythological: 0,
 };
 
@@ -109,8 +109,9 @@ export default function LearningDashboard() {
       return { name: w.name, weight: w.weight, value, contribution: c };
     });
     const p = sigmoid(z);
-    const g = { myth: inputs['ev_mythological'] ?? 0, claims: inputs['claims'] ?? 0, sources: inputs['sources'] ?? 0 };
-    const safe = g.myth < 0.5 && g.claims >= 1 / 6 - 1e-6 && g.sources >= 1 / 5 - 1e-6;
+    const g = { myth: inputs['ev_mythological'] ?? 0, claims: inputs['claims'] ?? 0,
+                sources: inputs['sources'] ?? 0, cred: inputs['sourceCred'] ?? 0 };
+    const safe = g.myth < 0.5 && g.claims >= 1 / 6 - 1e-6 && g.sources >= 1 / 5 - 1e-6 && g.cred >= 0.5;
     const conf = data?.thresholds.autoApproveConfidence ?? 0.9;
     const wouldAutoApprove = !!m.mature && p >= conf && safe;
     return { z, p, contribs, safe, wouldAutoApprove, conf };

@@ -19,7 +19,8 @@ function separable(n: number): TrainExample[] {
   const ex: TrainExample[] = [];
   for (let i = 0; i < n; i++) {
     const v = i / n; // 0..1
-    const x = [v, 0.5, 0.5, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const x = new Array(FEATURE_COUNT).fill(0.2);
+    x[0] = v;
     ex.push({ x, label: v > 0.5 ? 1 : 0 });
   }
   return ex;
@@ -73,12 +74,14 @@ describe('feature extraction', () => {
     expect(f.every(v => v >= 0 && v <= 1)).toBe(true);
     // index 5 = sources (has a source url → 1/5)
     expect(f[5]).toBeGreaterThan(0);
-    // index 6 = connections (3 related ids → 3/8)
-    expect(f[6]).toBeCloseTo(3 / 8, 6);
-    // index 7 = hasMainstream (present → 1)
-    expect(f[7]).toBe(1);
-    // strong_evidence one-hot at index 10, verified (index 9) not set
-    expect(f[10]).toBe(1);
-    expect(f[9]).toBe(0);
+    // index 6 = sourceCred (Wikipedia → 0.65)
+    expect(f[6]).toBeCloseTo(0.65, 6);
+    // index 7 = connections (3 related ids → 3/8)
+    expect(f[7]).toBeCloseTo(3 / 8, 6);
+    // index 8 = hasMainstream (present → 1)
+    expect(f[8]).toBe(1);
+    // strong_evidence one-hot at index 11, verified (index 10) not set
+    expect(f[11]).toBe(1);
+    expect(f[10]).toBe(0);
   });
 });

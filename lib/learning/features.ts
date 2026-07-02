@@ -18,6 +18,7 @@ export const FEATURE_NAMES = [
   'tags',          // normalized tag count
   'descLength',    // normalized description length
   'sources',       // normalized cited-source count
+  'sourceCred',    // avg credibility of cited sources (0..1)
   'connections',   // normalized graph degree (edges / proposed links)
   'hasMainstream', // 0/1 — carries a mainstream view (balance signal)
   'openQuestions', // normalized open-question count
@@ -31,6 +32,10 @@ export const FEATURE_NAMES = [
 export type FeatureName = typeof FEATURE_NAMES[number];
 export const FEATURE_COUNT = FEATURE_NAMES.length;
 
+// Wikipedia is the only source node-discovery cites; its credibility mirrors
+// lib/discovery/node-promoter.ts (WIKIPEDIA_CREDIBILITY_SCORE).
+export const WIKIPEDIA_CREDIBILITY = 0.65;
+
 export interface CandidateInput {
   confidenceScore:   number;
   evidenceLevel:     string;
@@ -40,6 +45,7 @@ export interface CandidateInput {
   openQuestionCount: number;
   descriptionLen:    number;
   sourceCount:       number;
+  sourceCredibility: number; // 0..1 average credibility of cited sources
   connectionCount:   number;
   hasMainstreamView: boolean;
 }
@@ -55,6 +61,7 @@ export function extractFeatures(c: CandidateInput): number[] {
     clamp01(c.tagCount / 8),
     clamp01(c.descriptionLen / 1200),
     clamp01(c.sourceCount / 5),
+    clamp01(c.sourceCredibility),
     clamp01(c.connectionCount / 8),
     c.hasMainstreamView ? 1 : 0,
     clamp01(c.openQuestionCount / 4),
@@ -90,12 +97,13 @@ export function candidateFromDiscovered(d: {
     openQuestionCount: arrLen(d.openQuestions),
     descriptionLen:    (d.description ?? '').length,
     sourceCount:       d.sourceUrl ? 1 : 0,
+    sourceCredibility: d.sourceUrl ? WIKIPEDIA_CREDIBILITY : 0,
     connectionCount:   arrLen(d.relatedNodeIds),
     hasMainstreamView: !!d.mainstreamView,
   };
 }
 
-/** From a live archive Node with relation counts. */
+/** From a live archive Node with relation counts + linked-source credibility. */
 export function candidateFromNode(n: {
   confidenceScore: number;
   evidenceLevel:   string;
@@ -103,9 +111,12 @@ export function candidateFromNode(n: {
   mainstreamView:  string | null;
   _count: {
     claims: number; criticisms: number; openQuestions: number; tags: number;
-    sourceLinks: number; edgesFrom: number; edgesTo: number;
+    edgesFrom: number; edgesTo: number;
   };
+  sourceLinks: { source: { credibilityScore: number } | null }[];
 }): CandidateInput {
+  const creds = n.sourceLinks.map(l => l.source?.credibilityScore).filter((c): c is number => typeof c === 'number');
+  const avgCred = creds.length ? creds.reduce((a, b) => a + b, 0) / creds.length : 0;
   return {
     confidenceScore:   n.confidenceScore,
     evidenceLevel:     n.evidenceLevel,
@@ -114,7 +125,8 @@ export function candidateFromNode(n: {
     tagCount:          n._count.tags,
     openQuestionCount: n._count.openQuestions,
     descriptionLen:    (n.description ?? '').length,
-    sourceCount:       n._count.sourceLinks,
+    sourceCount:       n.sourceLinks.length,
+    sourceCredibility: avgCred,
     connectionCount:   n._count.edgesFrom + n._count.edgesTo,
     hasMainstreamView: !!n.mainstreamView,
   };
@@ -140,6 +152,7 @@ export function candidateFromProposal(p: {
     openQuestionCount: arrLen(p.openQuestions),
     descriptionLen:    (p.description ?? '').length,
     sourceCount:       0,
+    sourceCredibility: 0,
     connectionCount:   0,
     hasMainstreamView: !!p.mainstreamView,
   };

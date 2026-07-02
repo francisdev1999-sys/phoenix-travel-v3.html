@@ -453,7 +453,8 @@ export async function runNodeDiscovery(opts: {
           tagCount:          proposal.tags.length,
           openQuestionCount: proposal.open_questions.length,
           descriptionLen:    proposal.description.length,
-          sourceCount:       1, // node-discovery always cites a Wikipedia source
+          sourceCount:       1,    // node-discovery always cites a Wikipedia source
+          sourceCredibility: 0.65, // Wikipedia credibility (WIKIPEDIA_CREDIBILITY)
           connectionCount:   relatedNodeIds.length,
           hasMainstreamView: !!proposal.mainstream_view,
         };
