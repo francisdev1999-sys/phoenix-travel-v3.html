@@ -7,6 +7,7 @@ import { CATEGORY_COLORS, EVIDENCE_COLORS } from '@/lib/graph';
 import { useNodes } from '@/lib/graph/useNodes';
 import { formatYear, RELATIONSHIP_COLORS, RELATIONSHIP_LABELS, TIER_COLORS, scoreTier, type RabbitHoleData, type RHConnection, type RHPath } from '@/lib/rabbit-hole';
 import { useUserStore } from '@/lib/store/userStore';
+import { engagement } from '@/lib/store/engagementStore';
 import ConnectionCard from '@/components/rabbit-hole/ConnectionCard';
 import PathCard from '@/components/rabbit-hole/PathCard';
 import ExplorationSynthesis from '@/components/synthesis/ExplorationSynthesis';
@@ -225,6 +226,13 @@ export default function RabbitHoleView() {
   }, [currentId, history.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const navigate = (id: string) => {
+    // Engagement: each hop is a +15 XP step; the pair traversed is a discovered
+    // connection; track the deepest depth reached this session.
+    const eng = engagement();
+    eng.visitNode(id);
+    if (currentId && currentId !== id) eng.discoverConnection(currentId, id);
+    eng.noteDepth([...history, currentId, id].filter(Boolean).length);
+    eng.awardHop();
     setHistory(prev => [...prev, currentId]);
     setCurrentId(id);
     setRabbitHoleNodeId(id);

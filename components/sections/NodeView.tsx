@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
 import { trackEngagement } from '@/lib/engagement';
+import { useEngagement } from '@/lib/store/engagementStore';
 import StanceSlider from '@/components/research/StanceSlider';
 import ConfidenceMeter from '@/components/research/ConfidenceMeter';
 import ResearchScore from '@/components/research/ResearchScore';
@@ -289,6 +290,7 @@ function BalanceScores({ node, neighbourCount, sourceCount }: {
 
 export default function NodeView() {
   const { navContext, startRabbitHole, setCurrentView } = useUserStore();
+  const visitNode = useEngagement(s => s.visitNode);
   const nodeId = navContext.nodeId;
 
   const [data, setData]           = useState<NodeResponse | null>(null);
@@ -307,12 +309,13 @@ export default function NodeView() {
     setShowAllSources(false);
     setShowAllNeighbours(false);
     trackEngagement('node_view', nodeId);
+    visitNode(nodeId); // +10 XP on first visit (idempotent in the store)
     fetch(`/api/nodes/${nodeId}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(setData)
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, [nodeId]);
+  }, [nodeId, visitNode]);
 
   if (!nodeId) {
     return (

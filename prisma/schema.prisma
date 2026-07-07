@@ -582,6 +582,16 @@ model UserProgress {
   rabbitHoleChain       String[] @default([])
   rabbitHoleDepth       Int      @default(0)
   recentDiscoveries     String[] @default([])
+  // ── Redesign engagement layer (server mirror of the client engagement store) ──
+  bookmarks             String[] @default([])
+  proposals             String[] @default([])
+  collections           Json     @default("[]")
+  expeditions           Json     @default("[]")
+  streak                Int      @default(0)
+  lastActiveDay         Int?
+  questDay              Int?
+  mysteryDay            Int?
+  onboardingDone        Boolean  @default(false)
   updatedAt             DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

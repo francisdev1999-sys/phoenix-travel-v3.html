@@ -473,7 +473,7 @@ export default function LandingPage() {
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => setCurrentView('explore')}
+              onClick={() => setCurrentView('home')}
               className="flex items-center gap-2 px-8 py-3.5 rounded-xl bg-purple-700 hover:bg-purple-600 text-white font-bold text-sm transition-all shadow-lg shadow-purple-900/40"
             >
               <Globe2 size={16} />

@@ -3,9 +3,12 @@ import { Suspense, lazy, useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { MessageSquare, Rabbit, X, Globe2, Network } from 'lucide-react';
 import { useUserStore } from '@/lib/store/userStore';
-import NavBar from '@/components/layout/NavBar';
+import AppSidebar from '@/components/layout/AppSidebar';
+import AppTopbar from '@/components/layout/AppTopbar';
 import LandingPage from '@/components/sections/LandingPage';
 import FeedbackWidget from '@/components/beta/FeedbackWidget';
+import EngagementSync from '@/components/engagement/EngagementSync';
+import AchievementToasts from '@/components/engagement/AchievementToasts';
 const ParticleField = lazy(() => import('@/components/effects/ParticleField'));
 
 const KnowledgeGraph = lazy(() => import('@/components/sections/KnowledgeGraph'));
@@ -25,8 +28,20 @@ const NodeView          = lazy(() => import('@/components/sections/NodeView'));
 const IntelFeed         = lazy(() => import('@/components/sections/IntelFeed'));
 const SearchExplorer    = lazy(() => import('@/components/sections/SearchExplorer'));
 const ExploreFeed       = lazy(() => import('@/components/sections/ExploreFeed'));
+const HomeView          = lazy(() => import('@/components/sections/HomeView'));
+const ConnectView       = lazy(() => import('@/components/sections/ConnectView'));
+const CompareView       = lazy(() => import('@/components/sections/CompareView'));
+const ProfileView       = lazy(() => import('@/components/sections/ProfileView'));
+const ProposeView       = lazy(() => import('@/components/sections/ProposeView'));
 import Breadcrumb from '@/components/navigation/Breadcrumb';
 import CommandPalette from '@/components/navigation/CommandPalette';
+
+const VALID_VIEWS = [
+  'graph', 'universe', 'galaxy', 'cluster', 'node', 'research-graph',
+  'timeline', 'evidence-board', 'globe', 'dashboard',
+  'diagnostics', 'sources', 'admin', 'rabbit-hole', 'intel-feed', 'search', 'explore',
+  'home', 'connect', 'compare', 'profile', 'propose',
+] as const;
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
@@ -52,22 +67,13 @@ function MobileGraphFallback() {
           The interactive graph works best on a larger screen. On mobile, browse by topic instead.
         </p>
       </div>
-      <div className="flex flex-col gap-3 w-full max-w-xs">
-        <button
-          onClick={navigateToUniverse}
-          className="flex items-center justify-center gap-2 w-full px-5 py-3.5 rounded-xl bg-purple-700 hover:bg-purple-600 text-white font-bold text-sm transition-all"
-        >
-          <Globe2 size={16} />
-          Browse Galaxies
-        </button>
-        <button
-          onClick={navigateToUniverse}
-          className="flex items-center justify-center gap-2 w-full px-5 py-3.5 rounded-xl border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white font-semibold text-sm transition-all"
-        >
-          Start Exploring
-        </button>
-      </div>
-      <p className="text-xs text-slate-600">Rotate to landscape or open on desktop for the full graph experience.</p>
+      <button
+        onClick={navigateToUniverse}
+        className="flex items-center justify-center gap-2 w-full max-w-xs px-5 py-3.5 rounded-xl bg-purple-700 hover:bg-purple-600 text-white font-bold text-sm transition-all"
+      >
+        <Globe2 size={16} />
+        Browse Galaxies
+      </button>
     </div>
   );
 }
@@ -88,361 +94,230 @@ export default function AppShell() {
   const isMobile = useIsMobile();
   const [sidePanel, setSidePanel] = useState<'ai' | 'rabbit' | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const isLanding = currentView === 'landing';
   const prevChainLenRef = useRef(rabbitHoleChain.length);
 
-  // Global Ctrl+K shortcut opens command palette
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        setPaletteOpen(o => !o);
-      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); setPaletteOpen(o => !o); }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
-  // Auto-open the rabbit hole panel the moment a rabbit hole is started
   useEffect(() => {
-    if (rabbitHoleChain.length > 0 && prevChainLenRef.current === 0) {
-      setSidePanel('rabbit');
-    }
-    if (rabbitHoleChain.length === 0) {
-      prevChainLenRef.current = 0;
-    } else {
-      prevChainLenRef.current = rabbitHoleChain.length;
-    }
+    if (rabbitHoleChain.length > 0 && prevChainLenRef.current === 0) setSidePanel('rabbit');
+    prevChainLenRef.current = rabbitHoleChain.length === 0 ? 0 : rabbitHoleChain.length;
   }, [rabbitHoleChain.length]);
 
-  // Auto-close side panel when the user navigates to a different view
-  useEffect(() => {
-    setSidePanel(null);
-  }, [currentView]);
-
-  // Beta usage tracking — fire-and-forget on view change
-  const sessionIdRef = useRef<string>(
-    typeof window !== 'undefined'
-      ? (sessionStorage.getItem('nexus_sid') ?? (() => {
-          const s = Math.random().toString(36).slice(2);
-          sessionStorage.setItem('nexus_sid', s);
-          return s;
-        })())
-      : ''
-  );
-  const track = useCallback((eventType: string, meta?: Record<string, unknown>) => {
-    void fetch('/api/beta/track', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ eventType, page: currentView, sessionId: sessionIdRef.current, meta }),
-    }).catch(() => {/* fire-and-forget */});
-  }, [currentView]);
-
-  const VIEW_TO_EVENT: Record<string, string> = {
-    graph:          'graph_view',
-    timeline:       'timeline_view',
-    globe:          'globe_view',
-    sources:        'source_view',
-    universe:       'universe_view',
-    'evidence-board': 'evidence_view',
-    'rabbit-hole':  'rabbit_hole',
-  };
-  const prevViewRef = useRef<string>('');
-  useEffect(() => {
-    if (currentView === prevViewRef.current || currentView === 'landing') return;
-    prevViewRef.current = currentView;
-    const eventType = VIEW_TO_EVENT[currentView];
-    if (eventType) track(eventType);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentView]);
+  useEffect(() => { setSidePanel(null); setDrawerOpen(false); }, [currentView]);
 
   const isInitialMountRef = useRef(true);
 
-  // On first load: restore view from URL hash so deep-links and refreshes work
   useEffect(() => {
-    const VALID = [
-      'graph', 'universe', 'galaxy', 'cluster', 'node', 'research-graph',
-      'timeline', 'evidence-board', 'globe', 'dashboard',
-      'diagnostics', 'sources', 'admin', 'rabbit-hole', 'intel-feed', 'search', 'explore',
-    ] as const;
-    const urlHash = window.location.hash.slice(1) as typeof VALID[number];
-    if (urlHash && (VALID as readonly string[]).includes(urlHash)) setCurrentView(urlHash);
+    const urlHash = window.location.hash.slice(1) as typeof VALID_VIEWS[number];
+    if (urlHash && (VALID_VIEWS as readonly string[]).includes(urlHash)) setCurrentView(urlHash);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Sync currentView → browser history so back/forward navigate within the app
   useEffect(() => {
     const hash = currentView === 'landing' ? '' : `#${currentView}`;
-
     if (isInitialMountRef.current) {
       isInitialMountRef.current = false;
       window.history.replaceState({ view: currentView }, '', hash || '/');
       return;
     }
-
-    // If hash already matches, this render was triggered by popstate — skip push
     if (window.location.hash === hash) return;
-
     window.history.pushState({ view: currentView }, '', hash || '/');
   }, [currentView]);
 
-  // Intercept browser back/forward — keep navigation within the SPA
   useEffect(() => {
-    const validViews = [
-      'landing', 'graph', 'theory', 'universe',
-      'galaxy', 'cluster', 'node', 'research-graph',
-      'timeline', 'evidence-board', 'globe', 'dashboard',
-      'diagnostics', 'sources', 'admin', 'rabbit-hole', 'intel-feed', 'search', 'explore',
-    ];
-
     const handlePopState = (e: PopStateEvent) => {
       const view = e.state?.view;
-      setCurrentView(validViews.includes(view) ? view : 'landing');
+      setCurrentView((['landing', ...VALID_VIEWS] as string[]).includes(view) ? view : 'landing');
     };
-
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [setCurrentView]);
 
   return (
     <MotionConfig reducedMotion={researchMode ? 'always' : 'user'}>
+    <EngagementSync />
     <div
-      className="min-h-screen bg-[#000005] text-slate-200 overflow-hidden"
+      className="min-h-screen bg-[#06060f] text-slate-200 overflow-hidden"
       style={{ maxWidth: '100vw', overflowX: 'hidden' }}
       data-research={researchMode ? 'true' : undefined}
     >
-      {/* Global particle field — suppressed in research mode */}
       {!isLanding && !researchMode && <Suspense fallback={null}><ParticleField /></Suspense>}
 
-      {/* Landing Page */}
+      {/* Landing */}
       <AnimatePresence mode="wait">
         {isLanding && (
-          <motion.div
-            key="landing"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8 }}
-            className="h-screen overflow-y-auto"
-          >
+          <motion.div key="landing" initial={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }} className="h-screen overflow-y-auto">
             <LandingPage />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Main App */}
+      {/* Main app — sidebar + topbar shell */}
       <AnimatePresence>
         {!isLanding && (
-          <motion.div
-            key="app"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            className="fixed inset-0 flex flex-col"
-          >
-            <NavBar />
+          <motion.div key="app" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} className="fixed inset-0 flex">
+            {/* Sidebar — static ≥lg, drawer below */}
+            <div className="hidden lg:block shrink-0 z-30"><AppSidebar /></div>
+            <AnimatePresence>
+              {drawerOpen && (
+                <>
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="lg:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setDrawerOpen(false)} />
+                  <motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'spring', damping: 26, stiffness: 240 }} className="lg:hidden fixed inset-y-0 left-0 z-50">
+                    <AppSidebar onNavigate={() => setDrawerOpen(false)} />
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
 
-            {/* Below-navbar wrapper — accounts for the fixed NavBar height */}
-            <div className="flex-1 flex flex-col overflow-hidden pt-14 sm:pt-16">
-              {/* Breadcrumb — only visible on galaxy hierarchy views */}
+            {/* Main column */}
+            <div className="flex-1 flex flex-col min-w-0">
+              <AppTopbar onOpenMenu={() => setDrawerOpen(true)} />
+
               {(['galaxy','cluster','node','research-graph'] as string[]).includes(currentView) && (
                 <div className="flex-shrink-0 px-4 py-1.5 border-b border-purple-900/15 bg-black/20">
                   <Breadcrumb />
                 </div>
               )}
 
-            {/* Main content area */}
-            <div className="flex-1 flex overflow-hidden relative">
-              {/* Core view */}
-              <div className="flex-1 overflow-hidden relative">
-                <Suspense fallback={<LoadingSpinner />}>
-                  <AnimatePresence mode="wait">
-                    {(currentView === 'graph' || currentView === 'research-graph') && (
-                      <motion.div key="graph" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">
-                        {isMobile ? <MobileGraphFallback /> : <KnowledgeGraph />}
-                      </motion.div>
-                    )}
-                    {currentView === 'universe' && (
-                      <motion.div key="universe" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto">
-                        <GalaxyView />
-                      </motion.div>
-                    )}
-                    {currentView === 'galaxy' && (
-                      <motion.div key="galaxy" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="absolute inset-0 overflow-y-auto">
-                        <GalaxyView />
-                      </motion.div>
-                    )}
-                    {currentView === 'cluster' && (
-                      <motion.div key="cluster" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="absolute inset-0 overflow-y-auto">
-                        <ClusterView />
-                      </motion.div>
-                    )}
-                    {currentView === 'timeline' && (
-                      <motion.div key="timeline" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto">
-                        <TimelineExplorer />
-                      </motion.div>
-                    )}
-                    {currentView === 'evidence-board' && (
-                      <motion.div key="evidence" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">
-                        <EvidenceBoard />
-                      </motion.div>
-                    )}
-                    {currentView === 'globe' && (
-                      <motion.div key="globe" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">
-                        <AncientGlobe />
-                      </motion.div>
-                    )}
-                    {currentView === 'dashboard' && (
-                      <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto">
-                        <Dashboard />
-                      </motion.div>
-                    )}
-                    {currentView === 'diagnostics' && (
-                      <motion.div key="diagnostics" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto">
-                        <GraphDiagnostics />
-                      </motion.div>
-                    )}
-                    {currentView === 'sources' && (
-                      <motion.div key="sources" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto">
-                        <SourceIngestion />
-                      </motion.div>
-                    )}
-                    {currentView === 'admin' && (
-                      <motion.div key="admin" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto">
-                        <AdminPanel />
-                      </motion.div>
-                    )}
-                    {currentView === 'rabbit-hole' && (
-                      <motion.div key="rabbit-hole" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto">
-                        <RabbitHoleView />
-                      </motion.div>
-                    )}
-                    {currentView === 'node' && (
-                      <motion.div key="node" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="absolute inset-0 overflow-y-auto">
-                        <NodeView />
-                      </motion.div>
-                    )}
-                    {currentView === 'intel-feed' && (
-                      <motion.div key="intel-feed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto">
-                        <IntelFeed />
-                      </motion.div>
-                    )}
-                    {currentView === 'search' && (
-                      <motion.div key="search" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto">
-                        <SearchExplorer />
-                      </motion.div>
-                    )}
-                    {currentView === 'explore' && (
-                      <motion.div key="explore" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto">
-                        <ExploreFeed />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </Suspense>
-              </div>
-
-              {/* Side panel — full-screen overlay on mobile, 340px sidebar on sm+ */}
-              <AnimatePresence>
-                {sidePanel && (
-                  <>
-                  {/* Tap backdrop — closes panel on mobile */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="absolute inset-0 z-20 sm:hidden bg-black/40"
-                    onClick={() => setSidePanel(null)}
-                  />
-                  <motion.div
-                    initial={{ x: '100%', opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: '100%', opacity: 0 }}
-                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                    className="absolute inset-y-0 right-0 w-full sm:w-[340px] z-30 glass-dark border-l border-purple-900/20 overflow-hidden flex flex-col"
-                  >
-                    {/* Mobile-only close button for AI panel */}
-                    {sidePanel === 'ai' && (
-                      <button
-                        onClick={() => setSidePanel(null)}
-                        className="sm:hidden absolute top-3 right-3 z-10 p-2 glass rounded-lg text-slate-400 hover:text-white"
-                      >
-                        <X size={16} />
-                      </button>
-                    )}
-                    <Suspense fallback={<LoadingSpinner />}>
-                      {sidePanel === 'ai' && <AIAssistant />}
-                      {sidePanel === 'rabbit' && (
-                        <div className="flex flex-col h-full">
-                          <div className="p-4 border-b border-purple-900/20 flex items-center justify-between">
-                            <div className="text-sm font-bold text-white flex items-center gap-2">
-                              <Rabbit size={16} className="text-purple-400" />
-                              Rabbit Hole Mode
-                            </div>
-                            <button onClick={() => setSidePanel(null)} className="text-slate-500 hover:text-white">
-                              <X size={14} />
-                            </button>
-                          </div>
-                          <div className="flex-1 overflow-y-auto">
-                            <RabbitHoleMode />
-                          </div>
-                        </div>
+              <div className="flex-1 flex overflow-hidden relative">
+                <div className="flex-1 overflow-hidden relative">
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <AnimatePresence mode="wait">
+                      {currentView === 'home' && (
+                        <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto"><HomeView /></motion.div>
                       )}
-                    </Suspense>
-                  </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
-            </div> {/* end below-navbar wrapper */}
+                      {currentView === 'connect' && (
+                        <motion.div key="connect" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto"><ConnectView /></motion.div>
+                      )}
+                      {currentView === 'compare' && (
+                        <motion.div key="compare" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto"><CompareView /></motion.div>
+                      )}
+                      {currentView === 'profile' && (
+                        <motion.div key="profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto"><ProfileView /></motion.div>
+                      )}
+                      {currentView === 'propose' && (
+                        <motion.div key="propose" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto"><ProposeView /></motion.div>
+                      )}
+                      {(currentView === 'graph' || currentView === 'research-graph') && (
+                        <motion.div key="graph" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">
+                          {isMobile ? <MobileGraphFallback /> : <KnowledgeGraph />}
+                        </motion.div>
+                      )}
+                      {currentView === 'universe' && (
+                        <motion.div key="universe" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto"><GalaxyView /></motion.div>
+                      )}
+                      {currentView === 'galaxy' && (
+                        <motion.div key="galaxy" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="absolute inset-0 overflow-y-auto"><GalaxyView /></motion.div>
+                      )}
+                      {currentView === 'cluster' && (
+                        <motion.div key="cluster" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="absolute inset-0 overflow-y-auto"><ClusterView /></motion.div>
+                      )}
+                      {currentView === 'timeline' && (
+                        <motion.div key="timeline" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto"><TimelineExplorer /></motion.div>
+                      )}
+                      {currentView === 'evidence-board' && (
+                        <motion.div key="evidence" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0"><EvidenceBoard /></motion.div>
+                      )}
+                      {currentView === 'globe' && (
+                        <motion.div key="globe" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0"><AncientGlobe /></motion.div>
+                      )}
+                      {currentView === 'dashboard' && (
+                        <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto"><Dashboard /></motion.div>
+                      )}
+                      {currentView === 'diagnostics' && (
+                        <motion.div key="diagnostics" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto"><GraphDiagnostics /></motion.div>
+                      )}
+                      {currentView === 'sources' && (
+                        <motion.div key="sources" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto"><SourceIngestion /></motion.div>
+                      )}
+                      {currentView === 'admin' && (
+                        <motion.div key="admin" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto"><AdminPanel /></motion.div>
+                      )}
+                      {currentView === 'rabbit-hole' && (
+                        <motion.div key="rabbit-hole" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto"><RabbitHoleView /></motion.div>
+                      )}
+                      {currentView === 'node' && (
+                        <motion.div key="node" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="absolute inset-0 overflow-y-auto"><NodeView /></motion.div>
+                      )}
+                      {currentView === 'intel-feed' && (
+                        <motion.div key="intel-feed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto"><IntelFeed /></motion.div>
+                      )}
+                      {currentView === 'search' && (
+                        <motion.div key="search" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto"><SearchExplorer /></motion.div>
+                      )}
+                      {currentView === 'explore' && (
+                        <motion.div key="explore" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto"><ExploreFeed /></motion.div>
+                      )}
+                    </AnimatePresence>
+                  </Suspense>
+                </div>
 
-            {/* Floating action buttons — above disclaimer banner */}
-            <div className="fixed bottom-12 right-4 flex flex-col gap-3 z-40">
-              {/* Beta Feedback button */}
+                {/* Side panel (AI / Rabbit) */}
+                <AnimatePresence>
+                  {sidePanel && (
+                    <>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-20 sm:hidden bg-black/40" onClick={() => setSidePanel(null)} />
+                    <motion.div
+                      initial={{ x: '100%', opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: '100%', opacity: 0 }}
+                      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                      className="absolute inset-y-0 right-0 w-full sm:w-[340px] z-30 glass-dark border-l border-purple-900/20 overflow-hidden flex flex-col"
+                    >
+                      {sidePanel === 'ai' && (
+                        <button onClick={() => setSidePanel(null)} className="sm:hidden absolute top-3 right-3 z-10 p-2 glass rounded-lg text-slate-400 hover:text-white"><X size={16} /></button>
+                      )}
+                      <Suspense fallback={<LoadingSpinner />}>
+                        {sidePanel === 'ai' && <AIAssistant />}
+                        {sidePanel === 'rabbit' && (
+                          <div className="flex flex-col h-full">
+                            <div className="p-4 border-b border-purple-900/20 flex items-center justify-between">
+                              <div className="text-sm font-bold text-white flex items-center gap-2"><Rabbit size={16} className="text-purple-400" />Rabbit Hole Mode</div>
+                              <button onClick={() => setSidePanel(null)} className="text-slate-500 hover:text-white"><X size={14} /></button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto"><RabbitHoleMode /></div>
+                          </div>
+                        )}
+                      </Suspense>
+                    </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* FABs */}
+            <div className="fixed bottom-4 right-4 flex flex-col gap-3 z-40">
               <FeedbackWidget currentView={currentView} />
-              {/* Rabbit Hole button */}
               <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                 onClick={() => setSidePanel(sidePanel === 'rabbit' ? null : 'rabbit')}
-                className={`w-12 h-12 rounded-full flex items-center justify-center shadow-xl transition-all ${
-                  sidePanel === 'rabbit'
-                    ? 'bg-purple-600 glow-purple'
-                    : 'glass border border-purple-500/30 hover:border-purple-500/60'
-                }`}
+                className={`w-12 h-12 rounded-full flex items-center justify-center shadow-xl transition-all ${sidePanel === 'rabbit' ? 'bg-purple-600 glow-purple' : 'glass border border-purple-500/30 hover:border-purple-500/60'}`}
                 title="Rabbit Hole Mode"
               >
                 <Rabbit size={18} className="text-purple-300" />
                 {rabbitHoleChain.length > 0 && (
-                  <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center text-xs font-bold text-white">
-                    {rabbitHoleChain.length}
-                  </div>
+                  <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center text-xs font-bold text-white">{rabbitHoleChain.length}</div>
                 )}
               </motion.button>
-
-              {/* AI Assistant button */}
               <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                 onClick={() => setSidePanel(sidePanel === 'ai' ? null : 'ai')}
-                className={`w-12 h-12 rounded-full flex items-center justify-center shadow-xl transition-all ${
-                  sidePanel === 'ai'
-                    ? 'bg-cyan-700 glow-cyan'
-                    : 'glass border border-cyan-500/30 hover:border-cyan-500/60'
-                }`}
+                className={`w-12 h-12 rounded-full flex items-center justify-center shadow-xl transition-all ${sidePanel === 'ai' ? 'bg-cyan-700 glow-cyan' : 'glass border border-cyan-500/30 hover:border-cyan-500/60'}`}
                 title="AI Research Assistant"
               >
                 <MessageSquare size={18} className="text-cyan-300" />
               </motion.button>
             </div>
 
-            {/* Command Palette */}
             <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
-
-            {/* Disclaimer banner */}
-            <div className="fixed bottom-0 left-0 right-0 z-30 text-center py-1 bg-black/40 border-t border-purple-900/10">
-              <p className="text-xs text-slate-600">
-                All content is presented as theories, claims, and open questions — not established facts. Critical thinking is encouraged.
-              </p>
-            </div>
+            <AchievementToasts />
           </motion.div>
         )}
       </AnimatePresence>
