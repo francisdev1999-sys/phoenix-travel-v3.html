@@ -9,6 +9,7 @@ import LandingPage from '@/components/sections/LandingPage';
 import FeedbackWidget from '@/components/beta/FeedbackWidget';
 import EngagementSync from '@/components/engagement/EngagementSync';
 import AchievementToasts from '@/components/engagement/AchievementToasts';
+import OnboardingTour from '@/components/engagement/OnboardingTour';
 const ParticleField = lazy(() => import('@/components/effects/ParticleField'));
 
 const KnowledgeGraph = lazy(() => import('@/components/sections/KnowledgeGraph'));
@@ -318,6 +319,7 @@ export default function AppShell() {
 
             <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
             <AchievementToasts />
+            <OnboardingTour />
           </motion.div>
         )}
       </AnimatePresence>

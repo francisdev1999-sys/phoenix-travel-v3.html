@@ -7,7 +7,7 @@ import {
   Plus, Loader2, Package, InboxIcon, Sparkles, Users, BarChart3,
   AlertOctagon, Brain, ShieldAlert, Search, Link2, MessageSquarePlus,
   Ticket, TrendingUp, ClipboardList, Database, CheckCircle2, Cpu,
-  AlertCircle, Radio, Clock, Zap, RefreshCw, Trash2, X, ChevronRight,
+  AlertCircle, Radio, Clock, Zap, RefreshCw, Trash2, X, ChevronRight, Menu,
 } from 'lucide-react';
 import AdminStats from '@/components/admin/AdminStats';
 import ProposedNodeCard from '@/components/admin/ProposedNodeCard';
@@ -37,6 +37,7 @@ import CROAuditDashboard from '@/components/admin/CROAuditDashboard';
 import SourceIntelligenceDashboard from '@/components/admin/SourceIntelligenceDashboard';
 import CleanupDashboard from '@/components/admin/CleanupDashboard';
 import NeuralCore from '@/components/admin/NeuralCore';
+import { useUserStore } from '@/lib/store/userStore';
 
 type Tab =
   | 'overview' | 'nodes' | 'edges' | 'sources' | 'diagnostics' | 'reports'
@@ -277,6 +278,7 @@ export default function AdminPanel() {
   const role    = (session?.user as { role?: string })?.role ?? 'user';
   const isAdmin = role === 'owner' || role === 'admin';
   const [tab, setTab] = useState<Tab>('overview');
+  const [adminDrawer, setAdminDrawer] = useState(false);
   const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
   const [proposingNode, setProposingNode] = useState(false);
   const [proposingEdge, setProposingEdge] = useState(false);
@@ -553,33 +555,91 @@ export default function AdminPanel() {
   // The full control panel (all tabs) is open to the owner and admin roles alike.
   const tabs = allTabs.filter(t => !t.ownerOnly || isAdmin);
 
+  // ── Grouped-sidebar console (redesign): Command / Content / Community / System ──
+  const GROUP_ORDER = ['Command', 'Content', 'Community', 'System'] as const;
+  const TAB_GROUP: Record<Tab, typeof GROUP_ORDER[number]> = {
+    overview: 'Command', 'neural-core': 'Command', diagnostics: 'Command', 'cro-audit': 'Command',
+    drafts: 'Content', nodes: 'Content', edges: 'Content', sources: 'Content', suggestions: 'Content',
+    'node-manager': 'Content', imports: 'Content', 'ai-audit': 'Content', integrity: 'Content',
+    similarity: 'Content', 'source-enrichment': 'Content', 'source-intel': 'Content',
+    users: 'Community', moderation: 'Community', reports: 'Community', intelligence: 'Community',
+    'beta-feedback': 'Community', 'beta-invites': 'Community', 'beta-analytics': 'Community',
+    platform: 'System', 'ai-activity': 'System', cleanup: 'System',
+  };
+  const TAB_SUBTITLE: Partial<Record<Tab, string>> = {
+    overview: 'System vitals + one-tap control cards', 'neural-core': 'The archive’s brain — live inference mesh',
+    drafts: 'Enrichment queue by quality tier', nodes: 'Proposed nodes awaiting review',
+    edges: 'Proposed relationships awaiting review', sources: 'Source submissions to verify',
+    users: 'Roles, trust and access', moderation: 'Reports and enforcement',
+    platform: 'Users · content · AI health', 'ai-activity': 'Model usage and cost',
+  };
+  const grouped = GROUP_ORDER
+    .map(g => ({ group: g, items: tabs.filter(t => TAB_GROUP[t.id] === g) }))
+    .filter(x => x.items.length > 0);
+  const activeMeta = allTabs.find(t => t.id === tab);
+
+  const AdminNav = ({ onPick }: { onPick?: () => void }) => (
+    <div className="flex flex-col h-full w-54 bg-[#0a0a18] border-r border-white/[0.07]" style={{ width: 216 }}>
+      <div className="flex items-center gap-2 px-4 h-[52px] shrink-0 border-b border-white/[0.06]">
+        <ShieldCheck size={16} className="text-purple-400" />
+        <span className="text-[13px] font-black text-white tracking-tight uppercase">Admin Console</span>
+      </div>
+      <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-3">
+        {grouped.map(({ group, items }) => (
+          <div key={group}>
+            <div className="px-2 mb-1 text-[9px] font-black uppercase tracking-[0.14em] text-slate-600">{group}</div>
+            <div className="space-y-0.5">
+              {items.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => { setTab(t.id); onPick?.(); }}
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-semibold transition-colors ${
+                    tab === t.id ? 'bg-[rgba(124,58,237,0.18)] text-[#e9d5ff]' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                  }`}
+                >
+                  {t.icon}{t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </nav>
+      <button
+        onClick={() => { useUserStore.getState().setCurrentView('home'); onPick?.(); }}
+        className="m-2 flex items-center gap-2 px-2.5 py-2 rounded-lg text-[12px] font-semibold text-slate-500 hover:text-slate-300 hover:bg-white/[0.04] transition-colors"
+      >
+        <ChevronRight size={14} className="rotate-180" /> Back to Archive
+      </button>
+    </div>
+  );
+
   return (
-    <div className="h-full flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-purple-900/20 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <ShieldCheck size={18} className="text-purple-400" />
-          <div>
-            <h1 className="text-lg font-bold text-white tracking-tight">Admin Master Control</h1>
-            <p className="text-xs text-slate-500">Full system control — no changes reach the graph without your approval.</p>
+    <div className="h-full flex overflow-hidden">
+      {/* Grouped sidebar — static ≥lg, drawer below */}
+      <div className="hidden lg:block shrink-0"><AdminNav /></div>
+      <AnimatePresence>
+        {adminDrawer && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="lg:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setAdminDrawer(false)} />
+            <motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'spring', damping: 26, stiffness: 240 }} className="lg:hidden fixed inset-y-0 left-0 z-50">
+              <AdminNav onPick={() => setAdminDrawer(false)} />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top bar */}
+        <div className="h-[52px] shrink-0 flex items-center gap-3 px-4 border-b border-white/[0.07] bg-[#06060f]/90 backdrop-blur-md">
+          <button onClick={() => setAdminDrawer(true)} className="lg:hidden p-1.5 text-slate-400 hover:text-white" aria-label="Open admin menu"><Menu size={18} /></button>
+          <div className="min-w-0">
+            <h1 className="text-[15px] font-black text-white tracking-tight truncate">{activeMeta?.label ?? 'Admin'}</h1>
+            {TAB_SUBTITLE[tab] && <p className="text-[11px] text-slate-500 truncate">{TAB_SUBTITLE[tab]}</p>}
+          </div>
+          <div className="ml-auto flex items-center gap-2 text-[11px] font-semibold text-emerald-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> All systems nominal
           </div>
         </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="px-6 pt-3 pb-0 flex-shrink-0 border-b border-purple-900/20">
-        <div className="flex gap-1 overflow-x-auto">
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-all -mb-px whitespace-nowrap ${
-                tab === t.id ? 'border-purple-500 text-purple-300' : 'border-transparent text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              {t.icon}{t.label}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* Content */}
       <AnimatePresence mode="wait">
@@ -870,6 +930,7 @@ export default function AdminPanel() {
           {tab === 'ai-activity'       && isAdmin && <AiActivityDashboard />}
         </motion.div>
       </AnimatePresence>
+      </div>
     </div>
   );
 }
