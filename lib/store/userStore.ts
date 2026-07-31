@@ -32,7 +32,7 @@ export type ViewType =
   | 'diagnostics' | 'sources' | 'admin' | 'rabbit-hole' | 'intel-feed'
   | 'search' | 'explore'
   // ── Redesign screens ──
-  | 'home' | 'connect' | 'compare' | 'profile' | 'propose';
+  | 'home' | 'connect' | 'compare' | 'profile' | 'propose' | 'map';
 
 export interface NavContext {
   galaxySlug:  string | null;

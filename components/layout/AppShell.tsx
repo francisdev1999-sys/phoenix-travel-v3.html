@@ -34,6 +34,7 @@ const ConnectView       = lazy(() => import('@/components/sections/ConnectView')
 const CompareView       = lazy(() => import('@/components/sections/CompareView'));
 const ProfileView       = lazy(() => import('@/components/sections/ProfileView'));
 const ProposeView       = lazy(() => import('@/components/sections/ProposeView'));
+const MapExplorer       = lazy(() => import('@/components/sections/MapExplorer'));
 import Breadcrumb from '@/components/navigation/Breadcrumb';
 import CommandPalette from '@/components/navigation/CommandPalette';
 
@@ -41,7 +42,7 @@ const VALID_VIEWS = [
   'graph', 'universe', 'galaxy', 'cluster', 'node', 'research-graph',
   'timeline', 'evidence-board', 'globe', 'dashboard',
   'diagnostics', 'sources', 'admin', 'rabbit-hole', 'intel-feed', 'search', 'explore',
-  'home', 'connect', 'compare', 'profile', 'propose',
+  'home', 'connect', 'compare', 'profile', 'propose', 'map',
 ] as const;
 
 function useIsMobile() {
@@ -206,6 +207,9 @@ export default function AppShell() {
                       )}
                       {currentView === 'propose' && (
                         <motion.div key="propose" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto"><ProposeView /></motion.div>
+                      )}
+                      {currentView === 'map' && (
+                        <motion.div key="map" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 overflow-y-auto"><MapExplorer /></motion.div>
                       )}
                       {(currentView === 'graph' || currentView === 'research-graph') && (
                         <motion.div key="graph" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">

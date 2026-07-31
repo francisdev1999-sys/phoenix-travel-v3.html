@@ -20,7 +20,7 @@ const NAV: NavItem[] = [
   { icon: Compass,    label: 'Pathfinder', view: 'connect',     group: 'Explore' },
   { icon: Globe2,     label: 'Galaxies',   view: 'universe',    group: 'Explore' },
   { icon: Network,    label: 'Graph',      view: 'graph',       group: 'Explore' },
-  { icon: Map,        label: 'Map',        view: 'globe',       group: 'Explore' },
+  { icon: Map,        label: 'Map',        view: 'map',         group: 'Explore' },
   { icon: Clock,      label: 'Timeline',   view: 'timeline',    group: 'Explore' },
   { icon: Rabbit,     label: 'Rabbit Hole',view: 'rabbit-hole', group: 'Research' },
   { icon: Search,     label: 'Search',     view: 'search',      group: 'Research' },
